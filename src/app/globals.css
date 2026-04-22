@@ -1,26 +1,101 @@
-@import "tailwindcss";
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 42 38% 97%;
+  --foreground: 210 24% 15%;
+  --muted: 42 28% 92%;
+  --muted-foreground: 214 12% 38%;
+  --border: 36 20% 82%;
+  --input: 36 18% 78%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 24% 15%;
+  --accent: 185 77% 34%;
+  --accent-foreground: 0 0% 100%;
+  --success: 151 55% 34%;
+  --warning: 37 92% 52%;
+  --danger: 2 70% 47%;
+  --info: 208 76% 46%;
+  --severity-low: 208 76% 46%;
+  --severity-medium: 37 92% 52%;
+  --severity-high: 2 70% 47%;
+  --ring: 185 77% 34%;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --radius-sm: 0.625rem;
+  --radius-md: 0.9rem;
+  --radius-lg: 1.25rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply min-h-full;
+    color-scheme: light;
+  }
+
+  body {
+    @apply min-h-full;
+    @apply bg-background font-sans text-foreground;
+    background-image:
+      radial-gradient(circle at top, rgba(13, 148, 136, 0.12), transparent 38%),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.7) 0%,
+        rgba(250, 247, 240, 0.96) 100%
+      );
+  }
+
+  a {
+    @apply outline-none transition-colors;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: hsla(var(--accent), 0.18);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .surface-shadow {
+    box-shadow:
+      0 18px 44px -28px rgba(15, 23, 42, 0.28),
+      0 10px 18px -16px rgba(13, 148, 136, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
