@@ -1,4 +1,5 @@
 import { buildActionInventory } from "@/features/actions-analyzer/lib/action-inventory";
+import { expandMatrix } from "@/features/actions-analyzer/lib/expand-matrix";
 import {
   buildExpressionSummary,
   collectExpressionsFromWorkflow,
@@ -64,10 +65,15 @@ export function analyzeWorkflowFiles(
       : collectedExpressions;
   });
   const actionInventory = buildActionInventory(normalizedWorkflows);
+  const matrixSummary = buildMatrixSummary(
+    normalizedWorkflows,
+    resolvedSettings,
+  );
   const context = createRuleContext({
     actionInventory,
     expressions,
     files,
+    matrixSummary,
     normalizedWorkflows,
     parseFindings,
     parsedFiles,
@@ -85,7 +91,6 @@ export function analyzeWorkflowFiles(
   );
   const triggerSummary = buildTriggerSummary(normalizedWorkflows);
   const permissionSummary = buildPermissionSummary(normalizedWorkflows);
-  const matrixSummary = buildMatrixSummaryPlaceholder(normalizedWorkflows);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -156,6 +161,7 @@ export function createEmptyReport(
     matrixSummary: {
       totalJobs: 0,
       maxCombinations: 0,
+      warningCount: 0,
       jobs: [],
     },
     attackPaths: [],
@@ -216,8 +222,9 @@ export function dedupeFindings(findings: AnalyzerFinding[]): AnalyzerFinding[] {
   return deduped;
 }
 
-function buildMatrixSummaryPlaceholder(
+function buildMatrixSummary(
   normalizedWorkflows: NormalizedWorkflow[],
+  settings: Pick<AnalyzerSettings, "maxMatrixCombinationsBeforeWarning">,
 ): MatrixSummary {
   const jobs = normalizedWorkflows.flatMap((workflow) =>
     workflow.jobs.flatMap((job): MatrixJobSummary[] => {
@@ -230,9 +237,13 @@ function buildMatrixSummaryPlaceholder(
       return [
         {
           filePath: workflow.filePath,
-          jobName: job.id,
-          dimensions: Object.keys(matrix.dimensions),
-          combinations: estimateMatrixCombinations(matrix),
+          jobId: job.id,
+          jobName: job.name.value,
+          location: matrix.location ?? job.strategy?.location ?? job.location,
+          ...expandMatrix(matrix, {
+            failFast: job.strategy?.failFast.value ?? null,
+            maxParallel: job.strategy?.maxParallel.value ?? null,
+          }),
         },
       ];
     }),
@@ -240,7 +251,21 @@ function buildMatrixSummaryPlaceholder(
 
   return {
     totalJobs: jobs.length,
-    maxCombinations: Math.max(0, ...jobs.map((job) => job.combinations)),
+    maxCombinations: Math.max(
+      0,
+      ...jobs.map((job) => job.finalCombinationCount ?? 0),
+    ),
+    warningCount: jobs.filter(
+      (job) =>
+        job.isUnresolved ||
+        (job.finalCombinationCount ?? 0) >
+          settings.maxMatrixCombinationsBeforeWarning ||
+        (job.finalCombinationCount ?? 0) === 0 ||
+        job.excludeEntries.some(
+          (entry) => entry.matchedBaseCombinations === 0,
+        ) ||
+        job.includeEntries.some((entry) => entry.matchedBaseCombinations === 0),
+    ).length,
     jobs,
   };
 }
@@ -294,7 +319,8 @@ function buildPermissionSummary(
           access: "write",
           filePath: workflow.filePath,
           jobName: job.id,
-          location: job.permissions?.scopeLocations[scope] ?? job.permissions?.location,
+          location:
+            job.permissions?.scopeLocations[scope] ?? job.permissions?.location,
           scope,
           source: "job" as const,
         }),
@@ -355,6 +381,7 @@ function createRuleContext({
   actionInventory,
   expressions,
   files,
+  matrixSummary,
   normalizedWorkflows,
   parseFindings,
   parsedFiles,
@@ -363,6 +390,7 @@ function createRuleContext({
   actionInventory: ActionInventoryItem[];
   expressions: WorkflowExpression[];
   files: WorkflowInputFile[];
+  matrixSummary: MatrixSummary;
   normalizedWorkflows: NormalizedWorkflow[];
   parseFindings: AnalyzerFinding[];
   parsedFiles: RuleContext["parsedFiles"];
@@ -372,6 +400,7 @@ function createRuleContext({
     actionInventory,
     expressions,
     files,
+    matrixSummary,
     normalizedWorkflows,
     parseFindings,
     parsedFiles,
@@ -380,6 +409,11 @@ function createRuleContext({
       return filePath
         ? expressions.filter((expression) => expression.filePath === filePath)
         : expressions;
+    },
+    getMatrixJobSummary(filePath: string, jobId: string) {
+      return matrixSummary.jobs.find(
+        (job) => job.filePath === filePath && job.jobId === jobId,
+      );
     },
     getParsedFile(filePath: string) {
       return parsedFiles.find((parsedFile) => parsedFile.filePath === filePath);
@@ -390,39 +424,6 @@ function createRuleContext({
       );
     },
   };
-}
-
-function estimateDimensionCardinality(value: unknown): number {
-  if (Array.isArray(value)) {
-    return value.length;
-  }
-
-  if (typeof value === "string" || typeof value === "number") {
-    return 1;
-  }
-
-  return 0;
-}
-
-function estimateMatrixCombinations(
-  matrix: NonNullable<
-    NonNullable<NormalizedWorkflow["jobs"][number]["strategy"]>["matrix"]
-  >,
-): number {
-  const base = Object.values(matrix.dimensions).reduce<number>(
-    (product, value) => {
-      const cardinality = estimateDimensionCardinality(value);
-
-      return cardinality > 0 ? product * cardinality : product;
-    },
-    1,
-  );
-  const adjustedBase =
-    Object.keys(matrix.dimensions).length > 0
-      ? Math.max(0, base - matrix.exclude.length)
-      : 0;
-
-  return adjustedBase + matrix.include.length;
 }
 
 function filterFindingsBySettings(

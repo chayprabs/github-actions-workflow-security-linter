@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { matrixWorkflowFixtures } from "@/features/actions-analyzer/fixtures/matrix-workflows";
 import {
   analyzeWorkflowFiles,
   applyRuleSettings,
@@ -200,5 +201,28 @@ jobs:
     expect(report.files).toHaveLength(3);
     expect(report.summary.analyzedFileCount).toBe(3);
     expect(report.summary.workflowCount).toBeGreaterThanOrEqual(1);
+  });
+
+  it("populates matrix summaries with static preview details per job", () => {
+    const report = analyzeWorkflowFiles([
+      createInput(
+        ".github/workflows/matrix.yml",
+        matrixWorkflowFixtures.largeStaticMatrix,
+      ),
+    ]);
+
+    expect(report.matrixSummary).toMatchObject({
+      maxCombinations: 18,
+      totalJobs: 1,
+    });
+    expect(report.matrixSummary.jobs[0]).toMatchObject({
+      axisNames: ["os", "node", "pnpm"],
+      baseCombinationCount: 18,
+      failFast: false,
+      finalCombinationCount: 18,
+      jobId: "test",
+      maxParallel: 3,
+    });
+    expect(report.matrixSummary.jobs[0]?.sampleCombinations).toHaveLength(18);
   });
 });

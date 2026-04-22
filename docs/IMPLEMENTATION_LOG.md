@@ -248,3 +248,21 @@
 
 - The branch-versus-tag distinction for arbitrary custom refs is still heuristic because GitHub Actions does not encode ref type directly in the YAML string. The analyzer treats obvious branch names such as `main`, `master`, and `refs/heads/*` as branches, while the broader unpinned-reference rules still catch other mutable refs.
 - The analyzer intentionally does not generate automatic SHA replacement fixes for external actions or reusable workflows, because it cannot safely infer which reviewed commit the workflow author intended to trust.
+
+## Prompt 14
+
+- Status: Completed.
+- Outcome: Added a static matrix preview engine via `expandMatrix()` that expands scalar axes, object-valued axes, `include`, and `exclude` entries, carries unresolved reasons for dynamic matrix expressions, and records per-job matrix summaries with counts, samples, `fail-fast`, and `max-parallel`. Upgraded `GHA407` to use the real expansion count and added matrix findings `GHA412`, `GHA413`, and `GHA414` for unmatched include and exclude entries, empty matrices, and unresolved dynamic matrices while preserving the existing `GHA053` matrix-context misuse rule from the expression pack. Updated the Results UI with a dedicated Matrix preview panel, per-job matrix badges, first-20 combination tables, a JSON copy button, and grouped matrix findings in the main findings view. Added pure expansion tests plus analyzer-level matrix rule coverage and summary assertions.
+
+### Commands Run
+
+- `npx prettier --write src\\features\\actions-analyzer\\components\\results-panel.tsx src\\features\\actions-analyzer\\components\\matrix-preview-panel.tsx src\\features\\actions-analyzer\\fixtures\\reports.ts src\\features\\actions-analyzer\\fixtures\\matrix-workflows.ts src\\features\\actions-analyzer\\lib\\analyze-workflows.ts src\\features\\actions-analyzer\\lib\\analyze-workflows.test.ts src\\features\\actions-analyzer\\lib\\expand-matrix.ts src\\features\\actions-analyzer\\lib\\expand-matrix.test.ts src\\features\\actions-analyzer\\lib\\rule-catalog.ts src\\features\\actions-analyzer\\lib\\rules\\index.ts src\\features\\actions-analyzer\\lib\\rules\\matrix.rules.ts src\\features\\actions-analyzer\\lib\\rules\\matrix.rules.test.ts src\\features\\actions-analyzer\\types\\analysis.ts src\\features\\actions-analyzer\\types\\domain.ts`
+- `npm run typecheck`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+
+### Known Issues / Notes
+
+- Dynamic matrices such as `fromJSON(...)` are intentionally reported as unresolved rather than guessed. The preview engine preserves the job metadata and unresolved reasons, but it does not attempt to evaluate runtime-generated matrix data.
+- Include matching follows static base-axis matching so the preview stays deterministic and review-friendly. That is sufficient for CI review and warning generation, but it still cannot mirror every runtime nuance of GitHub-hosted expression evaluation.

@@ -398,7 +398,8 @@ export const ruleCatalog = [
   },
   {
     id: "GHA105",
-    title: "Self-hosted runner is reachable from an untrusted pull request trigger",
+    title:
+      "Self-hosted runner is reachable from an untrusted pull request trigger",
     description:
       "Self-hosted runners should be isolated carefully because pull request workflows can execute contributor-controlled code.",
     category: "runner",
@@ -409,7 +410,8 @@ export const ruleCatalog = [
   },
   {
     id: "GHA106",
-    title: "Workflow_run follow-up may perform privileged work on untrusted artifacts",
+    title:
+      "Workflow_run follow-up may perform privileged work on untrusted artifacts",
     description:
       "A workflow triggered by `workflow_run` can have secrets and write permissions, so artifact and trust boundaries need careful review.",
     category: "security",
@@ -562,6 +564,17 @@ export const ruleCatalog = [
     tags: ["actions", "privilege", "third-party"],
   },
   {
+    id: "GHA407",
+    title: "Matrix likely expands to many combinations",
+    description:
+      "Large matrix expansions can slow feedback loops, increase CI cost, and make failures harder to reason about.",
+    category: "matrix",
+    defaultSeverity: "medium",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["matrix", "reliability", "ci-scale"],
+  },
+  {
     id: "GHA401",
     title: "Job is missing timeout-minutes",
     description:
@@ -570,6 +583,39 @@ export const ruleCatalog = [
     defaultSeverity: "low",
     enabledByDefault: true,
     tags: ["timeouts", "reliability", "ci"],
+  },
+  {
+    id: "GHA412",
+    title: "Matrix include or exclude entry does not match the base matrix",
+    description:
+      "A static include or exclude entry that matches no base combinations is often surprising and worth reviewing.",
+    category: "matrix",
+    defaultSeverity: "low",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["matrix", "include", "exclude"],
+  },
+  {
+    id: "GHA413",
+    title: "Matrix resolves to no combinations",
+    description:
+      "A matrix job with zero final combinations will not schedule any real job variants and is often a configuration mistake.",
+    category: "matrix",
+    defaultSeverity: "high",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["matrix", "empty", "configuration"],
+  },
+  {
+    id: "GHA414",
+    title: "Matrix cannot be expanded statically",
+    description:
+      "Dynamic matrix expressions such as `fromJSON(...)` are valid, but the analyzer cannot preview them deterministically without runtime data.",
+    category: "matrix",
+    defaultSeverity: "low",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["matrix", "dynamic", "preview"],
   },
   {
     id: "GHA900",

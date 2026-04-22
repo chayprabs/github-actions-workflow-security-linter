@@ -16,6 +16,12 @@ import {
   reusableWorkflowMixedFieldsRule,
   unknownNeedsRule,
 } from "@/features/actions-analyzer/lib/rules/job-semantics.rules";
+import {
+  emptyMatrixRule,
+  largeMatrixRule,
+  unresolvedMatrixRule,
+  unmatchedMatrixEntryRule,
+} from "@/features/actions-analyzer/lib/rules/matrix.rules";
 import { noFilesRule } from "@/features/actions-analyzer/lib/rules/no-files.rule";
 import {
   broadWritePermissionsRule,
@@ -70,6 +76,10 @@ export const registeredRuleModules: RuleModule[] = [
   invalidTimeoutRule,
   reusableWorkflowMixedFieldsRule,
   suspiciousKeyTypoRule,
+  largeMatrixRule,
+  unmatchedMatrixEntryRule,
+  emptyMatrixRule,
+  unresolvedMatrixRule,
   malformedExpressionRule,
   unknownContextRule,
   secretsInIfRule,

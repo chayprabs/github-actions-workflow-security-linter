@@ -2,6 +2,8 @@ import type {
   ActionInventoryItem,
   AnalyzerFinding,
   AnalyzerSettings,
+  MatrixJobSummary,
+  MatrixSummary,
   RuleDefinition,
   WorkflowAnalysisReport,
   WorkflowInputFile,
@@ -14,11 +16,16 @@ export interface RuleContext {
   actionInventory: ActionInventoryItem[];
   files: WorkflowInputFile[];
   expressions: WorkflowExpression[];
+  matrixSummary: MatrixSummary;
   normalizedWorkflows: NormalizedWorkflow[];
   parseFindings: AnalyzerFinding[];
   parsedFiles: ParsedYamlFile[];
   settings: AnalyzerSettings;
   getExpressions: (filePath?: string | undefined) => WorkflowExpression[];
+  getMatrixJobSummary: (
+    filePath: string,
+    jobId: string,
+  ) => MatrixJobSummary | undefined;
   getParsedFile: (filePath: string) => ParsedYamlFile | undefined;
   getWorkflow: (filePath: string) => NormalizedWorkflow | undefined;
 }

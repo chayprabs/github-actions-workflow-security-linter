@@ -121,6 +121,7 @@ export const emptyAnalysisReport: WorkflowAnalysisReport = {
   matrixSummary: {
     totalJobs: 0,
     maxCombinations: 0,
+    warningCount: 0,
     jobs: [],
   },
   attackPaths: [],
@@ -216,6 +217,7 @@ export const sampleAnalysisReport: WorkflowAnalysisReport = {
   matrixSummary: {
     totalJobs: 0,
     maxCombinations: 0,
+    warningCount: 0,
     jobs: [],
   },
   attackPaths: [

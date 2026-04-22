@@ -257,16 +257,68 @@ export interface SecuritySummary {
   totalFindings: number;
 }
 
+export interface MatrixCombinationEntry {
+  key: string;
+  value: unknown;
+}
+
+export interface MatrixCombination {
+  entries: MatrixCombinationEntry[];
+  values: Record<string, unknown>;
+}
+
+export interface MatrixEntryMatchSummary {
+  entry: Record<string, unknown>;
+  matchedBaseCombinations: number;
+  reason: string;
+}
+
+export interface MatrixExpansionResult {
+  axisNames: string[];
+  baseCombinationCount: number | null;
+  combinationKeys: string[];
+  excludeEntries: MatrixEntryMatchSummary[];
+  excludedCombinationCount: number | null;
+  failFast: boolean | null;
+  finalCombinationCount: number | null;
+  finalCombinations: MatrixCombination[];
+  hasMoreCombinations: boolean;
+  includeEntries: MatrixEntryMatchSummary[];
+  includeOnlyCombinationCount: number | null;
+  isUnresolved: boolean;
+  maxParallel: number | null;
+  sampleCombinations: MatrixCombination[];
+  sampleLimit: number;
+  unresolvedReasons: string[];
+}
+
 export interface MatrixJobSummary {
   filePath: string;
-  jobName: string;
-  dimensions: string[];
-  combinations: number;
+  jobId: string;
+  jobName: string | null;
+  location?: SourceLocation | undefined;
+  axisNames: string[];
+  baseCombinationCount: number | null;
+  combinationKeys: string[];
+  excludeEntries: MatrixEntryMatchSummary[];
+  excludedCombinationCount: number | null;
+  failFast: boolean | null;
+  finalCombinationCount: number | null;
+  finalCombinations: MatrixCombination[];
+  hasMoreCombinations: boolean;
+  includeEntries: MatrixEntryMatchSummary[];
+  includeOnlyCombinationCount: number | null;
+  isUnresolved: boolean;
+  maxParallel: number | null;
+  sampleCombinations: MatrixCombination[];
+  sampleLimit: number;
+  unresolvedReasons: string[];
 }
 
 export interface MatrixSummary {
   totalJobs: number;
   maxCombinations: number;
+  warningCount: number;
   jobs: MatrixJobSummary[];
 }
 

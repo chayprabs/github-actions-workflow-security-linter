@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { MatrixPreviewPanel } from "@/features/actions-analyzer/components/matrix-preview-panel";
 import type {
   ActionInventoryItem,
   AnalyzerFinding,
@@ -44,7 +45,10 @@ export function ResultsPanel({
   view = "all",
 }: ResultsPanelProps) {
   const hasRunAnalysis = report !== null;
-  const actionInventory = useMemo(() => report?.actionInventory ?? [], [report]);
+  const actionInventory = useMemo(
+    () => report?.actionInventory ?? [],
+    [report],
+  );
   const findings = useMemo(() => report?.findings ?? [], [report]);
   const issueCount = findings.length;
   const availableCategories = useMemo(() => {
@@ -353,6 +357,9 @@ export function ResultsPanel({
                     Untrusted expression usages:{" "}
                     {report.expressionSummary.untrustedContextUsages}
                   </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Matrix preview warnings: {report.matrixSummary.warningCount}
+                  </p>
                 </article>
                 <article className="rounded-xl border border-border/80 bg-background/70 p-4">
                   <div className="flex flex-wrap items-center gap-2">
@@ -373,6 +380,15 @@ export function ResultsPanel({
                       {report.permissionSummary.jobOverrides.length === 1
                         ? "override"
                         : "overrides"}
+                    </Badge>
+                    <Badge
+                      tone={
+                        report.matrixSummary.warningCount > 0
+                          ? "warning"
+                          : "success"
+                      }
+                    >
+                      {report.matrixSummary.maxCombinations} max matrix combos
                     </Badge>
                   </div>
                   <p className="mt-3 text-sm font-medium text-foreground">
@@ -409,6 +425,15 @@ export function ResultsPanel({
             ) : null}
 
             {hasRunAnalysis && report ? (
+              <MatrixPreviewPanel
+                matrixSummary={report.matrixSummary}
+                maxCombinationsBeforeWarning={
+                  report.settings.maxMatrixCombinationsBeforeWarning
+                }
+              />
+            ) : null}
+
+            {hasRunAnalysis && report ? (
               <article
                 className="rounded-xl border border-border/80 bg-background/70 p-4"
                 data-testid="action-inventory-card"
@@ -418,9 +443,7 @@ export function ResultsPanel({
                     {actionInventory.length}{" "}
                     {actionInventory.length === 1 ? "reference" : "references"}
                   </Badge>
-                  <Badge
-                    tone={unpinnedActionCount > 0 ? "warning" : "success"}
-                  >
+                  <Badge tone={unpinnedActionCount > 0 ? "warning" : "success"}>
                     {unpinnedActionCount} unpinned
                   </Badge>
                   <Badge
@@ -554,7 +577,9 @@ export function ResultsPanel({
                                     {getPinningStatusLabel(item)}
                                   </Badge>
                                   <p className="mt-1 text-xs text-muted-foreground">
-                                    {item.mutable ? "Mutable ref" : "Immutable ref"}
+                                    {item.mutable
+                                      ? "Mutable ref"
+                                      : "Immutable ref"}
                                   </p>
                                 </td>
                                 <td className="px-3 py-3">
@@ -563,7 +588,9 @@ export function ResultsPanel({
                                   </p>
                                   <p className="mt-1 text-sm text-foreground">
                                     {item.jobId}
-                                    {item.stepLabel ? ` / ${item.stepLabel}` : " / job uses"}
+                                    {item.stepLabel
+                                      ? ` / ${item.stepLabel}`
+                                      : " / job uses"}
                                   </p>
                                 </td>
                                 <td className="rounded-r-xl px-3 py-3">
@@ -656,24 +683,32 @@ function FindingCard({ finding }: { finding: AnalyzerFinding }) {
 }
 
 function getFindingGroups(findings: AnalyzerFinding[]) {
-  const securityFindings = findings.filter((finding) => isSecurityFinding(finding));
+  const securityFindings = findings.filter((finding) =>
+    isSecurityFinding(finding),
+  );
   const supplyChainFindings = findings.filter(
     (finding) => finding.category === "supply-chain",
   );
   const expressionFindings = findings.filter(
     (finding) => finding.category === "expressions",
   );
-  const syntaxAndSemantics = findings.filter((finding) =>
-    !isSecurityFinding(finding) &&
-    finding.category !== "supply-chain" &&
-    finding.category !== "expressions" &&
-    isSyntaxAndSemanticsFinding(finding),
+  const matrixFindings = findings.filter(
+    (finding) => finding.category === "matrix",
+  );
+  const syntaxAndSemantics = findings.filter(
+    (finding) =>
+      !isSecurityFinding(finding) &&
+      finding.category !== "supply-chain" &&
+      finding.category !== "expressions" &&
+      finding.category !== "matrix" &&
+      isSyntaxAndSemanticsFinding(finding),
   );
   const otherFindings = findings.filter(
     (finding) =>
       !isSecurityFinding(finding) &&
       finding.category !== "supply-chain" &&
       finding.category !== "expressions" &&
+      finding.category !== "matrix" &&
       !isSyntaxAndSemanticsFinding(finding),
   );
   const groups = [];
@@ -705,6 +740,16 @@ function getFindingGroups(findings: AnalyzerFinding[]) {
       findings: expressionFindings,
       id: "expressions",
       title: "Expressions",
+    });
+  }
+
+  if (matrixFindings.length > 0) {
+    groups.push({
+      description:
+        "Static matrix preview warnings for large fan-out, unmatched include and exclude entries, empty expansions, and dynamic matrices that cannot be previewed deterministically.",
+      findings: matrixFindings,
+      id: "matrix",
+      title: "Matrix preview",
     });
   }
 
@@ -834,7 +879,11 @@ function isSyntaxAndSemanticsFinding(finding: AnalyzerFinding) {
 function isSecurityFinding(finding: AnalyzerFinding) {
   const numericRuleId = Number.parseInt(finding.ruleId.slice(3), 10);
 
-  return Number.isFinite(numericRuleId) && numericRuleId >= 100 && numericRuleId < 200;
+  return (
+    Number.isFinite(numericRuleId) &&
+    numericRuleId >= 100 &&
+    numericRuleId < 200
+  );
 }
 
 function categorySort(left: FindingCategory, right: FindingCategory) {
@@ -844,12 +893,18 @@ function categorySort(left: FindingCategory, right: FindingCategory) {
     "runner",
     "supply-chain",
     "expressions",
+    "matrix",
+    "reliability",
     "syntax",
     "triggers",
   ];
 
-  return (order.indexOf(left) === -1 ? Number.POSITIVE_INFINITY : order.indexOf(left)) -
-    (order.indexOf(right) === -1
+  return (
+    (order.indexOf(left) === -1
       ? Number.POSITIVE_INFINITY
-      : order.indexOf(right)) || left.localeCompare(right);
+      : order.indexOf(left)) -
+      (order.indexOf(right) === -1
+        ? Number.POSITIVE_INFINITY
+        : order.indexOf(right)) || left.localeCompare(right)
+  );
 }
