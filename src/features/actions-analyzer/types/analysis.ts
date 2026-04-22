@@ -1,4 +1,5 @@
 import type {
+  ActionInventoryItem,
   AnalyzerFinding,
   AnalyzerSettings,
   RuleDefinition,
@@ -10,6 +11,7 @@ import type { NormalizedWorkflow } from "@/features/actions-analyzer/types/norma
 import type { ParsedYamlFile } from "@/features/actions-analyzer/types/parser";
 
 export interface RuleContext {
+  actionInventory: ActionInventoryItem[];
   files: WorkflowInputFile[];
   expressions: WorkflowExpression[];
   normalizedWorkflows: NormalizedWorkflow[];

@@ -106,7 +106,7 @@ export const workflowSamples = [
   {
     content: safeBasicWorkflow,
     description:
-      "A minimal baseline workflow with explicit permissions, timeouts, and pinned actions.",
+      "A minimal baseline workflow with explicit permissions, timeouts, and standard first-party action tags.",
     id: "safe-basic",
     label: "Safe basic workflow",
     path: ".github/workflows/ci-safe.yml",

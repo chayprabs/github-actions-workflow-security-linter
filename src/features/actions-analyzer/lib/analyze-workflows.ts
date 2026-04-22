@@ -1,3 +1,4 @@
+import { buildActionInventory } from "@/features/actions-analyzer/lib/action-inventory";
 import {
   buildExpressionSummary,
   collectExpressionsFromWorkflow,
@@ -32,7 +33,6 @@ import type {
   RuleModule,
   SecuritySummary,
   TriggerSummary,
-  WorkflowActionUse,
   WorkflowAnalysisReport,
   WorkflowExpression,
   WorkflowInputFile,
@@ -63,7 +63,9 @@ export function analyzeWorkflowFiles(
         )
       : collectedExpressions;
   });
+  const actionInventory = buildActionInventory(normalizedWorkflows);
   const context = createRuleContext({
+    actionInventory,
     expressions,
     files,
     normalizedWorkflows,
@@ -81,7 +83,6 @@ export function analyzeWorkflowFiles(
       resolvedSettings,
     ),
   );
-  const actionInventory = buildActionInventoryPlaceholder(normalizedWorkflows);
   const triggerSummary = buildTriggerSummary(normalizedWorkflows);
   const permissionSummary = buildPermissionSummary(normalizedWorkflows);
   const matrixSummary = buildMatrixSummaryPlaceholder(normalizedWorkflows);
@@ -213,39 +214,6 @@ export function dedupeFindings(findings: AnalyzerFinding[]): AnalyzerFinding[] {
   }
 
   return deduped;
-}
-
-function buildActionInventoryPlaceholder(
-  normalizedWorkflows: NormalizedWorkflow[],
-): ActionInventoryItem[] {
-  return normalizedWorkflows.flatMap((workflow) =>
-    workflow.jobs.flatMap((job) =>
-      job.steps.flatMap((step) => {
-        if (!step.uses) {
-          return [];
-        }
-
-        const ref =
-          step.uses.kind === "docker-action"
-            ? (step.uses.digest ?? step.uses.tag)
-            : step.uses.ref;
-
-        return [
-          {
-            action: getActionInventoryName(step.uses),
-            filePath: workflow.filePath,
-            uses: step.uses.raw,
-            ref: ref ?? null,
-            isPinnedToSha: isPinnedActionUse(step.uses),
-            relatedJobs: [job.id],
-            relatedSteps: [
-              step.id.value ?? step.name.value ?? `step-${step.index + 1}`,
-            ],
-          },
-        ];
-      }),
-    ),
-  );
 }
 
 function buildMatrixSummaryPlaceholder(
@@ -384,6 +352,7 @@ function buildTriggerSummary(
 }
 
 function createRuleContext({
+  actionInventory,
   expressions,
   files,
   normalizedWorkflows,
@@ -391,6 +360,7 @@ function createRuleContext({
   parsedFiles,
   settings,
 }: {
+  actionInventory: ActionInventoryItem[];
   expressions: WorkflowExpression[];
   files: WorkflowInputFile[];
   normalizedWorkflows: NormalizedWorkflow[];
@@ -399,6 +369,7 @@ function createRuleContext({
   settings: AnalyzerSettings;
 }): RuleContext {
   return {
+    actionInventory,
     expressions,
     files,
     normalizedWorkflows,
@@ -469,22 +440,6 @@ function finalizeFindings(findings: AnalyzerFinding[]): AnalyzerFinding[] {
   );
 }
 
-function getActionInventoryName(uses: WorkflowActionUse): string {
-  if (uses.kind === "repository-action") {
-    return [uses.owner, uses.repo, uses.path].filter(Boolean).join("/");
-  }
-
-  if (uses.kind === "docker-action") {
-    return uses.image ?? uses.raw;
-  }
-
-  if (uses.kind === "local-action") {
-    return uses.path ?? uses.raw;
-  }
-
-  return uses.raw;
-}
-
 function hydrateFindingWithDefinition(
   finding: AnalyzerFinding,
   index: number,
@@ -512,18 +467,6 @@ function hydrateFindingWithDefinition(
     relatedJobs: finding.relatedJobs ?? [],
     relatedSteps: finding.relatedSteps ?? [],
   };
-}
-
-function isPinnedActionUse(uses: WorkflowActionUse): boolean {
-  if (uses.kind === "docker-action") {
-    return uses.digest !== null;
-  }
-
-  if (uses.kind === "repository-action") {
-    return uses.ref !== null && /^[a-f0-9]{40}$/iu.test(uses.ref);
-  }
-
-  return false;
 }
 
 function isRuleEnabled(

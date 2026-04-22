@@ -231,3 +231,20 @@
 
 - The security pack is intentionally conservative and static. It flags documented risky combinations and broad privilege patterns, but it does not attempt to prove exploitability, repository fork policy, or runtime trust boundaries that are only knowable from GitHub repository settings.
 - Remediation text and rule docs URLs were aligned against the current GitHub Actions docs for permissions, `pull_request_target`, `workflow_run`, self-hosted runner access guidance, secrets usage, and OpenID Connect during implementation.
+
+## Prompt 13
+
+- Status: Completed.
+- Outcome: Replaced the placeholder action inventory with a real `uses:` reference model that records step-level actions and job-level reusable workflows, classifies local/first-party/third-party/docker/reusable-workflow references, derives ref kinds and mutability, carries source locations, and attaches effective job permission context. Added the requested supply-chain rule pack `GHA200` through `GHA208` for third-party SHA pinning, first-party mutable tags, branch refs, short SHAs, Docker digests, dynamic `uses`, `actions/checkout` persisted credentials in write-capable jobs, `latest` tags, and privileged third-party references. Updated the Results UI with a dedicated Supply chain findings group plus an Action inventory table and filters for first-party, third-party, unpinned, and privileged references. Added fixture-backed tests for `actions/checkout@v4`, `thirdparty/action@main`, full SHA pins, Docker tag versus digest behavior, and reusable workflow inventory coverage.
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+
+### Known Issues / Notes
+
+- The branch-versus-tag distinction for arbitrary custom refs is still heuristic because GitHub Actions does not encode ref type directly in the YAML string. The analyzer treats obvious branch names such as `main`, `master`, and `refs/heads/*` as branches, while the broader unpinned-reference rules still catch other mutable refs.
+- The analyzer intentionally does not generate automatic SHA replacement fixes for external actions or reusable workflows, because it cannot safely infer which reviewed commit the workflow author intended to trust.

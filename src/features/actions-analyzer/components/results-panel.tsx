@@ -15,12 +15,14 @@ import {
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import type {
+  ActionInventoryItem,
   AnalyzerFinding,
   FindingCategory,
   WorkflowAnalysisReport,
 } from "@/features/actions-analyzer/types";
 
 type ResultsPanelView = "all" | "findings" | "report";
+type ActionInventoryPartyFilter = "all" | "first-party" | "third-party";
 
 interface ResultsPanelProps {
   activeFileName: string;
@@ -42,6 +44,7 @@ export function ResultsPanel({
   view = "all",
 }: ResultsPanelProps) {
   const hasRunAnalysis = report !== null;
+  const actionInventory = useMemo(() => report?.actionInventory ?? [], [report]);
   const findings = useMemo(() => report?.findings ?? [], [report]);
   const issueCount = findings.length;
   const availableCategories = useMemo(() => {
@@ -50,6 +53,11 @@ export function ResultsPanel({
   const [selectedCategory, setSelectedCategory] = useState<
     "all" | FindingCategory
   >("all");
+  const [actionPartyFilter, setActionPartyFilter] =
+    useState<ActionInventoryPartyFilter>("all");
+  const [showOnlyPrivilegedActions, setShowOnlyPrivilegedActions] =
+    useState(false);
+  const [showOnlyUnpinnedActions, setShowOnlyUnpinnedActions] = useState(false);
   const activeCategory =
     selectedCategory === "all" || availableCategories.includes(selectedCategory)
       ? selectedCategory
@@ -59,6 +67,34 @@ export function ResultsPanel({
       ? findings
       : findings.filter((finding) => finding.category === activeCategory);
   }, [activeCategory, findings]);
+  const filteredActionInventory = useMemo(() => {
+    return actionInventory.filter((item) => {
+      if (actionPartyFilter !== "all" && item.origin !== actionPartyFilter) {
+        return false;
+      }
+
+      if (showOnlyUnpinnedActions && item.pinned) {
+        return false;
+      }
+
+      if (showOnlyPrivilegedActions && !item.isPrivileged) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [
+    actionInventory,
+    actionPartyFilter,
+    showOnlyPrivilegedActions,
+    showOnlyUnpinnedActions,
+  ]);
+  const privilegedActionCount = useMemo(() => {
+    return actionInventory.filter((item) => item.isPrivileged).length;
+  }, [actionInventory]);
+  const unpinnedActionCount = useMemo(() => {
+    return actionInventory.filter((item) => !item.pinned).length;
+  }, [actionInventory]);
   const findingGroups = getFindingGroups(filteredFindings);
   const showFindings = view === "all" || view === "findings";
   const showReport = view === "all" || view === "report";
@@ -372,6 +408,193 @@ export function ResultsPanel({
               </div>
             ) : null}
 
+            {hasRunAnalysis && report ? (
+              <article
+                className="rounded-xl border border-border/80 bg-background/70 p-4"
+                data-testid="action-inventory-card"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge tone="info">
+                    {actionInventory.length}{" "}
+                    {actionInventory.length === 1 ? "reference" : "references"}
+                  </Badge>
+                  <Badge
+                    tone={unpinnedActionCount > 0 ? "warning" : "success"}
+                  >
+                    {unpinnedActionCount} unpinned
+                  </Badge>
+                  <Badge
+                    tone={
+                      privilegedActionCount > 0 ? "severity-high" : "subtle"
+                    }
+                  >
+                    {privilegedActionCount} privileged
+                  </Badge>
+                </div>
+                <p className="mt-3 text-sm font-medium text-foreground">
+                  Action inventory
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Every step-level and job-level <code>uses</code> reference is
+                  classified here so you can review pinning, mutability, and
+                  permission context in one place.
+                </p>
+
+                {actionInventory.length > 0 ? (
+                  <>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {(["all", "first-party", "third-party"] as const).map(
+                        (filter) => (
+                          <Button
+                            key={filter}
+                            onClick={() => {
+                              setActionPartyFilter(filter);
+                            }}
+                            size="sm"
+                            variant={
+                              actionPartyFilter === filter
+                                ? "primary"
+                                : "secondary"
+                            }
+                          >
+                            {formatActionPartyFilterLabel(filter)}
+                          </Button>
+                        ),
+                      )}
+                      <Button
+                        onClick={() => {
+                          setShowOnlyUnpinnedActions((current) => !current);
+                        }}
+                        size="sm"
+                        variant={
+                          showOnlyUnpinnedActions ? "primary" : "secondary"
+                        }
+                      >
+                        Unpinned
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setShowOnlyPrivilegedActions((current) => !current);
+                        }}
+                        size="sm"
+                        variant={
+                          showOnlyPrivilegedActions ? "primary" : "secondary"
+                        }
+                      >
+                        Privileged
+                      </Button>
+                    </div>
+
+                    {filteredActionInventory.length === 0 ? (
+                      <div className="mt-4">
+                        <EmptyState
+                          data-testid="action-inventory-empty-filter"
+                          description="No inventory entries match the active action filters."
+                          title="Nothing in this filter"
+                        />
+                      </div>
+                    ) : (
+                      <div className="mt-4 overflow-x-auto">
+                        <table className="min-w-full border-separate border-spacing-y-2 text-sm">
+                          <thead>
+                            <tr className="text-left text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                              <th className="px-3 py-2 font-medium">Action</th>
+                              <th className="px-3 py-2 font-medium">Kind</th>
+                              <th className="px-3 py-2 font-medium">Ref</th>
+                              <th className="px-3 py-2 font-medium">
+                                Pinning status
+                              </th>
+                              <th className="px-3 py-2 font-medium">
+                                File/job/step
+                              </th>
+                              <th className="px-3 py-2 font-medium">
+                                Permissions context
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredActionInventory.map((item) => (
+                              <tr
+                                className="rounded-xl border border-border/80 bg-background/80 align-top"
+                                key={`${item.filePath}:${item.jobId}:${item.sourceType}:${item.stepIndex ?? "job"}:${item.uses}`}
+                              >
+                                <td className="rounded-l-xl px-3 py-3">
+                                  <p className="font-medium text-foreground">
+                                    {item.action}
+                                  </p>
+                                  <p className="mt-1 break-all text-xs leading-5 text-muted-foreground">
+                                    {item.uses}
+                                  </p>
+                                </td>
+                                <td className="px-3 py-3">
+                                  <div className="flex flex-wrap gap-2">
+                                    <Badge tone="subtle">
+                                      {formatActionKindLabel(item.kind)}
+                                    </Badge>
+                                    {item.origin !== "unknown" &&
+                                    item.kind === "reusable-workflow" ? (
+                                      <Badge tone="info">
+                                        {formatActionKindLabel(item.origin)}
+                                      </Badge>
+                                    ) : null}
+                                  </div>
+                                </td>
+                                <td className="px-3 py-3">
+                                  <p className="font-medium text-foreground">
+                                    {item.ref ?? "none"}
+                                  </p>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {formatActionRefKindLabel(item.refKind)}
+                                  </p>
+                                </td>
+                                <td className="px-3 py-3">
+                                  <Badge
+                                    tone={item.pinned ? "success" : "warning"}
+                                  >
+                                    {getPinningStatusLabel(item)}
+                                  </Badge>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {item.mutable ? "Mutable ref" : "Immutable ref"}
+                                  </p>
+                                </td>
+                                <td className="px-3 py-3">
+                                  <p className="break-all text-xs leading-5 text-muted-foreground">
+                                    {item.filePath}
+                                  </p>
+                                  <p className="mt-1 text-sm text-foreground">
+                                    {item.jobId}
+                                    {item.stepLabel ? ` / ${item.stepLabel}` : " / job uses"}
+                                  </p>
+                                </td>
+                                <td className="rounded-r-xl px-3 py-3">
+                                  <p className="text-sm text-foreground">
+                                    {item.permissions.summary}
+                                  </p>
+                                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                                    {item.privilegedReasons.length > 0
+                                      ? item.privilegedReasons.join("; ")
+                                      : "No elevated context detected"}
+                                  </p>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="mt-4">
+                    <EmptyState
+                      data-testid="action-inventory-empty-state"
+                      description="This analysis run did not include any step or job `uses` references."
+                      title="No actions or reusable workflows detected"
+                    />
+                  </div>
+                )}
+              </article>
+            ) : null}
+
             <div className="flex flex-wrap gap-2">
               {["Markdown", "JSON", "SARIF", "HTML"].map((format) => (
                 <Button key={format} disabled variant="secondary">
@@ -434,17 +657,22 @@ function FindingCard({ finding }: { finding: AnalyzerFinding }) {
 
 function getFindingGroups(findings: AnalyzerFinding[]) {
   const securityFindings = findings.filter((finding) => isSecurityFinding(finding));
+  const supplyChainFindings = findings.filter(
+    (finding) => finding.category === "supply-chain",
+  );
   const expressionFindings = findings.filter(
     (finding) => finding.category === "expressions",
   );
   const syntaxAndSemantics = findings.filter((finding) =>
     !isSecurityFinding(finding) &&
+    finding.category !== "supply-chain" &&
     finding.category !== "expressions" &&
     isSyntaxAndSemanticsFinding(finding),
   );
   const otherFindings = findings.filter(
     (finding) =>
       !isSecurityFinding(finding) &&
+      finding.category !== "supply-chain" &&
       finding.category !== "expressions" &&
       !isSyntaxAndSemanticsFinding(finding),
   );
@@ -457,6 +685,16 @@ function getFindingGroups(findings: AnalyzerFinding[]) {
       findings: securityFindings,
       id: "security",
       title: "Security",
+    });
+  }
+
+  if (supplyChainFindings.length > 0) {
+    groups.push({
+      description:
+        "Pinning, mutability, Docker digest use, dynamic references, checkout credential persistence, and privileged third-party dependency exposure.",
+      findings: supplyChainFindings,
+      id: "supply-chain",
+      title: "Supply chain",
     });
   }
 
@@ -508,6 +746,66 @@ function formatCategoryLabel(category: "all" | FindingCategory) {
     .split("-")
     .map((segment) => segment[0]?.toUpperCase() + segment.slice(1))
     .join(" ");
+}
+
+function formatActionKindLabel(
+  value: ActionInventoryItem["kind"] | ActionInventoryItem["origin"],
+) {
+  return value
+    .split("-")
+    .map((segment) => segment[0]?.toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function formatActionPartyFilterLabel(filter: ActionInventoryPartyFilter) {
+  return filter === "all" ? "All" : formatActionKindLabel(filter);
+}
+
+function formatActionRefKindLabel(refKind: ActionInventoryItem["refKind"]) {
+  return refKind
+    .split("-")
+    .map((segment) => segment[0]?.toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function getPinningStatusLabel(item: ActionInventoryItem) {
+  if (item.pinned) {
+    if (item.refKind === "digest") {
+      return "Pinned by digest";
+    }
+
+    if (item.refKind === "full-sha") {
+      return "Pinned to full SHA";
+    }
+
+    if (item.kind === "local") {
+      return "Local reference";
+    }
+
+    if (item.kind === "reusable-workflow" && item.origin === "local") {
+      return "Local workflow";
+    }
+
+    return "Pinned";
+  }
+
+  switch (item.refKind) {
+    case "branch":
+      return "Branch ref";
+    case "expression":
+      return "Dynamic ref";
+    case "major-tag":
+    case "semver-tag":
+      return "Tag ref";
+    case "short-sha":
+      return "Short SHA";
+    case "unknown":
+      return "Unknown ref";
+    case "none":
+      return "No pin";
+    default:
+      return "Unpinned";
+  }
 }
 
 function getSeverityTone(severity: AnalyzerFinding["severity"]) {

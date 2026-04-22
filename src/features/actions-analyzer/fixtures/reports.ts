@@ -19,7 +19,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v4
       - run: npm publish
 `,
   sizeBytes: new TextEncoder().encode(`name: Release
@@ -28,7 +28,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v4
       - run: npm publish
 `).byteLength,
   sourceKind: "sample",
@@ -38,10 +38,10 @@ const sampleFindings: AnalyzerFinding[] = sortFindings([
   {
     id: createFindingId(sampleFile.path, "GHA201", 7, 9, 0),
     ruleId: "GHA201",
-    title: "Action uses a floating ref",
+    title: "First-party reference uses a mutable tag",
     message:
-      "Avoid floating refs for actions. Pin to an immutable commit SHA or a trusted release tag.",
-    severity: "high",
+      "First-party actions like actions/checkout@v4 commonly use version tags, but strict supply-chain reviews still prefer full SHA pins.",
+    severity: "medium",
     category: "supply-chain",
     confidence: "high",
     filePath: sampleFile.path,
@@ -52,12 +52,12 @@ const sampleFindings: AnalyzerFinding[] = sortFindings([
       endLine: 7,
       endColumn: 31,
     },
-    evidence: "uses: actions/checkout@main",
+    evidence: "uses: actions/checkout@v4",
     remediation:
-      "Replace the floating ref with a commit SHA or a vetted immutable release reference.",
-    tags: ["actions", "pinning", "supply-chain"],
+      "Replace the mutable tag with a reviewed full commit SHA when your policy requires immutable pins.",
+    tags: ["actions", "pinning", "first-party"],
     relatedJobs: ["release"],
-    relatedSteps: ["actions/checkout@main"],
+    relatedSteps: ["actions/checkout@v4"],
   },
   {
     id: createFindingId(sampleFile.path, "GHA100", 1, 1, 1),
@@ -136,11 +136,41 @@ export const sampleAnalysisReport: WorkflowAnalysisReport = {
     {
       action: "actions/checkout",
       filePath: sampleFile.path,
-      uses: "actions/checkout@main",
-      ref: "main",
-      isPinnedToSha: false,
-      relatedJobs: ["release"],
-      relatedSteps: ["actions/checkout@main"],
+      isPrivileged: false,
+      jobId: "release",
+      jobName: null,
+      kind: "first-party",
+      location: {
+        filePath: sampleFile.path,
+        line: 7,
+        column: 9,
+        endLine: 7,
+        endColumn: 29,
+      },
+      mutable: true,
+      origin: "first-party",
+      owner: "actions",
+      path: null,
+      permissions: {
+        broadWriteScopes: [],
+        hasIdTokenWrite: false,
+        hasWriteAccess: false,
+        scopes: [],
+        shorthand: null,
+        source: "none",
+        summary: "Permissions not declared",
+        writeScopes: [],
+      },
+      pinned: false,
+      privilegedReasons: [],
+      ref: "v4",
+      refKind: "major-tag",
+      repo: "checkout",
+      sourceType: "step",
+      stepIndex: 0,
+      stepLabel: "step-1",
+      uses: "actions/checkout@v4",
+      workflowName: "Release",
     },
   ],
   expressionSummary: {
@@ -193,7 +223,7 @@ export const sampleAnalysisReport: WorkflowAnalysisReport = {
       id: "ap-001",
       title: "Untrusted code can influence privileged workflow execution",
       description:
-        "The workflow uses pull_request_target with an unpinned third-party action, increasing the blast radius of upstream changes.",
+        "The workflow uses pull_request_target with mutable action pinning, increasing the blast radius of upstream changes.",
       severity: "high",
       relatedRuleIds: ["GHA100", "GHA201"],
       filePaths: [sampleFile.path],

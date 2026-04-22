@@ -27,7 +27,7 @@ test("home page and analyzer placeholder load", async ({ page }) => {
     /pull_request_target/i,
   );
   await page.getByRole("button", { name: /Analyze/i }).click();
-  await expect(page.getByText(/No findings detected/i)).toBeVisible();
+  await expect(page.getByText(/GHA103/i)).toBeVisible();
 
   await page.goto("/privacy");
   await expect(page.getByRole("heading", { name: /Privacy/i })).toBeVisible();

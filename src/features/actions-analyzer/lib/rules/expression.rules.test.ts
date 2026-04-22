@@ -10,7 +10,6 @@ const expressionRuleIds = [
   "GHA053",
   "GHA054",
   "GHA055",
-  "GHA056",
 ] as const;
 
 function createInput(path: string, content: string) {
@@ -156,26 +155,6 @@ jobs:
       evidence: "${{ github.event.comment.body }}",
       ruleId: "GHA055",
       severity: "medium",
-    });
-  });
-
-  it("emits GHA056 for dynamic action references", () => {
-    const report = analyzeRule(
-      "GHA056",
-      `name: Dynamic Uses
-on: push
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@\${{ github.ref_name }}
-`,
-    );
-
-    expect(report.findings[0]).toMatchObject({
-      evidence: "${{ github.ref_name }}",
-      ruleId: "GHA056",
-      severity: "high",
     });
   });
 

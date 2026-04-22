@@ -11,7 +11,6 @@ const secretsInIfRuleDefinition = requireRuleDefinition("GHA052");
 const matrixOutsideMatrixJobRuleDefinition = requireRuleDefinition("GHA053");
 const unknownNeedsExpressionRuleDefinition = requireRuleDefinition("GHA054");
 const untrustedContextRuleDefinition = requireRuleDefinition("GHA055");
-const dynamicUsesRuleDefinition = requireRuleDefinition("GHA056");
 
 export const malformedExpressionRule: RuleModule = {
   definition: malformedExpressionRuleDefinition,
@@ -225,38 +224,6 @@ export const untrustedContextRule: RuleModule = {
             relatedSteps: expression.stepLabel ? [expression.stepLabel] : [],
             remediation:
               "Pass the untrusted value through an environment variable boundary first, then quote it carefully in scripts or downstream tools.",
-          },
-          index,
-        ),
-      ];
-    });
-  },
-};
-
-export const dynamicUsesRule: RuleModule = {
-  definition: dynamicUsesRuleDefinition,
-  check(context) {
-    return context.expressions.flatMap((expression, index) => {
-      if (
-        expression.isMalformed ||
-        expression.fieldType !== "uses" ||
-        !/@\s*\$\{\{/u.test(expression.rawValue)
-      ) {
-        return [];
-      }
-
-      return [
-        createRuleFinding(
-          dynamicUsesRuleDefinition,
-          {
-            evidence: expression.rawExpression,
-            filePath: expression.filePath,
-            location: expression.location,
-            message: `\`uses\` in \`${expression.fieldPathLabel}\` selects its ref dynamically at runtime, which makes review and pinning harder.`,
-            relatedJobs: expression.jobId ? [expression.jobId] : [],
-            relatedSteps: expression.stepLabel ? [expression.stepLabel] : [],
-            remediation:
-              "Use a static action or reusable workflow reference so the reviewed ref is visible in the workflow file and can be pinned safely.",
           },
           index,
         ),

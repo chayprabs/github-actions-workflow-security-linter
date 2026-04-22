@@ -1,7 +1,6 @@
 import type { RuleModule } from "@/features/actions-analyzer/types";
 
 import {
-  dynamicUsesRule,
   malformedExpressionRule,
   matrixOutsideMatrixJobRule,
   secretsInIfRule,
@@ -37,6 +36,17 @@ import {
   stepRunAndUsesRule,
 } from "@/features/actions-analyzer/lib/rules/step-semantics.rules";
 import {
+  branchReferenceRule,
+  checkoutPersistedCredentialsRule,
+  dockerDigestRule,
+  dynamicUsesReferenceRule,
+  firstPartyMutableTagRule,
+  latestTagRule,
+  privilegedThirdPartyReferenceRule,
+  shortShaRule,
+  thirdPartyUnpinnedRule,
+} from "@/features/actions-analyzer/lib/rules/supply-chain.rules";
+import {
   duplicateJobIdsRule,
   invalidJobsShapeRule,
   missingJobsRule,
@@ -66,7 +76,6 @@ export const registeredRuleModules: RuleModule[] = [
   matrixOutsideMatrixJobRule,
   unknownNeedsExpressionRule,
   untrustedContextRule,
-  dynamicUsesRule,
   missingTopLevelPermissionsRule,
   topLevelWriteAllRule,
   broadWritePermissionsRule,
@@ -78,4 +87,13 @@ export const registeredRuleModules: RuleModule[] = [
   longLivedCloudSecretRule,
   untrustedDeploymentRule,
   privilegedThirdPartyActionRule,
+  thirdPartyUnpinnedRule,
+  firstPartyMutableTagRule,
+  branchReferenceRule,
+  shortShaRule,
+  dockerDigestRule,
+  dynamicUsesReferenceRule,
+  checkoutPersistedCredentialsRule,
+  latestTagRule,
+  privilegedThirdPartyReferenceRule,
 ];

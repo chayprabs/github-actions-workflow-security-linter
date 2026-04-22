@@ -1,4 +1,5 @@
 import type {
+  ActionOriginKind,
   NormalizedWorkflow,
   PermissionDeclarationSummary,
   PermissionScopeSummary,
@@ -79,6 +80,18 @@ export function getBroadWriteScopes(
     .sort();
 }
 
+export function getEnvironmentName(value: unknown): string | null {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (!isPlainObject(value)) {
+    return null;
+  }
+
+  return typeof value.name === "string" ? value.name : null;
+}
+
 export function getJobEffectivePermissions(
   workflow: NormalizedWorkflow,
   job: WorkflowJob,
@@ -86,8 +99,62 @@ export function getJobEffectivePermissions(
   return job.permissions ?? workflow.permissions;
 }
 
+export function getPermissionScopeEntries(
+  permissions: WorkflowPermissions | null,
+): Array<{
+  access: string;
+  scope: string;
+}> {
+  if (!permissions) {
+    return [];
+  }
+
+  if (permissions.kind === "shorthand" && permissions.shorthand) {
+    return [
+      {
+        access: permissions.shorthand,
+        scope: "*",
+      },
+    ];
+  }
+
+  if (permissions.kind !== "mapping") {
+    return [];
+  }
+
+  return Object.entries(permissions.scopes)
+    .map(([scope, access]) => ({
+      access: String(access),
+      scope,
+    }))
+    .sort((left, right) => left.scope.localeCompare(right.scope));
+}
+
 export function getStepActionUses(job: WorkflowJob): WorkflowActionUse[] {
   return job.steps.flatMap((step) => (step.uses ? [step.uses] : []));
+}
+
+export function getWritePermissionScopes(
+  permissions: WorkflowPermissions | null,
+): string[] {
+  if (!permissions) {
+    return [];
+  }
+
+  if (
+    permissions.kind === "shorthand" &&
+    permissions.shorthand === "write-all"
+  ) {
+    return ["*"];
+  }
+
+  if (permissions.kind !== "mapping") {
+    return [];
+  }
+
+  return Object.entries(permissions.scopes)
+    .flatMap(([scope, access]) => (access === "write" ? [scope] : []))
+    .sort();
 }
 
 export function getWorkflowEventNames(workflow: NormalizedWorkflow): string[] {
@@ -114,11 +181,28 @@ export function hasUntrustedPullRequestTrigger(
   return workflow.on.some((trigger) => untrustedTriggerNames.has(trigger.name));
 }
 
+export function hasIdTokenWritePermission(
+  permissions: WorkflowPermissions | null,
+): boolean {
+  if (!permissions) {
+    return false;
+  }
+
+  if (
+    permissions.kind === "shorthand" &&
+    permissions.shorthand === "write-all"
+  ) {
+    return true;
+  }
+
+  return permissions.kind === "mapping" && permissions.scopes["id-token"] === "write";
+}
+
 export function isDeploymentLikeJob(job: WorkflowJob): boolean {
   const candidates = [
     job.id,
     job.name.value,
-    normalizeEnvironmentName(job.environment.raw),
+    getEnvironmentName(job.environment.raw),
   ]
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.toLowerCase());
@@ -168,13 +252,26 @@ export function isSelfHostedRunsOn(rawRunsOn: unknown): boolean {
   return isSelfHostedRunsOn(rawRunsOn.labels);
 }
 
+export function getActionOriginForOwner(owner: string | null): ActionOriginKind {
+  if (!owner) {
+    return "unknown";
+  }
+
+  return firstPartyActionOwners.has(owner.toLowerCase())
+    ? "first-party"
+    : "third-party";
+}
+
+export function isFirstPartyOwner(owner: string | null): boolean {
+  return getActionOriginForOwner(owner) === "first-party";
+}
+
 export function isThirdPartyActionUse(
   uses: WorkflowActionUse | null,
 ): boolean {
   return (
     uses?.kind === "repository-action" &&
-    !!uses.owner &&
-    !firstPartyActionOwners.has(uses.owner.toLowerCase())
+    getActionOriginForOwner(uses.owner) === "third-party"
   );
 }
 
@@ -314,16 +411,4 @@ function getTriggerFilterLabels(trigger: NormalizedWorkflow["on"][number]) {
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function normalizeEnvironmentName(value: unknown): string | null {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (!isPlainObject(value)) {
-    return null;
-  }
-
-  return typeof value.name === "string" ? value.name : null;
 }

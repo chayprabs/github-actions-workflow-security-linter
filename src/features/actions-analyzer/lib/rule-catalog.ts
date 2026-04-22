@@ -342,17 +342,6 @@ export const ruleCatalog = [
     tags: ["expressions", "github-event", "input-handling"],
   },
   {
-    id: "GHA056",
-    title: "Action or reusable workflow reference is dynamic",
-    description:
-      "Dynamic `uses` references make review and pinning difficult because the action or workflow ref is chosen at runtime.",
-    category: "expressions",
-    defaultSeverity: "high",
-    docsUrl: workflowSyntaxDocsUrl,
-    enabledByDefault: true,
-    tags: ["expressions", "uses", "supply-chain"],
-  },
-  {
     id: "GHA100",
     title: "Top-level permissions are not declared explicitly",
     description:
@@ -474,14 +463,103 @@ export const ruleCatalog = [
     tags: ["permissions", "third-party-actions", "token"],
   },
   {
-    id: "GHA201",
-    title: "Action uses a floating ref",
+    id: "GHA200",
+    title: "Third-party reference is not pinned to a full commit SHA",
     description:
-      "Third-party actions should use immutable commit SHAs or trusted release tags instead of floating refs such as main or master.",
+      "Third-party actions and reusable workflows should use immutable 40-character commit SHAs so reviewed references cannot move later.",
     category: "supply-chain",
     defaultSeverity: "high",
+    docsUrl: workflowSyntaxDocsUrl,
     enabledByDefault: true,
     tags: ["actions", "pinning", "supply-chain"],
+  },
+  {
+    id: "GHA201",
+    title: "First-party reference uses a mutable tag",
+    description:
+      "Version tags such as `v4` are common for `actions/*`, but strict supply-chain policies still require full commit SHA pinning.",
+    category: "supply-chain",
+    defaultSeverity: "medium",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["actions", "pinning", "first-party"],
+  },
+  {
+    id: "GHA202",
+    title: "Reference uses a branch name",
+    description:
+      "Branches are highly mutable because they can move independently of code review and release processes.",
+    category: "supply-chain",
+    defaultSeverity: "high",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["actions", "branches", "pinning"],
+  },
+  {
+    id: "GHA203",
+    title: "Reference uses a short commit SHA",
+    description:
+      "Short SHAs are better than tags or branches, but strict pinning should use the full 40-character commit SHA.",
+    category: "supply-chain",
+    defaultSeverity: "medium",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["actions", "commit-sha", "pinning"],
+  },
+  {
+    id: "GHA204",
+    title: "Docker action image is not pinned by digest",
+    description:
+      "Docker-based actions should use immutable `@sha256:...` digests instead of mutable image tags.",
+    category: "supply-chain",
+    defaultSeverity: "medium",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["docker", "pinning", "supply-chain"],
+  },
+  {
+    id: "GHA205",
+    title: "Dynamic uses reference",
+    description:
+      "Dynamic `uses` values make review and pinning harder because the selected action or workflow is determined at runtime.",
+    category: "supply-chain",
+    defaultSeverity: "high",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["actions", "expressions", "supply-chain"],
+  },
+  {
+    id: "GHA206",
+    title: "actions/checkout persists credentials in a write-capable job",
+    description:
+      "When `actions/checkout` leaves credentials configured in a job that can write, later git commands may reuse the token unexpectedly.",
+    category: "supply-chain",
+    defaultSeverity: "medium",
+    docsUrl: permissionsDocsUrl,
+    enabledByDefault: true,
+    tags: ["actions/checkout", "credentials", "permissions"],
+  },
+  {
+    id: "GHA207",
+    title: "Reference uses the latest tag",
+    description:
+      "The `latest` tag is especially unstable because it is expected to move as new releases are published.",
+    category: "supply-chain",
+    defaultSeverity: "high",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["actions", "docker", "latest-tag"],
+  },
+  {
+    id: "GHA208",
+    title: "Third-party reference runs in a privileged job",
+    description:
+      "Third-party actions or reusable workflows in jobs with write access, OIDC, or deploy-like context deserve extra scrutiny because compromise impact is higher.",
+    category: "supply-chain",
+    defaultSeverity: "high",
+    docsUrl: permissionsDocsUrl,
+    enabledByDefault: true,
+    tags: ["actions", "privilege", "third-party"],
   },
   {
     id: "GHA401",

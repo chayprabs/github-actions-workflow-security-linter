@@ -104,7 +104,7 @@ export function AnalyzerPlaceholder() {
                     icon: ShieldAlert,
                     title: "Rule engine seed",
                     description:
-                      "A local YAML parser and rule scaffold already checks permissions, floating refs, and missing timeouts.",
+                      "A local YAML parser and rule scaffold already checks permissions, supply-chain pinning, and missing timeouts.",
                   },
                   {
                     icon: FileSearch,

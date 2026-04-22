@@ -127,14 +127,80 @@ export interface AnalyzerFinding {
   fix?: SuggestedFix | undefined;
 }
 
+export const actionInventoryKinds = [
+  "local",
+  "first-party",
+  "third-party",
+  "docker",
+  "reusable-workflow",
+  "unknown",
+] as const;
+
+export type ActionInventoryKind = (typeof actionInventoryKinds)[number];
+
+export const actionOriginKinds = [
+  "local",
+  "first-party",
+  "third-party",
+  "docker",
+  "unknown",
+] as const;
+
+export type ActionOriginKind = (typeof actionOriginKinds)[number];
+
+export const actionRefKinds = [
+  "full-sha",
+  "short-sha",
+  "semver-tag",
+  "major-tag",
+  "branch",
+  "expression",
+  "digest",
+  "none",
+  "unknown",
+] as const;
+
+export type ActionRefKind = (typeof actionRefKinds)[number];
+
+export interface ActionInventoryPermissionEntry {
+  access: string;
+  scope: string;
+}
+
+export interface ActionInventoryPermissionContext {
+  broadWriteScopes: string[];
+  hasIdTokenWrite: boolean;
+  hasWriteAccess: boolean;
+  scopes: ActionInventoryPermissionEntry[];
+  shorthand: string | null;
+  source: "job" | "none" | "top-level";
+  summary: string;
+  writeScopes: string[];
+}
+
 export interface ActionInventoryItem {
   action: string;
   filePath: string;
+  jobId: string;
+  jobName: string | null;
+  kind: ActionInventoryKind;
+  location?: SourceLocation | undefined;
+  mutable: boolean;
+  origin: ActionOriginKind;
+  owner: string | null;
+  path: string | null;
+  permissions: ActionInventoryPermissionContext;
+  pinned: boolean;
   uses: string;
+  refKind: ActionRefKind;
   ref: string | null;
-  isPinnedToSha: boolean;
-  relatedJobs: string[];
-  relatedSteps: string[];
+  repo: string | null;
+  sourceType: "job" | "step";
+  stepIndex: number | null;
+  stepLabel: string | null;
+  workflowName: string | null;
+  isPrivileged: boolean;
+  privilegedReasons: string[];
 }
 
 export interface PermissionScopeSummary {
