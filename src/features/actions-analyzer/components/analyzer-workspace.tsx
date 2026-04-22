@@ -2,28 +2,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputPanel } from "@/features/actions-analyzer/components/input-panel";
 import { ResultsPanel } from "@/features/actions-analyzer/components/results-panel";
 import { WorkspaceToolbar } from "@/features/actions-analyzer/components/workspace-toolbar";
+import type { WorkflowSampleId } from "@/features/actions-analyzer/fixtures/samples";
 import type {
-  AnalyzerFinding,
-  NormalizedWorkflow,
+  WorkflowAnalysisReport,
   WorkflowInputFile,
 } from "@/features/actions-analyzer/types";
-import type { WorkflowSampleId } from "@/features/actions-analyzer/fixtures/samples";
 
 interface AnalyzerWorkspaceProps {
   activeFile: WorkflowInputFile | null;
   activeFileId: string | null;
-  analysisMessage: string | null;
+  analysisError: string | null;
+  autoRunEnabled: boolean;
+  canAnalyze: boolean;
   defaultVirtualPath: string;
   errors: string[];
   fileCount: number;
   files: WorkflowInputFile[];
   folderUploadSupported: boolean;
-  hasInput: boolean;
+  hasRunnableInput: boolean;
   includeAllYamlFiles: boolean;
   inputText: string;
+  isAnalyzing: boolean;
   maxFileSizeLabel: string;
   onAddPasteFile: () => void;
   onAnalyze: () => void;
+  onAutoRunChange: (checked: boolean) => void;
   onClear: () => void;
   onClearActiveInput: () => void;
   onFileUpload: (files: FileList | null) => Promise<void>;
@@ -36,10 +39,7 @@ interface AnalyzerWorkspaceProps {
   onSampleChange: (sampleId: WorkflowSampleId | "manual") => void;
   onSelectFile: (fileId: string) => void;
   onToggleIncludeAllYamlFiles: (checked: boolean) => void;
-  parseFindings: AnalyzerFinding[];
-  normalizedWorkflows: NormalizedWorkflow[];
-  parsedFileCount: number;
-  parseScore: number | null;
+  report: WorkflowAnalysisReport | null;
   selectedSampleId: WorkflowSampleId | "manual";
   selectedSampleLabel: string;
   totalSizeLabel: string;
@@ -48,18 +48,22 @@ interface AnalyzerWorkspaceProps {
 export function AnalyzerWorkspace({
   activeFile,
   activeFileId,
-  analysisMessage,
+  analysisError,
+  autoRunEnabled,
+  canAnalyze,
   defaultVirtualPath,
   errors,
   fileCount,
   files,
   folderUploadSupported,
-  hasInput,
+  hasRunnableInput,
   includeAllYamlFiles,
   inputText,
+  isAnalyzing,
   maxFileSizeLabel,
   onAddPasteFile,
   onAnalyze,
+  onAutoRunChange,
   onClear,
   onClearActiveInput,
   onFileUpload,
@@ -72,10 +76,7 @@ export function AnalyzerWorkspace({
   onSampleChange,
   onSelectFile,
   onToggleIncludeAllYamlFiles,
-  parseFindings,
-  normalizedWorkflows,
-  parsedFileCount,
-  parseScore,
+  report,
   selectedSampleId,
   selectedSampleLabel,
   totalSizeLabel,
@@ -88,9 +89,12 @@ export function AnalyzerWorkspace({
     >
       <WorkspaceToolbar
         activeFileName={activeFile?.path ?? defaultVirtualPath}
-        canAnalyze={hasInput}
+        autoRunEnabled={autoRunEnabled}
+        canAnalyze={canAnalyze}
         fileCount={fileCount}
+        isAnalyzing={isAnalyzing}
         onAnalyze={onAnalyze}
+        onAutoRunChange={onAutoRunChange}
         onLoadRiskySample={onLoadRiskySample}
         selectedSampleLabel={selectedSampleLabel}
         totalSizeLabel={totalSizeLabel}
@@ -100,6 +104,7 @@ export function AnalyzerWorkspace({
         <InputPanel
           activeFile={activeFile}
           activeFileId={activeFileId}
+          canAnalyze={canAnalyze}
           defaultVirtualPath={defaultVirtualPath}
           errors={errors}
           fileCount={fileCount}
@@ -107,6 +112,7 @@ export function AnalyzerWorkspace({
           folderUploadSupported={folderUploadSupported}
           includeAllYamlFiles={includeAllYamlFiles}
           inputText={inputText}
+          isAnalyzing={isAnalyzing}
           maxFileSizeLabel={maxFileSizeLabel}
           onAddPasteFile={onAddPasteFile}
           onAnalyze={onAnalyze}
@@ -126,13 +132,10 @@ export function AnalyzerWorkspace({
         />
         <ResultsPanel
           activeFileName={activeFile?.path ?? defaultVirtualPath}
-          analysisMessage={analysisMessage}
-          findings={parseFindings}
-          hasInput={hasInput}
-          hasRunAnalysis={parseScore !== null}
-          normalizedWorkflows={normalizedWorkflows}
-          parsedFileCount={parsedFileCount}
-          score={parseScore}
+          analysisError={analysisError}
+          hasInput={hasRunnableInput}
+          isAnalyzing={isAnalyzing}
+          report={report}
           selectedSampleLabel={selectedSampleLabel}
           view="all"
         />
@@ -150,6 +153,7 @@ export function AnalyzerWorkspace({
             <InputPanel
               activeFile={activeFile}
               activeFileId={activeFileId}
+              canAnalyze={canAnalyze}
               defaultVirtualPath={defaultVirtualPath}
               errors={errors}
               fileCount={fileCount}
@@ -157,6 +161,7 @@ export function AnalyzerWorkspace({
               folderUploadSupported={folderUploadSupported}
               includeAllYamlFiles={includeAllYamlFiles}
               inputText={inputText}
+              isAnalyzing={isAnalyzing}
               maxFileSizeLabel={maxFileSizeLabel}
               onAddPasteFile={onAddPasteFile}
               onAnalyze={onAnalyze}
@@ -178,13 +183,10 @@ export function AnalyzerWorkspace({
           <TabsContent value="findings">
             <ResultsPanel
               activeFileName={activeFile?.path ?? defaultVirtualPath}
-              analysisMessage={analysisMessage}
-              findings={parseFindings}
-              hasInput={hasInput}
-              hasRunAnalysis={parseScore !== null}
-              normalizedWorkflows={normalizedWorkflows}
-              parsedFileCount={parsedFileCount}
-              score={parseScore}
+              analysisError={analysisError}
+              hasInput={hasRunnableInput}
+              isAnalyzing={isAnalyzing}
+              report={report}
               selectedSampleLabel={selectedSampleLabel}
               view="findings"
             />
@@ -192,13 +194,10 @@ export function AnalyzerWorkspace({
           <TabsContent value="report">
             <ResultsPanel
               activeFileName={activeFile?.path ?? defaultVirtualPath}
-              analysisMessage={analysisMessage}
-              findings={parseFindings}
-              hasInput={hasInput}
-              hasRunAnalysis={parseScore !== null}
-              normalizedWorkflows={normalizedWorkflows}
-              parsedFileCount={parsedFileCount}
-              score={parseScore}
+              analysisError={analysisError}
+              hasInput={hasRunnableInput}
+              isAnalyzing={isAnalyzing}
+              report={report}
               selectedSampleLabel={selectedSampleLabel}
               view="report"
             />

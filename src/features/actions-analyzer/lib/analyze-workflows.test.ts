@@ -1,61 +1,204 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  fixtureWorkflows,
-  sampleWorkflowBatch,
-} from "@/features/actions-analyzer/fixtures/sample-workflows";
-import {
-  analyzeWorkflow,
-  analyzeWorkflows,
+  analyzeWorkflowFiles,
+  applyRuleSettings,
+  createEmptyReport,
 } from "@/features/actions-analyzer/lib/analyze-workflows";
+import { registeredRuleModules } from "@/features/actions-analyzer/lib/rules";
+import { createWorkflowInputFile } from "@/features/actions-analyzer/lib/workflow-input-utils";
 
-describe("analyzeWorkflow", () => {
-  it("returns a clean result for the hardened fixture", () => {
-    const result = analyzeWorkflow(fixtureWorkflows.hardened);
-
-    expect(result.isValid).toBe(true);
-    expect(result.findings).toHaveLength(0);
-    expect(result.score).toBe(100);
-    expect(result.summary.hasExplicitPermissions).toBe(true);
-    expect(result.summary.triggers).toEqual(["push", "pull_request"]);
-    expect(result.summary.matrixJobs).toEqual(["test"]);
+function createInput(path: string, content: string) {
+  return createWorkflowInputFile({
+    content,
+    path,
+    sourceKind: "sample",
   });
+}
 
-  it("flags risky patterns with stable rule ids", () => {
-    const result = analyzeWorkflow(fixtureWorkflows.risky);
+describe("createEmptyReport", () => {
+  it("returns an empty-ish report with resolved settings", () => {
+    const report = createEmptyReport();
 
-    expect(result.isValid).toBe(true);
-    expect(result.findings.map((finding) => finding.ruleId)).toEqual([
-      "GHA201",
-      "GHA201",
-      "GHA101",
-      "GHA401",
-    ]);
-    expect(result.score).toBe(73);
-    expect(result.summary.actionInventory).toEqual([
-      "actions/checkout@main",
-      "docker/login-action@master",
-    ]);
-  });
-
-  it("reports invalid yaml as a syntax finding", () => {
-    const result = analyzeWorkflow(fixtureWorkflows.invalid);
-
-    expect(result.isValid).toBe(false);
-    expect(result.findings[0]?.ruleId).toBe("GHA001");
-    expect(result.findings[0]?.category).toBe("syntax");
+    expect(report.files).toEqual([]);
+    expect(report.findings).toEqual([]);
+    expect(report.expressionSummary).toEqual({
+      contexts: [],
+      totalExpressions: 0,
+      unknownContexts: [],
+      untrustedContextUsages: 0,
+    });
+    expect(report.securitySummary).toEqual({
+      criticalFindings: 0,
+      highFindings: 0,
+      totalFindings: 0,
+    });
+    expect(report.summary.totalFindings).toBe(0);
+    expect(report.summary.score).toBe(100);
   });
 });
 
-describe("analyzeWorkflows", () => {
-  it("analyzes multiple workflow files deterministically", () => {
-    const results = analyzeWorkflows(sampleWorkflowBatch);
+describe("applyRuleSettings", () => {
+  it("filters the rule registry by enabled and disabled ids", () => {
+    expect(
+      applyRuleSettings(registeredRuleModules, {
+        enabledRuleIds: ["GHA900"],
+      }).map((rule) => rule.definition.id),
+    ).toEqual(["GHA900"]);
 
-    expect(results).toHaveLength(3);
-    expect(results.map((result) => result.filePath)).toEqual([
-      ".github/workflows/ci-secure.yml",
-      ".github/workflows/release-risky.yml",
-      ".github/workflows/broken.yml",
+    expect(
+      applyRuleSettings(registeredRuleModules, {
+        disabledRuleIds: ["GHA900"],
+      }).map((rule) => rule.definition.id),
+    ).not.toContain("GHA900");
+  });
+});
+
+describe("analyzeWorkflowFiles", () => {
+  it("returns an empty-ish report for no files by default", () => {
+    const report = analyzeWorkflowFiles([]);
+
+    expect(report.findings).toEqual([]);
+    expect(report.summary).toMatchObject({
+      analyzedFileCount: 0,
+      score: 100,
+      totalFindings: 0,
+      workflowCount: 0,
+    });
+  });
+
+  it("emits the GHA900 smoke finding only when explicitly enabled for empty input", () => {
+    const report = analyzeWorkflowFiles([], {
+      includeEmptyInputFinding: true,
+    });
+
+    expect(report.findings).toHaveLength(1);
+    expect(report.findings[0]).toMatchObject({
+      category: "maintainability",
+      filePath: "<workspace>",
+      ruleId: "GHA900",
+      severity: "info",
+    });
+  });
+
+  it("includes YAML parse findings in the final report", () => {
+    const report = analyzeWorkflowFiles([
+      createInput(
+        ".github/workflows/broken.yml",
+        `name: Broken
+on:
+  push
+jobs:
+  build
+    runs-on: ubuntu-latest
+`,
+      ),
     ]);
+
+    expect(report.findings.map((finding) => finding.ruleId)).toContain(
+      "GHA001",
+    );
+    expect(report.expressionSummary.totalExpressions).toBe(0);
+    expect(report.summary.totalFindings).toBeGreaterThan(0);
+  });
+
+  it("respects disabled rule ids for parse findings", () => {
+    const report = analyzeWorkflowFiles(
+      [
+        createInput(
+          ".github/workflows/broken.yml",
+          `name: Broken
+on:
+  push
+jobs:
+  build
+    runs-on: ubuntu-latest
+`,
+        ),
+      ],
+      {
+        disabledRuleIds: ["GHA001"],
+      },
+    );
+
+    expect(report.findings.map((finding) => finding.ruleId)).not.toContain(
+      "GHA001",
+    );
+  });
+
+  it("changes score based on findings", () => {
+    const cleanReport = analyzeWorkflowFiles([
+      createInput(
+        ".github/workflows/clean.yml",
+        `name: Clean
+on: push
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+`,
+      ),
+    ]);
+    const brokenReport = analyzeWorkflowFiles([
+      createInput(
+        ".github/workflows/broken.yml",
+        `name: Broken
+on:
+  push
+jobs:
+  build
+    runs-on: ubuntu-latest
+`,
+      ),
+    ]);
+
+    expect(cleanReport.summary.score).toBe(100);
+    expect(brokenReport.summary.score).toBeLessThan(cleanReport.summary.score);
+  });
+
+  it("does not crash when multiple files are analyzed together", () => {
+    const report = analyzeWorkflowFiles([
+      createInput(
+        ".github/workflows/ci.yml",
+        `name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm test
+`,
+      ),
+      createInput(
+        ".github/workflows/reusable.yml",
+        `name: Reusable
+on: workflow_dispatch
+jobs:
+  deploy:
+    uses: org/platform/.github/workflows/deploy.yml@v2
+    with:
+      environment: production
+`,
+      ),
+      createInput(
+        ".github/workflows/broken.yml",
+        `name: Broken
+jobs:
+  build
+    runs-on: ubuntu-latest
+`,
+      ),
+    ]);
+
+    expect(report.files).toHaveLength(3);
+    expect(report.summary.analyzedFileCount).toBe(3);
+    expect(report.summary.workflowCount).toBeGreaterThanOrEqual(1);
   });
 });

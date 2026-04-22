@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  startTransition,
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-} from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 
 import { analyzeWorkflowFiles } from "@/features/actions-analyzer/lib/analyze-workflows";
 import type {
@@ -60,46 +54,32 @@ export function useWorkflowAnalysis({
     };
   }, [files, settings]);
 
-  useEffect(() => {
-    if (files.length > 0) {
+  function commitAnalysisError(requestId: number, message: string) {
+    if (requestId !== latestRequestIdRef.current) {
       return;
     }
 
     startTransition(() => {
-      setReport(null);
-      setError(null);
-      setLastAnalyzedAt(null);
+      setError(message);
     });
     setIsAnalyzing(false);
-  }, [files]);
+  }
 
-  const commitAnalysisError = useEffectEvent(
-    (requestId: number, message: string) => {
-      if (requestId !== latestRequestIdRef.current) {
-        return;
-      }
+  function commitAnalysisSuccess(
+    requestId: number,
+    nextReport: WorkflowAnalysisReport,
+  ) {
+    if (requestId !== latestRequestIdRef.current) {
+      return;
+    }
 
-      startTransition(() => {
-        setError(message);
-      });
-      setIsAnalyzing(false);
-    },
-  );
-
-  const commitAnalysisSuccess = useEffectEvent(
-    (requestId: number, nextReport: WorkflowAnalysisReport) => {
-      if (requestId !== latestRequestIdRef.current) {
-        return;
-      }
-
-      startTransition(() => {
-        setReport(nextReport);
-        setError(null);
-        setLastAnalyzedAt(Date.now());
-      });
-      setIsAnalyzing(false);
-    },
-  );
+    startTransition(() => {
+      setReport(nextReport);
+      setError(null);
+      setLastAnalyzedAt(Date.now());
+    });
+    setIsAnalyzing(false);
+  }
 
   useEffect(() => {
     if (typeof Worker === "undefined") {
@@ -107,6 +87,7 @@ export function useWorkflowAnalysis({
     }
 
     try {
+      const pendingRequests = pendingRequestsRef.current;
       const worker = new Worker(
         new URL("../workers/analysis.worker.ts", import.meta.url),
         {
@@ -140,9 +121,9 @@ export function useWorkflowAnalysis({
       const handleWorkerError = () => {
         workerRef.current = null;
 
-        for (const [requestId, pendingRequest] of pendingRequestsRef.current) {
+        for (const [requestId, pendingRequest] of pendingRequests) {
           pendingRequest.reject(new Error(analysisErrorMessage));
-          pendingRequestsRef.current.delete(requestId);
+          pendingRequests.delete(requestId);
         }
       };
 
@@ -156,9 +137,9 @@ export function useWorkflowAnalysis({
         worker.terminate();
         workerRef.current = null;
 
-        for (const [requestId, pendingRequest] of pendingRequestsRef.current) {
+        for (const [requestId, pendingRequest] of pendingRequests) {
           pendingRequest.reject(new Error(analysisErrorMessage));
-          pendingRequestsRef.current.delete(requestId);
+          pendingRequests.delete(requestId);
         }
       };
     } catch (workerError) {
@@ -169,9 +150,10 @@ export function useWorkflowAnalysis({
     }
   }, []);
 
-  const analyzeNow = useEffectEvent(async (options: AnalyzeNowOptions = {}) => {
+  async function analyzeNow(options: AnalyzeNowOptions = {}) {
     const requestId = latestRequestIdRef.current + 1;
-    const { files: nextFiles, settings: nextSettings } = latestInputsRef.current;
+    const { files: nextFiles, settings: nextSettings } =
+      latestInputsRef.current;
     const resolvedSettings: Partial<AnalyzerSettings> = {
       ...nextSettings,
       ...(options.settings ?? {}),
@@ -187,7 +169,13 @@ export function useWorkflowAnalysis({
 
     try {
       const nextReport = workerRef.current
-        ? await analyzeWithWorker(requestId, nextFiles, resolvedSettings, workerRef.current, pendingRequestsRef.current)
+        ? await analyzeWithWorker(
+            requestId,
+            nextFiles,
+            resolvedSettings,
+            workerRef.current,
+            pendingRequestsRef.current,
+          )
         : await Promise.resolve().then(() =>
             analyzeWorkflowFiles(nextFiles, resolvedSettings),
           );
@@ -204,7 +192,7 @@ export function useWorkflowAnalysis({
       commitAnalysisError(requestId, message);
       return null;
     }
-  });
+  }
 
   return {
     report,

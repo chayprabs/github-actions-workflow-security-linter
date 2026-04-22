@@ -163,6 +163,7 @@ describe("defaultAnalyzerSettings", () => {
       allowSelfHostedOnPullRequest: false,
       maxMatrixCombinationsBeforeWarning: 16,
       detectSecretsInInput: true,
+      includeEmptyInputFinding: false,
     });
   });
 

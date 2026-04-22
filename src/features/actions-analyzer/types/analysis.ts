@@ -5,15 +5,18 @@ import type {
   WorkflowAnalysisReport,
   WorkflowInputFile,
 } from "@/features/actions-analyzer/types/domain";
+import type { WorkflowExpression } from "@/features/actions-analyzer/types/expressions";
 import type { NormalizedWorkflow } from "@/features/actions-analyzer/types/normalized";
 import type { ParsedYamlFile } from "@/features/actions-analyzer/types/parser";
 
 export interface RuleContext {
   files: WorkflowInputFile[];
+  expressions: WorkflowExpression[];
   normalizedWorkflows: NormalizedWorkflow[];
   parseFindings: AnalyzerFinding[];
   parsedFiles: ParsedYamlFile[];
   settings: AnalyzerSettings;
+  getExpressions: (filePath?: string | undefined) => WorkflowExpression[];
   getParsedFile: (filePath: string) => ParsedYamlFile | undefined;
   getWorkflow: (filePath: string) => NormalizedWorkflow | undefined;
 }

@@ -26,10 +26,8 @@ test("home page and analyzer placeholder load", async ({ page }) => {
   await expect(page.getByLabel(/Workflow YAML/i)).toHaveValue(
     /pull_request_target/i,
   );
-  await page.getByRole("button", { name: /^Analyze$/i }).click();
-  await expect(
-    page.getByText(/No YAML parse issues detected yet\./i),
-  ).toBeVisible();
+  await page.getByRole("button", { name: /Analyze/i }).click();
+  await expect(page.getByText(/No findings detected/i)).toBeVisible();
 
   await page.goto("/privacy");
   await expect(page.getByRole("heading", { name: /Privacy/i })).toBeVisible();

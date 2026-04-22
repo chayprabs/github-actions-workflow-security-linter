@@ -30,6 +30,7 @@ import type { WorkflowInputFile } from "@/features/actions-analyzer/types";
 interface InputPanelProps {
   activeFile: WorkflowInputFile | null;
   activeFileId: string | null;
+  canAnalyze: boolean;
   defaultVirtualPath: string;
   errors: string[];
   fileCount: number;
@@ -37,6 +38,7 @@ interface InputPanelProps {
   folderUploadSupported: boolean;
   includeAllYamlFiles: boolean;
   inputText: string;
+  isAnalyzing: boolean;
   maxFileSizeLabel: string;
   onAddPasteFile: () => void;
   onAnalyze: () => void;
@@ -58,6 +60,7 @@ interface InputPanelProps {
 export function InputPanel({
   activeFile,
   activeFileId,
+  canAnalyze,
   defaultVirtualPath,
   errors,
   fileCount,
@@ -65,6 +68,7 @@ export function InputPanel({
   folderUploadSupported,
   includeAllYamlFiles,
   inputText,
+  isAnalyzing,
   maxFileSizeLabel,
   onAddPasteFile,
   onAnalyze,
@@ -261,8 +265,12 @@ export function InputPanel({
             </div>
           </div>
 
-          <Button className="sm:hidden" onClick={onAnalyze}>
-            Analyze
+          <Button
+            className="sm:hidden"
+            disabled={!canAnalyze}
+            onClick={onAnalyze}
+          >
+            {isAnalyzing ? "Analyzing..." : "Analyze"}
           </Button>
         </div>
 

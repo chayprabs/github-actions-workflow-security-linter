@@ -1,5 +1,81 @@
 import type { RuleModule } from "@/features/actions-analyzer/types";
 
+import {
+  dynamicUsesRule,
+  malformedExpressionRule,
+  matrixOutsideMatrixJobRule,
+  secretsInIfRule,
+  unknownContextRule,
+  unknownNeedsExpressionRule,
+  untrustedContextRule,
+} from "@/features/actions-analyzer/lib/rules/expression.rules";
+import {
+  invalidPermissionsRule,
+  invalidRunsOnRule,
+  invalidTimeoutRule,
+  missingRunsOnOrUsesRule,
+  reusableWorkflowMixedFieldsRule,
+  unknownNeedsRule,
+} from "@/features/actions-analyzer/lib/rules/job-semantics.rules";
 import { noFilesRule } from "@/features/actions-analyzer/lib/rules/no-files.rule";
+import {
+  broadWritePermissionsRule,
+  longLivedCloudSecretRule,
+  missingTopLevelPermissionsRule,
+  privilegedThirdPartyActionRule,
+  pullRequestTargetCheckoutRule,
+  pullRequestTargetRule,
+  secretsInWorkflowOrJobEnvRule,
+  selfHostedPullRequestRule,
+  topLevelWriteAllRule,
+  untrustedDeploymentRule,
+  workflowRunPrivilegeRule,
+} from "@/features/actions-analyzer/lib/rules/security.rules";
+import {
+  malformedUsesRule,
+  stepMissingRunOrUsesRule,
+  stepRunAndUsesRule,
+} from "@/features/actions-analyzer/lib/rules/step-semantics.rules";
+import {
+  duplicateJobIdsRule,
+  invalidJobsShapeRule,
+  missingJobsRule,
+  missingOnRule,
+  suspiciousKeyTypoRule,
+} from "@/features/actions-analyzer/lib/rules/workflow-structure.rules";
 
-export const registeredRuleModules: RuleModule[] = [noFilesRule];
+export const registeredRuleModules: RuleModule[] = [
+  noFilesRule,
+  missingOnRule,
+  missingJobsRule,
+  invalidJobsShapeRule,
+  missingRunsOnOrUsesRule,
+  stepRunAndUsesRule,
+  stepMissingRunOrUsesRule,
+  malformedUsesRule,
+  unknownNeedsRule,
+  duplicateJobIdsRule,
+  invalidPermissionsRule,
+  invalidRunsOnRule,
+  invalidTimeoutRule,
+  reusableWorkflowMixedFieldsRule,
+  suspiciousKeyTypoRule,
+  malformedExpressionRule,
+  unknownContextRule,
+  secretsInIfRule,
+  matrixOutsideMatrixJobRule,
+  unknownNeedsExpressionRule,
+  untrustedContextRule,
+  dynamicUsesRule,
+  missingTopLevelPermissionsRule,
+  topLevelWriteAllRule,
+  broadWritePermissionsRule,
+  pullRequestTargetRule,
+  pullRequestTargetCheckoutRule,
+  selfHostedPullRequestRule,
+  workflowRunPrivilegeRule,
+  secretsInWorkflowOrJobEnvRule,
+  longLivedCloudSecretRule,
+  untrustedDeploymentRule,
+  privilegedThirdPartyActionRule,
+];

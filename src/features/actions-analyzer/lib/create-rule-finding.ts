@@ -33,8 +33,7 @@ export function createRuleFinding(
   draft: RuleFindingDraft,
   index = 0,
 ): AnalyzerFinding {
-  const definition =
-    typeof rule === "string" ? getRuleDefinition(rule) : rule;
+  const definition = typeof rule === "string" ? getRuleDefinition(rule) : rule;
 
   if (!definition) {
     throw new Error(
@@ -60,7 +59,9 @@ export function createRuleFinding(
     evidence: draft.evidence,
     remediation: draft.remediation ?? definition.description,
     docsUrl: draft.docsUrl ?? definition.docsUrl,
-    tags: Array.from(new Set([...(definition.tags ?? []), ...(draft.tags ?? [])])),
+    tags: Array.from(
+      new Set([...(definition.tags ?? []), ...(draft.tags ?? [])]),
+    ),
     relatedJobs: draft.relatedJobs ?? [],
     relatedSteps: draft.relatedSteps ?? [],
     fix: draft.fix,

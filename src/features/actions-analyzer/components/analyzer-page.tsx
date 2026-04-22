@@ -1,36 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useState } from "react";
 
 import { Container } from "@/components/ui/container";
 import { AnalyzerHero } from "@/features/actions-analyzer/components/analyzer-hero";
 import { AnalyzerWorkspace } from "@/features/actions-analyzer/components/analyzer-workspace";
 import { SeoContent } from "@/features/actions-analyzer/components/seo-content";
 import type { WorkflowSampleId } from "@/features/actions-analyzer/fixtures/samples";
-import { normalizeParsedWorkflowFiles } from "@/features/actions-analyzer/lib/normalize-workflow";
-import { parseWorkflowYamlFiles } from "@/features/actions-analyzer/lib/parse-workflow-yaml";
-import {
-  calculateScore,
-  sortFindings,
-} from "@/features/actions-analyzer/lib/scoring";
+import { useWorkflowAnalysis } from "@/features/actions-analyzer/lib/use-workflow-analysis";
 import { useWorkflowInputs } from "@/features/actions-analyzer/lib/use-workflow-inputs";
 import { getWorkflowFileSourceLabel } from "@/features/actions-analyzer/lib/workflow-input-utils";
-import type {
-  AnalyzerFinding,
-  NormalizedWorkflow,
-} from "@/features/actions-analyzer/types";
 
-interface AnalyzerRunResult {
-  findings: AnalyzerFinding[];
-  normalizedWorkflows: NormalizedWorkflow[];
-  parsedFileCount: number;
-  score: number;
-}
+const smallInputThresholdBytes = 64 * 1024;
+const smallInputThresholdFiles = 5;
 
 export function AnalyzerPage() {
-  const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
-  const [analysisResult, setAnalysisResult] =
-    useState<AnalyzerRunResult | null>(null);
   const workflowInputs = useWorkflowInputs({
     confirmReplace: (message) => window.confirm(message),
   });
@@ -39,65 +23,74 @@ export function AnalyzerPage() {
     activeFile?.sourceKind === "sample"
       ? (workflowInputs.selectedSample?.label ?? "Sample")
       : getWorkflowFileSourceLabel(activeFile?.sourceKind ?? "paste");
-
-  function clearAnalysisOutput() {
-    setAnalysisMessage(null);
-    setAnalysisResult(null);
-  }
-
-  function handleLoadRiskySample() {
-    if (workflowInputs.loadSample("risky-pull-request-target")) {
-      clearAnalysisOutput();
-    }
-  }
-
-  function handleAnalyze() {
-    const parsedFiles = parseWorkflowYamlFiles(workflowInputs.files);
-    const normalizedWorkflows = normalizeParsedWorkflowFiles(parsedFiles);
-    const findings = sortFindings(
-      parsedFiles.flatMap((parsedFile) => parsedFile.parseFindings),
-    );
-    const score = calculateScore(findings);
-    const parsedFileCount = parsedFiles.length;
-    const issueCount = findings.length;
-
-    setAnalysisResult({
-      findings,
-      normalizedWorkflows,
-      parsedFileCount,
-      score,
+  const analysisFiles = useMemo(() => {
+    return workflowInputs.files.filter((file) => {
+      return file.content.trim().length > 0 || file.sourceKind !== "paste";
     });
-    setAnalysisMessage(
-      issueCount === 0
-        ? `Parsed ${parsedFileCount} workflow ${
-            parsedFileCount === 1 ? "file" : "files"
-          } locally. No YAML parse issues detected yet.`
-        : `Parsed ${parsedFileCount} workflow ${
-            parsedFileCount === 1 ? "file" : "files"
-          } locally and found ${issueCount} YAML ${
-            issueCount === 1 ? "issue" : "issues"
-          }.`,
-    );
-  }
+  }, [workflowInputs.files]);
+  const autoRunRecommended = useMemo(() => {
+    if (analysisFiles.length === 0) {
+      return false;
+    }
 
-  function handleInputChange(value: string) {
-    if (!activeFile) {
+    const allSamples = analysisFiles.every(
+      (file) => file.sourceKind === "sample",
+    );
+    const smallInput =
+      analysisFiles.length <= smallInputThresholdFiles &&
+      workflowInputs.totalSizeBytes <= smallInputThresholdBytes;
+
+    return allSamples || smallInput;
+  }, [analysisFiles, workflowInputs.totalSizeBytes]);
+  const [manualAutoRunEnabled, setManualAutoRunEnabled] = useState<
+    boolean | null
+  >(null);
+  const analysis = useWorkflowAnalysis({
+    files: analysisFiles,
+    settings: workflowInputs.settings,
+  });
+  const autoRunEnabled = manualAutoRunEnabled ?? autoRunRecommended;
+  const visibleReport =
+    analysisFiles.length === 0 && (analysis.report?.files.length ?? 0) > 0
+      ? null
+      : analysis.report;
+  const visibleAnalysisError =
+    analysisFiles.length === 0 && visibleReport === null
+      ? null
+      : analysis.error;
+
+  const requestAutoRun = useEffectEvent(() => {
+    void analysis.analyzeNow({
+      includeEmptyInputFinding: false,
+    });
+  });
+
+  useEffect(() => {
+    if (!autoRunEnabled || analysisFiles.length === 0) {
       return;
     }
 
-    workflowInputs.updateFileContent(activeFile.id, value);
-    clearAnalysisOutput();
+    const timeoutId = window.setTimeout(() => {
+      requestAutoRun();
+    }, 400);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [analysisFiles, autoRunEnabled]);
+
+  function handleLoadRiskySample() {
+    workflowInputs.loadSample("risky-pull-request-target");
+  }
+
+  function handleAnalyze() {
+    void analysis.analyzeNow({
+      includeEmptyInputFinding: analysisFiles.length === 0,
+    });
   }
 
   function handleSampleLoad(sampleId: WorkflowSampleId) {
-    if (workflowInputs.loadSample(sampleId)) {
-      clearAnalysisOutput();
-    }
-  }
-
-  function handleClear() {
-    workflowInputs.clearAll();
-    clearAnalysisOutput();
+    workflowInputs.loadSample(sampleId);
   }
 
   return (
@@ -109,60 +102,57 @@ export function AnalyzerPage() {
       <AnalyzerWorkspace
         activeFile={activeFile}
         activeFileId={workflowInputs.activeFileId}
-        analysisMessage={analysisMessage}
+        analysisError={visibleAnalysisError}
+        autoRunEnabled={autoRunEnabled}
+        canAnalyze={!analysis.isAnalyzing}
         defaultVirtualPath={workflowInputs.defaultVirtualPath}
         errors={workflowInputs.errors}
         fileCount={workflowInputs.fileCount}
         files={workflowInputs.files}
         folderUploadSupported={workflowInputs.folderUploadSupported}
-        hasInput={workflowInputs.hasAnyContent}
+        hasRunnableInput={analysisFiles.length > 0}
         includeAllYamlFiles={workflowInputs.includeAllYamlFiles}
         inputText={activeFile?.content ?? ""}
+        isAnalyzing={analysis.isAnalyzing}
         maxFileSizeLabel={workflowInputs.maxFileSizeLabel}
-        onAddPasteFile={() => {
-          workflowInputs.addPasteFile();
-          clearAnalysisOutput();
-        }}
+        onAddPasteFile={workflowInputs.addPasteFile}
         onAnalyze={handleAnalyze}
-        onClear={handleClear}
-        onClearActiveInput={() => {
-          workflowInputs.clearActiveInput();
-          clearAnalysisOutput();
+        onAutoRunChange={(checked) => {
+          setManualAutoRunEnabled(checked);
         }}
+        onClear={workflowInputs.clearAll}
+        onClearActiveInput={workflowInputs.clearActiveInput}
         onFileUpload={async (files) => {
           await workflowInputs.addUploadedFiles(files, "file");
-          clearAnalysisOutput();
         }}
         onFileUploadFromFolder={async (files) => {
           await workflowInputs.addUploadedFiles(files, "folder");
-          clearAnalysisOutput();
         }}
-        onInputChange={handleInputChange}
+        onInputChange={(value) => {
+          if (!activeFile) {
+            return;
+          }
+
+          workflowInputs.updateFileContent(activeFile.id, value);
+        }}
         onLoadRiskySample={handleLoadRiskySample}
-        onRemoveFile={(fileId) => {
-          workflowInputs.removeFile(fileId);
-          clearAnalysisOutput();
+        onLoadSelectedSample={() => {
+          if (workflowInputs.selectedSampleId !== "manual") {
+            handleSampleLoad(workflowInputs.selectedSampleId);
+          }
         }}
+        onRemoveFile={workflowInputs.removeFile}
         onRenameFile={(path) => {
           if (!activeFile) {
             return;
           }
 
           workflowInputs.renameFile(activeFile.id, path);
-          clearAnalysisOutput();
-        }}
-        onLoadSelectedSample={() => {
-          if (workflowInputs.selectedSampleId !== "manual") {
-            handleSampleLoad(workflowInputs.selectedSampleId);
-          }
         }}
         onSampleChange={workflowInputs.selectSample}
         onSelectFile={workflowInputs.setActiveFileId}
         onToggleIncludeAllYamlFiles={workflowInputs.setIncludeAllYamlFiles}
-        parseFindings={analysisResult?.findings ?? []}
-        normalizedWorkflows={analysisResult?.normalizedWorkflows ?? []}
-        parseScore={analysisResult?.score ?? null}
-        parsedFileCount={analysisResult?.parsedFileCount ?? 0}
+        report={visibleReport}
         selectedSampleId={workflowInputs.selectedSampleId}
         selectedSampleLabel={selectedSampleLabel}
         totalSizeLabel={workflowInputs.totalSizeLabel}

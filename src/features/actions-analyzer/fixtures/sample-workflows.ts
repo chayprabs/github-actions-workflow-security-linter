@@ -1,9 +1,6 @@
-import type { AnalyzerWorkflowInput } from "@/features/actions-analyzer/types";
+import type { WorkflowInputFile } from "@/features/actions-analyzer/types";
 
-function createWorkflowInput(
-  path: string,
-  content: string,
-): AnalyzerWorkflowInput {
+function createWorkflowInput(path: string, content: string): WorkflowInputFile {
   return {
     id: path,
     path,

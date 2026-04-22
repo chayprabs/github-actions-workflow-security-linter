@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { Download, FileText, SearchCheck, ShieldAlert } from "lucide-react";
 
 import { Alert } from "@/components/ui/alert";
@@ -13,43 +16,60 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import type {
   AnalyzerFinding,
-  NormalizedWorkflow,
+  FindingCategory,
+  WorkflowAnalysisReport,
 } from "@/features/actions-analyzer/types";
 
 type ResultsPanelView = "all" | "findings" | "report";
 
 interface ResultsPanelProps {
   activeFileName: string;
-  analysisMessage: string | null;
-  findings: AnalyzerFinding[];
+  analysisError: string | null;
   hasInput: boolean;
-  hasRunAnalysis: boolean;
-  normalizedWorkflows: NormalizedWorkflow[];
-  parsedFileCount: number;
-  score: number | null;
+  isAnalyzing: boolean;
+  report: WorkflowAnalysisReport | null;
   selectedSampleLabel: string;
   view?: ResultsPanelView | undefined;
 }
 
 export function ResultsPanel({
   activeFileName,
-  analysisMessage,
-  findings,
+  analysisError,
   hasInput,
-  hasRunAnalysis,
-  normalizedWorkflows,
-  parsedFileCount,
-  score,
+  isAnalyzing,
+  report,
   selectedSampleLabel,
   view = "all",
 }: ResultsPanelProps) {
-  if (!hasInput) {
+  const hasRunAnalysis = report !== null;
+  const findings = useMemo(() => report?.findings ?? [], [report]);
+  const issueCount = findings.length;
+  const availableCategories = useMemo(() => {
+    return ["all", ...getFindingCategories(findings)] as const;
+  }, [findings]);
+  const [selectedCategory, setSelectedCategory] = useState<
+    "all" | FindingCategory
+  >("all");
+  const activeCategory =
+    selectedCategory === "all" || availableCategories.includes(selectedCategory)
+      ? selectedCategory
+      : "all";
+  const filteredFindings = useMemo(() => {
+    return activeCategory === "all"
+      ? findings
+      : findings.filter((finding) => finding.category === activeCategory);
+  }, [activeCategory, findings]);
+  const findingGroups = getFindingGroups(filteredFindings);
+  const showFindings = view === "all" || view === "findings";
+  const showReport = view === "all" || view === "report";
+
+  if (!hasInput && !hasRunAnalysis && !isAnalyzing && !analysisError) {
     return (
       <Card data-testid={`results-panel-${view}`}>
         <CardContent className="px-6 py-8">
           <EmptyState
             data-testid="results-empty-state"
-            description="Paste workflow YAML, upload a file, or load a sample to prepare the workspace. The analyzer engine and exports will connect in the next step."
+            description="Paste workflow YAML, upload a file, or load a sample to prepare the workspace. Manual Analyze will also explain when the workspace is still empty."
             title="No workflow loaded yet"
           />
         </CardContent>
@@ -57,19 +77,21 @@ export function ResultsPanel({
     );
   }
 
-  const showFindings = view === "all" || view === "findings";
-  const showReport = view === "all" || view === "report";
-  const issueCount = findings.length;
-
   return (
     <div className="space-y-5" data-testid={`results-panel-${view}`}>
-      {analysisMessage ? (
+      {isAnalyzing ? (
+        <Alert data-testid="analysis-status-message" title="Status" tone="info">
+          Analyzing workflow locally...
+        </Alert>
+      ) : null}
+
+      {analysisError ? (
         <Alert
-          data-testid="analysis-placeholder-message"
-          title="Status"
-          tone="info"
+          data-testid="analysis-error-message"
+          title="Analysis error"
+          tone="danger"
         >
-          {analysisMessage}
+          {analysisError}
         </Alert>
       ) : null}
 
@@ -78,7 +100,7 @@ export function ResultsPanel({
           <CardHeader>
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={hasRunAnalysis ? "info" : "warning"}>
-                {hasRunAnalysis ? "Parsed locally" : "Placeholder"}
+                {hasRunAnalysis ? "Analyzed locally" : "Ready to analyze"}
               </Badge>
               <Badge tone="subtle">{selectedSampleLabel}</Badge>
               {hasRunAnalysis ? (
@@ -89,25 +111,43 @@ export function ResultsPanel({
             </div>
             <CardTitle>Findings and score</CardTitle>
             <CardDescription>
-              {hasRunAnalysis
-                ? `Authos parsed ${parsedFileCount} workflow ${
-                    parsedFileCount === 1 ? "file" : "files"
-                  } in the browser and is showing YAML parser diagnostics now.`
-                : "The analyzer engine is not connected yet, but this panel matches the shape of the eventual findings experience."}
+              {hasRunAnalysis && report
+                ? `Authos analyzed ${report.summary.analyzedFileCount} workflow ${
+                    report.summary.analyzedFileCount === 1 ? "file" : "files"
+                  } in the browser and is showing parser plus registered-rule findings.`
+                : "Run analysis to populate local findings, score, and report placeholders."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
+            {hasRunAnalysis && findings.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {availableCategories.map((category) => (
+                  <Button
+                    key={category}
+                    onClick={() => {
+                      setSelectedCategory(category);
+                    }}
+                    size="sm"
+                    variant={
+                      activeCategory === category ? "primary" : "secondary"
+                    }
+                  >
+                    {formatCategoryLabel(category)}
+                  </Button>
+                ))}
+              </div>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-[11rem_minmax(0,1fr)]">
               <div className="rounded-xl border border-border/80 bg-background/75 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Score
                 </p>
                 <p className="mt-3 text-4xl font-semibold text-foreground">
-                  {hasRunAnalysis && score !== null ? score : "--"}
+                  {hasRunAnalysis && report ? report.summary.score : "--"}
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {hasRunAnalysis
-                    ? "Parser findings only for this prompt"
+                    ? `Grade ${report?.summary.grade ?? "--"}`
                     : "Available once rules run"}
                 </p>
               </div>
@@ -146,43 +186,33 @@ export function ResultsPanel({
               ) : issueCount === 0 ? (
                 <EmptyState
                   data-testid="results-no-issues"
-                  description="The YAML parser accepted the current workflow inputs. Deeper GitHub Actions security and lint rules will be layered on top in subsequent prompts."
-                  title="No YAML parse issues detected"
+                  description="The parser and currently registered core rules did not emit any findings for these workflow files."
+                  title="No findings detected"
+                />
+              ) : filteredFindings.length === 0 ? (
+                <EmptyState
+                  data-testid="results-no-category-issues"
+                  description="No findings in the currently selected category for this analysis run."
+                  title="Nothing in this filter"
                 />
               ) : (
-                <div className="grid gap-3" data-testid="results-findings-list">
-                  {findings.map((finding) => (
-                    <article
-                      key={finding.id}
-                      className="rounded-xl border border-border/80 bg-background/70 p-4"
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge tone={getSeverityTone(finding.severity)}>
-                          {finding.severity}
-                        </Badge>
-                        <Badge tone="subtle">{finding.ruleId}</Badge>
-                        <Badge tone="info">{finding.filePath}</Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {finding.location
-                            ? `Line ${finding.location.line}, column ${finding.location.column}`
-                            : "File-level diagnostic"}
-                        </span>
+                <div className="space-y-5" data-testid="results-findings-list">
+                  {findingGroups.map((group) => (
+                    <section key={group.id} className="space-y-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground">
+                          {group.title}
+                        </h3>
+                        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                          {group.description}
+                        </p>
                       </div>
-                      <h3 className="mt-3 text-sm font-semibold text-foreground">
-                        {finding.title}
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {finding.message}
-                      </p>
-                      {finding.evidence ? (
-                        <pre className="mt-3 overflow-x-auto rounded-lg border border-border/80 bg-background/80 p-3 text-xs leading-6 text-foreground">
-                          {finding.evidence}
-                        </pre>
-                      ) : null}
-                      <p className="mt-3 text-sm text-muted-foreground">
-                        {finding.remediation}
-                      </p>
-                    </article>
+                      <div className="grid gap-3">
+                        {group.findings.map((finding) => (
+                          <FindingCard finding={finding} key={finding.id} />
+                        ))}
+                      </div>
+                    </section>
                   ))}
                 </div>
               )}
@@ -197,7 +227,7 @@ export function ResultsPanel({
             <CardTitle>Report and exports</CardTitle>
             <CardDescription>
               {hasRunAnalysis
-                ? "This run includes real YAML parse diagnostics. Richer reports and export formats will connect as the analyzer expands."
+                ? "This run now comes from the real local analyzer pipeline. Richer rule prompts can plug into this report without changing the UI contract."
                 : "Export controls are visible now but remain disabled until the analyzer produces structured output."}
             </CardDescription>
           </CardHeader>
@@ -210,58 +240,135 @@ export function ResultsPanel({
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-foreground">
                     {hasRunAnalysis
-                      ? "Parse run summary"
+                      ? "Analysis run summary"
                       : "Report preview placeholder"}
                   </p>
                   <p className="text-sm leading-6 text-muted-foreground">
-                    {hasRunAnalysis
-                      ? `Authos parsed ${parsedFileCount} workflow ${
-                          parsedFileCount === 1 ? "file" : "files"
-                        } locally. The current report surface only includes YAML parser findings for `
+                    {hasRunAnalysis && report
+                      ? `Authos analyzed ${report.summary.analyzedFileCount} workflow ${
+                          report.summary.analyzedFileCount === 1
+                            ? "file"
+                            : "files"
+                        } locally for `
                       : "A readable report for "}
                     <span className="font-medium text-foreground">
                       {activeFileName}
                     </span>
-                    {hasRunAnalysis
-                      ? ". Expanded sections for security, permissions, action inventory, and exports will arrive in later prompts."
+                    {hasRunAnalysis && report
+                      ? `. The current pipeline produced ${report.actionInventory.length} action inventory entries, ${report.triggerSummary.events.length} trigger types, and ${report.matrixSummary.jobs.length} matrix summaries.`
                       : " will appear here with sections for score, findings, action inventory, permissions, and exports."}
                   </p>
                 </div>
               </div>
             </div>
 
-            {hasRunAnalysis && normalizedWorkflows.length > 0 ? (
-              <div
-                className="grid gap-3"
-                data-testid="normalized-workflow-summaries"
-              >
-                {normalizedWorkflows.map((workflow) => (
-                  <article
-                    key={workflow.filePath}
-                    className="rounded-xl border border-border/80 bg-background/70 p-4"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge tone="info">
-                        {workflow.summary.workflowName ?? "Unnamed workflow"}
-                      </Badge>
-                      <Badge tone="subtle">{workflow.filePath}</Badge>
-                      <Badge tone="subtle">
-                        {workflow.summary.jobCount}{" "}
-                        {workflow.summary.jobCount === 1 ? "job" : "jobs"}
-                      </Badge>
-                      <Badge tone="subtle">
-                        {workflow.summary.stepCount}{" "}
-                        {workflow.summary.stepCount === 1 ? "step" : "steps"}
-                      </Badge>
-                    </div>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                      Triggers:{" "}
-                      {workflow.summary.triggers.length > 0
-                        ? workflow.summary.triggers.join(", ")
-                        : "none parsed"}
-                    </p>
-                  </article>
-                ))}
+            {hasRunAnalysis && report ? (
+              <div className="grid gap-3" data-testid="analysis-report-summary">
+                <article className="rounded-xl border border-border/80 bg-background/70 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge tone="info">
+                      {report.summary.workflowCount}{" "}
+                      {report.summary.workflowCount === 1
+                        ? "workflow"
+                        : "workflows"}
+                    </Badge>
+                    <Badge tone="subtle">
+                      {report.triggerSummary.events.length}{" "}
+                      {report.triggerSummary.events.length === 1
+                        ? "trigger"
+                        : "triggers"}
+                    </Badge>
+                    <Badge tone="subtle">
+                      {report.actionInventory.length}{" "}
+                      {report.actionInventory.length === 1
+                        ? "action"
+                        : "actions"}
+                    </Badge>
+                    <Badge tone="subtle">
+                      {report.expressionSummary.totalExpressions}{" "}
+                      {report.expressionSummary.totalExpressions === 1
+                        ? "expression"
+                        : "expressions"}
+                    </Badge>
+                    <Badge tone="subtle">
+                      {report.matrixSummary.jobs.length}{" "}
+                      {report.matrixSummary.jobs.length === 1
+                        ? "matrix job"
+                        : "matrix jobs"}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    Triggers:{" "}
+                    {report.triggerSummary.events.length > 0
+                      ? report.triggerSummary.events.join(", ")
+                      : "none detected"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Permission warnings:{" "}
+                    {report.permissionSummary.warnings.length}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Expression contexts:{" "}
+                    {report.expressionSummary.contexts.length > 0
+                      ? report.expressionSummary.contexts.join(", ")
+                      : "none detected"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Untrusted expression usages:{" "}
+                    {report.expressionSummary.untrustedContextUsages}
+                  </p>
+                </article>
+                <article className="rounded-xl border border-border/80 bg-background/70 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge tone="danger">
+                      {report.securitySummary.criticalFindings} critical
+                    </Badge>
+                    <Badge tone="severity-high">
+                      {report.securitySummary.highFindings} high
+                    </Badge>
+                    <Badge tone="subtle">
+                      {report.permissionSummary.writeScopes.length} write{" "}
+                      {report.permissionSummary.writeScopes.length === 1
+                        ? "scope"
+                        : "scopes"}
+                    </Badge>
+                    <Badge tone="subtle">
+                      {report.permissionSummary.jobOverrides.length} job{" "}
+                      {report.permissionSummary.jobOverrides.length === 1
+                        ? "override"
+                        : "overrides"}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 text-sm font-medium text-foreground">
+                    Security summary
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Top-level permissions:{" "}
+                    {report.permissionSummary.hasTopLevelPermissions
+                      ? "declared"
+                      : "missing"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Recommended baseline:{" "}
+                    {report.permissionSummary.recommendedPermissions.length > 0
+                      ? report.permissionSummary.recommendedPermissions.join(
+                          ", ",
+                        )
+                      : "none suggested"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Untrusted triggers:{" "}
+                    {report.triggerSummary.untrustedEvents.length > 0
+                      ? report.triggerSummary.untrustedEvents.join(", ")
+                      : "none detected"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Privileged triggers:{" "}
+                    {report.triggerSummary.privilegedEvents.length > 0
+                      ? report.triggerSummary.privilegedEvents.join(", ")
+                      : "none detected"}
+                  </p>
+                </article>
               </div>
             ) : null}
 
@@ -280,6 +387,129 @@ export function ResultsPanel({
   );
 }
 
+function FindingCard({ finding }: { finding: AnalyzerFinding }) {
+  return (
+    <article className="rounded-xl border border-border/80 bg-background/70 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge tone={getSeverityTone(finding.severity)}>
+          {finding.severity}
+        </Badge>
+        <Badge tone="subtle">{finding.confidence} confidence</Badge>
+        <Badge tone="subtle">{finding.ruleId}</Badge>
+        <Badge tone="subtle">{formatCategoryLabel(finding.category)}</Badge>
+        <Badge tone="info">{finding.filePath}</Badge>
+        <span className="text-xs text-muted-foreground">
+          {finding.location
+            ? `Line ${finding.location.line}, column ${finding.location.column}`
+            : "File-level diagnostic"}
+        </span>
+      </div>
+      <h3 className="mt-3 text-sm font-semibold text-foreground">
+        {finding.title}
+      </h3>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        {finding.message}
+      </p>
+      {finding.evidence ? (
+        <pre className="mt-3 overflow-x-auto rounded-lg border border-border/80 bg-background/80 p-3 text-xs leading-6 text-foreground">
+          {finding.evidence}
+        </pre>
+      ) : null}
+      <p className="mt-3 text-sm text-muted-foreground">
+        {finding.remediation}
+      </p>
+      {finding.docsUrl ? (
+        <a
+          className="mt-3 inline-flex text-sm font-medium text-info underline-offset-4 hover:underline"
+          href={finding.docsUrl}
+          rel="noreferrer"
+          target="_blank"
+        >
+          View GitHub guidance
+        </a>
+      ) : null}
+    </article>
+  );
+}
+
+function getFindingGroups(findings: AnalyzerFinding[]) {
+  const securityFindings = findings.filter((finding) => isSecurityFinding(finding));
+  const expressionFindings = findings.filter(
+    (finding) => finding.category === "expressions",
+  );
+  const syntaxAndSemantics = findings.filter((finding) =>
+    !isSecurityFinding(finding) &&
+    finding.category !== "expressions" &&
+    isSyntaxAndSemanticsFinding(finding),
+  );
+  const otherFindings = findings.filter(
+    (finding) =>
+      !isSecurityFinding(finding) &&
+      finding.category !== "expressions" &&
+      !isSyntaxAndSemanticsFinding(finding),
+  );
+  const groups = [];
+
+  if (securityFindings.length > 0) {
+    groups.push({
+      description:
+        "Permissions, privileged triggers, self-hosted runner exposure, secret scope, and other deterministic security checks for GitHub Actions workflows.",
+      findings: securityFindings,
+      id: "security",
+      title: "Security",
+    });
+  }
+
+  if (expressionFindings.length > 0) {
+    groups.push({
+      description:
+        "Expression extraction, context recognition, and preliminary GitHub Actions expression safety checks.",
+      findings: expressionFindings,
+      id: "expressions",
+      title: "Expressions",
+    });
+  }
+
+  if (syntaxAndSemantics.length > 0) {
+    groups.push({
+      description:
+        "Workflow structure, trigger declarations, reusable workflow callers, action references, and other deterministic GitHub Actions correctness checks.",
+      findings: syntaxAndSemantics,
+      id: "syntax-and-semantics",
+      title: "Syntax and semantics",
+    });
+  }
+
+  if (otherFindings.length > 0) {
+    groups.push({
+      description:
+        "Additional analyzer findings outside the core workflow syntax and semantics pack.",
+      findings: otherFindings,
+      id: "other-findings",
+      title: "Other findings",
+    });
+  }
+
+  return groups;
+}
+
+function getFindingCategories(findings: AnalyzerFinding[]) {
+  return Array.from(new Set(findings.map((finding) => finding.category))).sort(
+    categorySort,
+  );
+}
+
+function formatCategoryLabel(category: "all" | FindingCategory) {
+  if (category === "all") {
+    return "All";
+  }
+
+  return category
+    .split("-")
+    .map((segment) => segment[0]?.toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
 function getSeverityTone(severity: AnalyzerFinding["severity"]) {
   switch (severity) {
     case "critical":
@@ -295,4 +525,33 @@ function getSeverityTone(severity: AnalyzerFinding["severity"]) {
     default:
       return "subtle";
   }
+}
+
+function isSyntaxAndSemanticsFinding(finding: AnalyzerFinding) {
+  const numericRuleId = Number.parseInt(finding.ruleId.slice(3), 10);
+
+  return Number.isFinite(numericRuleId) && numericRuleId < 50;
+}
+
+function isSecurityFinding(finding: AnalyzerFinding) {
+  const numericRuleId = Number.parseInt(finding.ruleId.slice(3), 10);
+
+  return Number.isFinite(numericRuleId) && numericRuleId >= 100 && numericRuleId < 200;
+}
+
+function categorySort(left: FindingCategory, right: FindingCategory) {
+  const order = [
+    "security",
+    "permissions",
+    "runner",
+    "supply-chain",
+    "expressions",
+    "syntax",
+    "triggers",
+  ];
+
+  return (order.indexOf(left) === -1 ? Number.POSITIVE_INFINITY : order.indexOf(left)) -
+    (order.indexOf(right) === -1
+      ? Number.POSITIVE_INFINITY
+      : order.indexOf(right)) || left.localeCompare(right);
 }

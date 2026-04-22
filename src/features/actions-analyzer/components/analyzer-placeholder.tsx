@@ -22,10 +22,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Toolbar } from "@/components/ui/toolbar";
 import { fixtureWorkflows } from "@/features/actions-analyzer/fixtures/sample-workflows";
-import { analyzeWorkflow } from "@/features/actions-analyzer/lib/analyze-workflows";
+import { analyzeWorkflowFiles } from "@/features/actions-analyzer/lib/analyze-workflows";
 import { siteConfig } from "@/lib/site";
 
-const fixturePreview = analyzeWorkflow(fixtureWorkflows.risky);
+const fixturePreview = analyzeWorkflowFiles([fixtureWorkflows.risky]);
 const sampleYaml = fixtureWorkflows.risky.content.trim();
 
 export function AnalyzerPlaceholder() {
@@ -155,7 +155,7 @@ export function AnalyzerPlaceholder() {
                     Sample risk score
                   </p>
                   <p className="mt-2 text-4xl font-semibold text-foreground">
-                    {fixturePreview.score}
+                    {fixturePreview.summary.score}
                   </p>
                 </div>
                 <div className="space-y-3 text-sm text-muted-foreground">
@@ -168,7 +168,9 @@ export function AnalyzerPlaceholder() {
                   <p>
                     Actions inventory:{" "}
                     <span className="font-semibold text-foreground">
-                      {fixturePreview.summary.actionInventory.join(", ")}
+                      {fixturePreview.actionInventory
+                        .map((item) => item.action)
+                        .join(", ")}
                     </span>
                   </p>
                 </div>

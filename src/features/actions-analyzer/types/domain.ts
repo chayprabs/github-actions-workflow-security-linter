@@ -1,3 +1,5 @@
+import type { ExpressionSummary } from "@/features/actions-analyzer/types/expressions";
+
 export const severities = [
   "critical",
   "high",
@@ -141,10 +143,23 @@ export interface PermissionScopeSummary {
   access: string;
   source: "top-level" | "job";
   jobName?: string | undefined;
+  location?: SourceLocation | undefined;
+}
+
+export interface PermissionDeclarationSummary {
+  filePath: string;
+  jobName?: string | undefined;
+  location?: SourceLocation | undefined;
+  scopes: PermissionScopeSummary[];
+  shorthand: string | null;
 }
 
 export interface PermissionSummary {
   hasTopLevelPermissions: boolean;
+  jobOverrides: PermissionDeclarationSummary[];
+  missingPermissions: string[];
+  topLevel: PermissionDeclarationSummary[];
+  writeScopes: PermissionScopeSummary[];
   scopes: PermissionScopeSummary[];
   recommendedPermissions: string[];
   warnings: string[];
@@ -159,9 +174,21 @@ export interface TriggerDetail {
 export interface TriggerSummary {
   events: string[];
   details: TriggerDetail[];
+  manualEvents: string[];
+  privilegedEvents: string[];
+  releaseEvents: string[];
+  scheduledEvents: string[];
+  trustedEvents: string[];
+  untrustedEvents: string[];
   usesPullRequestTarget: boolean;
   usesWorkflowDispatch: boolean;
   usesSchedule: boolean;
+}
+
+export interface SecuritySummary {
+  criticalFindings: number;
+  highFindings: number;
+  totalFindings: number;
 }
 
 export interface MatrixJobSummary {
@@ -202,7 +229,9 @@ export interface WorkflowAnalysisReport {
   summary: AnalysisSummary;
   findings: AnalyzerFinding[];
   actionInventory: ActionInventoryItem[];
+  expressionSummary: ExpressionSummary;
   permissionSummary: PermissionSummary;
+  securitySummary: SecuritySummary;
   triggerSummary: TriggerSummary;
   matrixSummary: MatrixSummary;
   attackPaths: AttackPath[];

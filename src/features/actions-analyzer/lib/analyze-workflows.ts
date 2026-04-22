@@ -1,9 +1,24 @@
+import {
+  buildExpressionSummary,
+  collectExpressionsFromWorkflow,
+  hydrateWorkflowExpressions,
+} from "@/features/actions-analyzer/lib/expression-utils";
 import { normalizeParsedWorkflow } from "@/features/actions-analyzer/lib/normalize-workflow";
 import { parseWorkflowYamlFiles } from "@/features/actions-analyzer/lib/parse-workflow-yaml";
 import { registeredRuleModules } from "@/features/actions-analyzer/lib/rules";
 import { getRuleDefinition } from "@/features/actions-analyzer/lib/rule-catalog";
+import {
+  buildPermissionDeclarationSummary,
+  getBroadWriteScopes,
+  isSecurityPackRuleId,
+  summarizeTriggerKinds,
+  toPermissionScopes,
+} from "@/features/actions-analyzer/lib/security-utils";
 import { resolveAnalyzerSettings } from "@/features/actions-analyzer/lib/settings";
-import { sortFindings, createFindingId } from "@/features/actions-analyzer/lib/scoring";
+import {
+  sortFindings,
+  createFindingId,
+} from "@/features/actions-analyzer/lib/scoring";
 import { buildAnalysisSummary } from "@/features/actions-analyzer/lib/summary";
 import type {
   ActionInventoryItem,
@@ -12,14 +27,14 @@ import type {
   MatrixJobSummary,
   MatrixSummary,
   NormalizedWorkflow,
-  PermissionScopeSummary,
   PermissionSummary,
   RuleContext,
   RuleModule,
-  TriggerDetail,
+  SecuritySummary,
   TriggerSummary,
   WorkflowActionUse,
   WorkflowAnalysisReport,
+  WorkflowExpression,
   WorkflowInputFile,
 } from "@/features/actions-analyzer/types";
 
@@ -32,8 +47,24 @@ export function analyzeWorkflowFiles(
   const normalizedWorkflows = parsedFiles
     .filter((parsedFile) => parsedFile.isSuccessful)
     .map((parsedFile) => normalizeParsedWorkflow(parsedFile));
-  const parseFindings = parsedFiles.flatMap((parsedFile) => parsedFile.parseFindings);
+  const parseFindings = parsedFiles.flatMap(
+    (parsedFile) => parsedFile.parseFindings,
+  );
+  const expressions = normalizedWorkflows.flatMap((workflow) => {
+    const parsedFile = parsedFiles.find(
+      (candidate) => candidate.filePath === workflow.filePath,
+    );
+    const collectedExpressions = collectExpressionsFromWorkflow(workflow);
+
+    return parsedFile
+      ? hydrateWorkflowExpressions(
+          collectedExpressions,
+          parsedFile.sourceMap.findLocationForPath,
+        )
+      : collectedExpressions;
+  });
   const context = createRuleContext({
+    expressions,
     files,
     normalizedWorkflows,
     parseFindings,
@@ -45,12 +76,14 @@ export function analyzeWorkflowFiles(
     applyRuleSettings(registeredRuleModules, resolvedSettings),
   );
   const findings = finalizeFindings(
-    filterFindingsBySettings([...parseFindings, ...ruleFindings], resolvedSettings),
+    filterFindingsBySettings(
+      [...parseFindings, ...ruleFindings],
+      resolvedSettings,
+    ),
   );
   const actionInventory = buildActionInventoryPlaceholder(normalizedWorkflows);
-  const triggerSummary = buildTriggerSummaryPlaceholder(normalizedWorkflows);
-  const permissionSummary =
-    buildPermissionSummaryPlaceholder(normalizedWorkflows);
+  const triggerSummary = buildTriggerSummary(normalizedWorkflows);
+  const permissionSummary = buildPermissionSummary(normalizedWorkflows);
   const matrixSummary = buildMatrixSummaryPlaceholder(normalizedWorkflows);
 
   return {
@@ -63,7 +96,9 @@ export function analyzeWorkflowFiles(
     ),
     findings,
     actionInventory,
+    expressionSummary: buildExpressionSummary(expressions),
     permissionSummary,
+    securitySummary: buildSecuritySummary(findings),
     triggerSummary,
     matrixSummary,
     attackPaths: [],
@@ -83,15 +118,36 @@ export function createEmptyReport(
     summary: buildAnalysisSummary([], files.length, 0),
     findings: [],
     actionInventory: [],
+    expressionSummary: {
+      contexts: [],
+      totalExpressions: 0,
+      unknownContexts: [],
+      untrustedContextUsages: 0,
+    },
     permissionSummary: {
       hasTopLevelPermissions: false,
+      jobOverrides: [],
+      missingPermissions: [],
+      topLevel: [],
+      writeScopes: [],
       scopes: [],
       recommendedPermissions: [],
       warnings: [],
     },
+    securitySummary: {
+      criticalFindings: 0,
+      highFindings: 0,
+      totalFindings: 0,
+    },
     triggerSummary: {
       events: [],
       details: [],
+      manualEvents: [],
+      privilegedEvents: [],
+      releaseEvents: [],
+      scheduledEvents: [],
+      trustedEvents: [],
+      untrustedEvents: [],
       usesPullRequestTarget: false,
       usesWorkflowDispatch: false,
       usesSchedule: false,
@@ -133,9 +189,7 @@ export function runRules(
   return findings;
 }
 
-export function dedupeFindings(
-  findings: AnalyzerFinding[],
-): AnalyzerFinding[] {
+export function dedupeFindings(findings: AnalyzerFinding[]): AnalyzerFinding[] {
   const seen = new Set<string>();
   const deduped: AnalyzerFinding[] = [];
 
@@ -173,7 +227,7 @@ function buildActionInventoryPlaceholder(
 
         const ref =
           step.uses.kind === "docker-action"
-            ? step.uses.digest ?? step.uses.tag
+            ? (step.uses.digest ?? step.uses.tag)
             : step.uses.ref;
 
         return [
@@ -185,9 +239,7 @@ function buildActionInventoryPlaceholder(
             isPinnedToSha: isPinnedActionUse(step.uses),
             relatedJobs: [job.id],
             relatedSteps: [
-              step.id.value ??
-                step.name.value ??
-                `step-${step.index + 1}`,
+              step.id.value ?? step.name.value ?? `step-${step.index + 1}`,
             ],
           },
         ];
@@ -225,35 +277,68 @@ function buildMatrixSummaryPlaceholder(
   };
 }
 
-function buildPermissionSummaryPlaceholder(
+function buildPermissionSummary(
   normalizedWorkflows: NormalizedWorkflow[],
 ): PermissionSummary {
-  const scopes: PermissionScopeSummary[] = [];
+  const jobOverrides = normalizedWorkflows.flatMap((workflow) =>
+    workflow.jobs.flatMap((job) => {
+      return job.permissions
+        ? [
+            buildPermissionDeclarationSummary(
+              workflow.filePath,
+              job.permissions,
+              "job",
+              job.id,
+            ),
+          ]
+        : [];
+    }),
+  );
+  const missingPermissions = normalizedWorkflows
+    .filter((workflow) => workflow.permissions === null)
+    .map((workflow) => workflow.filePath);
+  const scopes = normalizedWorkflows.flatMap((workflow) => [
+    ...(workflow.permissions
+      ? toPermissionScopes(workflow.filePath, workflow.permissions, "top-level")
+      : []),
+    ...workflow.jobs.flatMap((job) =>
+      job.permissions
+        ? toPermissionScopes(workflow.filePath, job.permissions, "job", job.id)
+        : [],
+    ),
+  ]);
+  const topLevel = normalizedWorkflows.flatMap((workflow) =>
+    workflow.permissions
+      ? [
+          buildPermissionDeclarationSummary(
+            workflow.filePath,
+            workflow.permissions,
+            "top-level",
+          ),
+        ]
+      : [],
+  );
+  const writeScopes = normalizedWorkflows.flatMap((workflow) => [
+    ...topLevelWriteScopes(workflow),
+    ...workflow.jobs.flatMap((job) =>
+      (job.permissions ? getBroadWriteScopes(job.permissions) : []).map(
+        (scope) => ({
+          access: "write",
+          filePath: workflow.filePath,
+          jobName: job.id,
+          location: job.permissions?.scopeLocations[scope] ?? job.permissions?.location,
+          scope,
+          source: "job" as const,
+        }),
+      ),
+    ),
+  ]);
   const warnings: string[] = [];
 
   for (const workflow of normalizedWorkflows) {
     if (!workflow.permissions) {
       warnings.push(
         `${workflow.filePath} does not declare top-level permissions.`,
-      );
-    } else {
-      scopes.push(
-        ...toPermissionScopes(workflow.filePath, workflow.permissions, "top-level"),
-      );
-    }
-
-    for (const job of workflow.jobs) {
-      if (!job.permissions) {
-        continue;
-      }
-
-      scopes.push(
-        ...toPermissionScopes(
-          workflow.filePath,
-          job.permissions,
-          "job",
-          job.id,
-        ),
       );
     }
   }
@@ -262,6 +347,10 @@ function buildPermissionSummaryPlaceholder(
     hasTopLevelPermissions: normalizedWorkflows.some(
       (workflow) => workflow.permissions !== null,
     ),
+    jobOverrides,
+    missingPermissions,
+    topLevel,
+    writeScopes,
     scopes,
     recommendedPermissions:
       normalizedWorkflows.length > 0 &&
@@ -272,36 +361,37 @@ function buildPermissionSummaryPlaceholder(
   };
 }
 
-function buildTriggerSummaryPlaceholder(
-  normalizedWorkflows: NormalizedWorkflow[],
-): TriggerSummary {
-  const details = normalizedWorkflows.flatMap((workflow) =>
-    workflow.on.map(
-      (trigger): TriggerDetail => ({
-        filePath: workflow.filePath,
-        event: trigger.name,
-        filters: getTriggerFilterLabels(trigger),
-      }),
-    ),
+function buildSecuritySummary(findings: AnalyzerFinding[]): SecuritySummary {
+  const securityFindings = findings.filter((finding) =>
+    isSecurityPackRuleId(finding.ruleId),
   );
-  const events = Array.from(new Set(details.map((detail) => detail.event))).sort();
 
   return {
-    events,
-    details,
-    usesPullRequestTarget: events.includes("pull_request_target"),
-    usesWorkflowDispatch: events.includes("workflow_dispatch"),
-    usesSchedule: events.includes("schedule"),
+    criticalFindings: securityFindings.filter(
+      (finding) => finding.severity === "critical",
+    ).length,
+    highFindings: securityFindings.filter(
+      (finding) => finding.severity === "high",
+    ).length,
+    totalFindings: securityFindings.length,
   };
 }
 
+function buildTriggerSummary(
+  normalizedWorkflows: NormalizedWorkflow[],
+): TriggerSummary {
+  return summarizeTriggerKinds(normalizedWorkflows);
+}
+
 function createRuleContext({
+  expressions,
   files,
   normalizedWorkflows,
   parseFindings,
   parsedFiles,
   settings,
 }: {
+  expressions: WorkflowExpression[];
   files: WorkflowInputFile[];
   normalizedWorkflows: NormalizedWorkflow[];
   parseFindings: AnalyzerFinding[];
@@ -309,16 +399,24 @@ function createRuleContext({
   settings: AnalyzerSettings;
 }): RuleContext {
   return {
+    expressions,
     files,
     normalizedWorkflows,
     parseFindings,
     parsedFiles,
     settings,
+    getExpressions(filePath?: string) {
+      return filePath
+        ? expressions.filter((expression) => expression.filePath === filePath)
+        : expressions;
+    },
     getParsedFile(filePath: string) {
       return parsedFiles.find((parsedFile) => parsedFile.filePath === filePath);
     },
     getWorkflow(filePath: string) {
-      return normalizedWorkflows.find((workflow) => workflow.filePath === filePath);
+      return normalizedWorkflows.find(
+        (workflow) => workflow.filePath === filePath,
+      );
     },
   };
 }
@@ -340,11 +438,14 @@ function estimateMatrixCombinations(
     NonNullable<NormalizedWorkflow["jobs"][number]["strategy"]>["matrix"]
   >,
 ): number {
-  const base = Object.values(matrix.dimensions).reduce((product, value) => {
-    const cardinality = estimateDimensionCardinality(value);
+  const base = Object.values(matrix.dimensions).reduce<number>(
+    (product, value) => {
+      const cardinality = estimateDimensionCardinality(value);
 
-    return cardinality > 0 ? product * cardinality : product;
-  }, 1);
+      return cardinality > 0 ? product * cardinality : product;
+    },
+    1,
+  );
   const adjustedBase =
     Object.keys(matrix.dimensions).length > 0
       ? Math.max(0, base - matrix.exclude.length)
@@ -382,54 +483,6 @@ function getActionInventoryName(uses: WorkflowActionUse): string {
   }
 
   return uses.raw;
-}
-
-function getTriggerFilterLabels(trigger: NormalizedWorkflow["on"][number]): string[] {
-  const labels: string[] = [];
-
-  if (trigger.branches.length > 0) {
-    labels.push("branches");
-  }
-
-  if (trigger.branchesIgnore.length > 0) {
-    labels.push("branches-ignore");
-  }
-
-  if (trigger.paths.length > 0) {
-    labels.push("paths");
-  }
-
-  if (trigger.pathsIgnore.length > 0) {
-    labels.push("paths-ignore");
-  }
-
-  if (trigger.tags.length > 0) {
-    labels.push("tags");
-  }
-
-  if (trigger.tagsIgnore.length > 0) {
-    labels.push("tags-ignore");
-  }
-
-  if (trigger.types.length > 0) {
-    labels.push("types");
-  }
-
-  if (trigger.workflows.length > 0) {
-    labels.push("workflows");
-  }
-
-  if (trigger.schedules.length > 0) {
-    labels.push("schedule");
-  }
-
-  if (Object.keys(trigger.inputs).length > 0) {
-    labels.push("inputs");
-  }
-
-  labels.push(...Object.keys(trigger.additionalFilters));
-
-  return labels;
 }
 
 function hydrateFindingWithDefinition(
@@ -487,33 +540,18 @@ function isRuleEnabled(
   return !disabledRuleIds.includes(ruleId);
 }
 
-function toPermissionScopes(
-  filePath: string,
-  permissions: NonNullable<NormalizedWorkflow["permissions"]>,
-  source: PermissionScopeSummary["source"],
-  jobName?: string,
-): PermissionScopeSummary[] {
-  if (permissions.kind === "shorthand" && permissions.shorthand) {
-    return [
-      {
-        filePath,
-        scope: "*",
-        access: permissions.shorthand,
-        source,
-        jobName,
-      },
-    ];
-  }
-
-  if (permissions.kind !== "mapping") {
+function topLevelWriteScopes(workflow: NormalizedWorkflow) {
+  if (!workflow.permissions) {
     return [];
   }
 
-  return Object.entries(permissions.scopes).map(([scope, access]) => ({
-    filePath,
+  return getBroadWriteScopes(workflow.permissions).map((scope) => ({
+    access: "write",
+    filePath: workflow.filePath,
+    location:
+      workflow.permissions?.scopeLocations[scope] ??
+      workflow.permissions?.location,
     scope,
-    access: String(access),
-    source,
-    jobName,
+    source: "top-level" as const,
   }));
 }

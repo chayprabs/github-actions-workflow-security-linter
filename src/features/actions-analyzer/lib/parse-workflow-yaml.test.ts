@@ -113,7 +113,7 @@ name: Two
 
     expect(parsed.documents).toHaveLength(2);
     expect(parsed.parseFindings.map((finding) => finding.ruleId)).toContain(
-      "GHA004",
+      "GHA018",
     );
   });
 
@@ -149,7 +149,7 @@ jobs:
 
     expect(parsed.rootType).toBe("sequence");
     expect(parsed.parseFindings.map((finding) => finding.ruleId)).toContain(
-      "GHA005",
+      "GHA019",
     );
   });
 

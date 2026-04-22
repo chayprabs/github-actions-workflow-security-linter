@@ -1,9 +1,14 @@
 import { createRuleFinding } from "@/features/actions-analyzer/lib/create-rule-finding";
-import { ruleCatalogById } from "@/features/actions-analyzer/lib/rule-catalog";
-import type { RuleModule } from "@/features/actions-analyzer/types";
+import { getRuleDefinition } from "@/features/actions-analyzer/lib/rule-catalog";
+import type {
+  RuleDefinition,
+  RuleModule,
+} from "@/features/actions-analyzer/types";
+
+const noFilesRuleDefinition = requireRuleDefinition("GHA900");
 
 export const noFilesRule: RuleModule = {
-  definition: ruleCatalogById.GHA900,
+  definition: noFilesRuleDefinition,
   check(context) {
     if (
       context.files.length > 0 ||
@@ -14,7 +19,7 @@ export const noFilesRule: RuleModule = {
 
     return [
       createRuleFinding(
-        ruleCatalogById.GHA900,
+        noFilesRuleDefinition,
         {
           evidence: "No workflow files loaded.",
           filePath: "<workspace>",
@@ -22,11 +27,19 @@ export const noFilesRule: RuleModule = {
             "Paste workflow YAML, upload a file, or load a sample before running analysis.",
           remediation:
             "Add at least one GitHub Actions workflow file to the workspace, then run analysis again.",
-          relatedJobs: [],
-          relatedSteps: [],
         },
         0,
       ),
     ];
   },
 };
+
+function requireRuleDefinition(ruleId: string): RuleDefinition {
+  const definition = getRuleDefinition(ruleId);
+
+  if (!definition) {
+    throw new Error(`Missing rule definition for ${ruleId}.`);
+  }
+
+  return definition;
+}

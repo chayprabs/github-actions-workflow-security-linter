@@ -165,7 +165,7 @@ export function parseWorkflowYaml(file: WorkflowInputFile): ParsedYamlFile {
           "GitHub Actions workflow files should contain a single YAML document, but this file contains multiple documents.",
         remediation:
           "Split the extra YAML documents into separate files under .github/workflows/.",
-        ruleId: "GHA004",
+        ruleId: "GHA018",
       }),
     );
   }
@@ -203,7 +203,7 @@ export function parseWorkflowYaml(file: WorkflowInputFile): ParsedYamlFile {
           "The workflow root should be a YAML mapping (object), not a scalar or sequence.",
         remediation:
           "Wrap the workflow in a top-level mapping with keys such as name, on, and jobs.",
-        ruleId: "GHA005",
+        ruleId: "GHA019",
       }),
     );
   }
