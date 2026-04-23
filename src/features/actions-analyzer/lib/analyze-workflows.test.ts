@@ -62,6 +62,7 @@ describe("analyzeWorkflowFiles", () => {
     expect(report.findings).toEqual([]);
     expect(report.summary).toMatchObject({
       analyzedFileCount: 0,
+      jobCount: 0,
       score: 100,
       totalFindings: 0,
       workflowCount: 0,
@@ -138,6 +139,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - run: echo ok
 `,
@@ -200,6 +202,7 @@ jobs:
 
     expect(report.files).toHaveLength(3);
     expect(report.summary.analyzedFileCount).toBe(3);
+    expect(report.summary.jobCount).toBeGreaterThanOrEqual(1);
     expect(report.summary.workflowCount).toBeGreaterThanOrEqual(1);
   });
 

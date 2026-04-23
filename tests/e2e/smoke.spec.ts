@@ -23,11 +23,13 @@ test("home page and analyzer placeholder load", async ({ page }) => {
     page.getByRole("button", { name: /Load risky sample/i }),
   ).toBeVisible();
   await page.getByRole("button", { name: /Load risky sample/i }).click();
-  await expect(page.getByLabel(/Workflow YAML/i)).toHaveValue(
+  await expect(page.getByLabel(/Workflow YAML/i)).toContainText(
     /pull_request_target/i,
   );
   await page.getByRole("button", { name: /Analyze/i }).click();
   await expect(page.getByText(/GHA103/i)).toBeVisible();
+  await page.getByRole("button", { name: /GHA103/i }).click();
+  await expect(page.getByLabel(/Workflow YAML/i)).toBeFocused();
 
   await page.goto("/privacy");
   await expect(page.getByRole("heading", { name: /Privacy/i })).toBeVisible();

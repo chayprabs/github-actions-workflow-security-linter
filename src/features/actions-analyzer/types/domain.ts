@@ -127,6 +127,13 @@ export interface AnalyzerFinding {
   fix?: SuggestedFix | undefined;
 }
 
+export interface IgnoredFinding {
+  comment: string;
+  finding: AnalyzerFinding;
+  line: number;
+  reason: string;
+}
+
 export const actionInventoryKinds = [
   "local",
   "first-party",
@@ -220,11 +227,49 @@ export interface PermissionDeclarationSummary {
   shorthand: string | null;
 }
 
+export interface PermissionScopeRecommendation {
+  currentAccess: string | null;
+  rationale: string;
+  recommendedAccess: "none" | "read" | "write";
+  scope: string;
+  status: "not-inferred" | "review-recommended";
+}
+
+export interface WorkflowPermissionRecommendation {
+  copyableYaml: string;
+  currentPermissionsYaml: string | null;
+  currentWriteScopes: string[];
+  filePath: string;
+  recommendedPermissions: Record<string, "read" | "write">;
+  recommendedWriteScopes: string[];
+  scopeRecommendations: PermissionScopeRecommendation[];
+  trustLevel: "mixed" | "privileged-follow-up" | "trusted" | "untrusted";
+  workflowName: string | null;
+}
+
+export interface JobPermissionRecommendation {
+  copyableYaml: string;
+  currentPermissionsSource: "job" | "none" | "top-level";
+  currentPermissionsYaml: string | null;
+  currentWriteScopes: string[];
+  filePath: string;
+  jobId: string;
+  recommendedPermissions: Record<string, "read" | "write">;
+  recommendedWriteScopes: string[];
+  riskLabel: "high" | "low" | "review";
+  scopeRecommendations: PermissionScopeRecommendation[];
+  thirdPartyActions: string[];
+  trustLevel: "mixed" | "privileged-follow-up" | "trusted" | "untrusted";
+  workflowName: string | null;
+}
+
 export interface PermissionSummary {
   hasTopLevelPermissions: boolean;
   jobOverrides: PermissionDeclarationSummary[];
+  jobRecommendations: JobPermissionRecommendation[];
   missingPermissions: string[];
   topLevel: PermissionDeclarationSummary[];
+  workflowRecommendations: WorkflowPermissionRecommendation[];
   writeScopes: PermissionScopeSummary[];
   scopes: PermissionScopeSummary[];
   recommendedPermissions: string[];
@@ -326,9 +371,13 @@ export interface AttackPath {
   id: string;
   title: string;
   description: string;
+  heuristic: string;
+  jobIds: string[];
+  mitigationChecklist: string[];
   severity: Severity;
   relatedRuleIds: string[];
   filePaths: string[];
+  stepLabels: string[];
 }
 
 export interface AnalysisSummary {
@@ -339,6 +388,7 @@ export interface AnalysisSummary {
   grade: ReportGrade;
   analyzedFileCount: number;
   workflowCount: number;
+  jobCount: number;
 }
 
 export interface WorkflowAnalysisReport {
@@ -346,6 +396,7 @@ export interface WorkflowAnalysisReport {
   files: WorkflowInputFile[];
   summary: AnalysisSummary;
   findings: AnalyzerFinding[];
+  ignoredFindings: IgnoredFinding[];
   actionInventory: ActionInventoryItem[];
   expressionSummary: ExpressionSummary;
   permissionSummary: PermissionSummary;

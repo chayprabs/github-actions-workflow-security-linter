@@ -6,10 +6,15 @@ import {
 } from "@/features/actions-analyzer/lib/action-inventory";
 import { createRuleFinding } from "@/features/actions-analyzer/lib/create-rule-finding";
 import {
+  createInsertFixAfterLine,
+  hasSimpleMappingKeyLine,
+} from "@/features/actions-analyzer/lib/fix-builders";
+import {
   buildEvidence,
   findPathLocation,
   requireRuleDefinition,
 } from "@/features/actions-analyzer/lib/rules/rule-helpers";
+import { detectLineEnding } from "@/features/actions-analyzer/lib/source-location-utils";
 import type {
   ActionInventoryItem,
   AnalyzerProfile,
@@ -281,6 +286,23 @@ export const checkoutPersistedCredentialsRule: RuleModule = {
           "persist-credentials",
         ]) ??
         item.location;
+      const fix =
+        parsedFile &&
+        step?.with.location &&
+        hasSimpleMappingKeyLine(parsedFile.content, step.with.location.line)
+          ? createInsertFixAfterLine(
+              parsedFile.content,
+              step.with.location.line,
+              `${getWithChildIndent(parsedFile.content, step.with.location.line)}persist-credentials: false${detectLineEnding(parsedFile.content)}`,
+              {
+                description:
+                  "Insert `persist-credentials: false` into the existing checkout `with` block.",
+                filePath: item.filePath,
+                label: "Add persist-credentials: false",
+                safety: "safe",
+              },
+            )
+          : undefined;
 
       return [
         createRuleFinding(
@@ -289,6 +311,7 @@ export const checkoutPersistedCredentialsRule: RuleModule = {
             confidence: "medium",
             evidence: buildEvidence(parsedFile, location),
             filePath: item.filePath,
+            fix,
             location,
             message: `\`${item.uses}\` leaves credentials configured in job \`${item.jobId}\`, and that job has write permissions. Later git commands in the same job can reuse the token unless \`persist-credentials: false\` is set.`,
             relatedJobs: [item.jobId],
@@ -421,6 +444,13 @@ function isPersistCredentialsDisabled(value: unknown) {
     value === false ||
     (typeof value === "string" && value.trim().toLowerCase() === "false")
   );
+}
+
+function getWithChildIndent(content: string, lineNumber: number) {
+  const line = content.split(/\r?\n/u)[lineNumber - 1] ?? "";
+  const baseIndent = /^\s*/u.exec(line)?.[0] ?? "";
+
+  return `${baseIndent}  `;
 }
 
 function isStrictSupplyChainProfile(profile: AnalyzerProfile) {

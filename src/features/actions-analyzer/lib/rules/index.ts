@@ -17,6 +17,13 @@ import {
   unknownNeedsRule,
 } from "@/features/actions-analyzer/lib/rules/job-semantics.rules";
 import {
+  broadCacheKeyRule,
+  continueOnErrorRule,
+  missingArtifactRetentionRule,
+  missingDeployConcurrencyRule,
+  missingJobTimeoutRule,
+} from "@/features/actions-analyzer/lib/rules/reliability.rules";
+import {
   emptyMatrixRule,
   largeMatrixRule,
   unresolvedMatrixRule,
@@ -76,6 +83,11 @@ export const registeredRuleModules: RuleModule[] = [
   invalidTimeoutRule,
   reusableWorkflowMixedFieldsRule,
   suspiciousKeyTypoRule,
+  missingJobTimeoutRule,
+  missingDeployConcurrencyRule,
+  continueOnErrorRule,
+  broadCacheKeyRule,
+  missingArtifactRetentionRule,
   largeMatrixRule,
   unmatchedMatrixEntryRule,
   emptyMatrixRule,

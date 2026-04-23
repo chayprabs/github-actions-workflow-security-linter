@@ -266,3 +266,94 @@
 
 - Dynamic matrices such as `fromJSON(...)` are intentionally reported as unresolved rather than guessed. The preview engine preserves the job metadata and unresolved reasons, but it does not attempt to evaluate runtime-generated matrix data.
 - Include matching follows static base-axis matching so the preview stays deterministic and review-friendly. That is sufficient for CI review and warning generation, but it still cannot mirror every runtime nuance of GitHub-hosted expression evaluation.
+
+## Prompt 15
+
+- Status: Completed.
+- Outcome: Replaced the plain workflow textarea with a real `WorkflowCodeEditor` built directly on CodeMirror 6, including YAML highlighting, line numbers, search, copy/download/select-all actions, soft-wrap toggle, readable monospace styling, lint gutter diagnostics, active-finding line highlighting, and an explicit textarea fallback path for manual resilience or files over 1 MB. Wired analyzer findings into file-scoped editor diagnostics, added click-to-line from the Results panel with mobile-tab handoff back to the editor, and upgraded the multi-file tabs to show per-file severity counts while keeping edits synced into each `WorkflowInputFile`. Added focused tests for finding presentation helpers and finding-card selection, refreshed the smoke spec for the editor flow, and updated the input/results state wiring without breaking the worker-backed analyzer pipeline.
+
+### Commands Run
+
+- `npm install @codemirror/state @codemirror/view @codemirror/lang-yaml @codemirror/lint @codemirror/search`
+- `npx prettier --write src/components/ui/textarea.tsx src/features/actions-analyzer/lib/finding-presentation.ts src/features/actions-analyzer/lib/finding-presentation.test.ts src/features/actions-analyzer/components/workflow-code-editor.tsx src/features/actions-analyzer/components/input-panel.tsx src/features/actions-analyzer/components/results-panel.tsx src/features/actions-analyzer/components/results-panel.test.tsx src/features/actions-analyzer/components/analyzer-workspace.tsx src/features/actions-analyzer/components/analyzer-page.tsx tests/e2e/smoke.spec.ts`
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+
+### Known Issues / Notes
+
+- YAML formatting remains intentionally deferred. The toolbar exposes the future slot, but it stays disabled for now so comments and author formatting are not accidentally lost by a naive stringify pass.
+- The Playwright smoke spec was updated for the CodeMirror-based editor flow, but `test:e2e` was not executed in this prompt because Playwright browsers were not installed.
+
+## Prompt 16
+
+- Status: Completed.
+- Outcome: Rebuilt the Results interface into a production-quality review surface. The analyzer summary now carries `jobCount`, and the Results panel now includes a score header with grade, severity counts, file/workflow/job/action metrics, analyzed-locally privacy badge, and last-analyzed timestamp. Added a full findings toolbar with search, severity toggles, category/file/job filters, security-only and warnings-only switches, grouping modes, and sort controls. Findings now render as compact review rows with a dedicated detail preview panel, while the report tab now presents explicit Security, Permission, Trigger, Reliability, Action Inventory, and Matrix Preview sections with accessible inventory tables and clearer empty/error states. Added helper-level tests for filtering/grouping logic, richer Results panel interaction tests, and small accessibility upgrades like table captions and header scopes.
+
+### Commands Run
+
+- `npx prettier --write src/features/actions-analyzer/types/domain.ts src/features/actions-analyzer/lib/summary.ts src/features/actions-analyzer/lib/analyze-workflows.ts src/features/actions-analyzer/lib/analyze-workflows.test.ts src/features/actions-analyzer/fixtures/reports.ts src/features/actions-analyzer/lib/results-presentation.ts src/features/actions-analyzer/lib/results-presentation.test.ts src/features/actions-analyzer/components/results-panel.tsx src/features/actions-analyzer/components/results-panel.test.tsx src/features/actions-analyzer/components/matrix-preview-panel.tsx src/features/actions-analyzer/components/analyzer-page.tsx src/features/actions-analyzer/components/analyzer-workspace.tsx docs/IMPLEMENTATION_LOG.md`
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+
+### Known Issues / Notes
+
+- The finding detail panel is intentionally a lightweight review preview for this prompt. It supports click-to-open and remediation review now, but deeper workflows such as richer navigation and fix actions remain for later prompts.
+- The Playwright smoke spec remains present, but `test:e2e` was not executed in this prompt because Playwright browsers were not installed.
+
+## Prompt 17
+
+- Status: Completed.
+- Outcome: Added a full finding-detail and remediation workflow across both the analyzer engine and the Results UI. The report contract now carries `ignoredFindings`, the analyzer parses `# authos-ignore RULE_ID: reason` comments, suppresses one matching finding on the relevant next line, and emits low-severity `GHA901` when a suppression comment omits its reason. Added patchable `SuggestedFix` support with preview/apply helpers, stale-analysis protection, and new reliability rules `GHA401` through `GHA405` for missing job timeouts, missing deploy concurrency, `continue-on-error: true`, broad cache keys, and missing artifact retention. Safe fixes now exist for missing top-level permissions, missing job timeouts, artifact retention, and `actions/checkout` persisted credentials when the source range is reliable; review/manual previews now exist for deploy concurrency, `continue-on-error`, cache-key guidance, and untrusted-context env-boundary guidance. The Results panel now renders richer finding detail with why-it-matters copy, remediation, docs link, evidence, affected actions, Markdown/remediation/ignore-comment copy actions, suggested patch previews, explicit apply-fix controls, and a collapsed Ignored findings section.
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+
+### Known Issues / Notes
+
+- Safe patch application is intentionally conservative. Authos only applies a fix when the finding includes an exact range and the current file content still matches the last analyzed snapshot; otherwise the UI asks the user to re-run analysis first.
+- Review/manual fixes intentionally favor explicit copied patches or snippets over automatic mutation when the target change depends on workflow intent, trust boundaries, or ecosystem-specific cache semantics.
+
+## Prompt 18
+
+- Status: Completed.
+- Outcome: Added two higher-signal review differentiators to the analyzer report: a best-effort permission minimizer and an attack-path explanation panel. The analyzer now derives workflow-level and job-level permission recommendations with a conservative `contents: read` baseline, trust labels, risk labels, third-party action awareness, scope-by-scope rationale, and copyable YAML snippets for both workflow-level reductions and job overrides. It also derives `attackPaths` from static combinations of enabled findings and workflow structure, covering `pull_request_target` plus PR-head checkout with write tokens, self-hosted shell execution on untrusted triggers, privileged unpinned third-party actions, `workflow_run` artifact handoffs into privileged follow-up jobs, and untrusted shell-context usage in privileged jobs. The Results UI now exposes both a `PermissionMinimizerPanel` and an `AttackPathPanel` with accessible tables, explicit heuristic language, copyable YAML, and actionable mitigation checklists. Added dedicated fixture-backed tests for permission recommendation behavior and all five attack-path patterns, plus updated sample report fixtures and Results panel assertions.
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+
+### Known Issues / Notes
+
+- Permission minimizer output is intentionally conservative and review-oriented. It uses static workflow heuristics, not repository settings or runtime API traces, so recommendations are labeled as review guidance rather than certainty.
+- Attack paths are explanation aids, not exploit proofs. The panel is careful to describe what a risky combination could allow or increase, while leaving room for branch protections, approvals, and repository policy that are not encoded in workflow YAML alone.
+
+## Prompt 19
+
+- Status: Completed.
+- Outcome: Added production-ready export, sharing, and report-comparison flows so analyzer output is easier to use in real code review. The Results panel now exposes a `ReportExportPanel` with `Copy PR comment`, `Copy share link`, `Download JSON`, `Download SARIF`, and `Download HTML` actions backed by browser-safe clipboard/download helpers and toast feedback. Markdown exports summarize score, top findings, action pinning, permissions, and matrix impact without embedding full workflow content; JSON exports serialize the full `WorkflowAnalysisReport`; SARIF exports produce a SARIF 2.1.0-like structure with rule metadata and location mapping; and HTML exports render a standalone escaped report with no external scripts. Added privacy-safe share-state helpers so copied links preserve safe filters, sample IDs, and analyzer settings without embedding pasted or uploaded YAML in the URL, and updated the page bootstrap path so those safe settings restore when a shared link is opened.
+- Outcome continued: Added a dedicated `Compare reports` workspace tab with a `CompareReportsPanel` that treats the current analysis as "Current" and compares it against either a second pasted/uploaded/sample input or the previously analyzed current report. The compare workflow now categorizes findings into new, resolved, and unchanged buckets using stable finding keys, highlights score delta and new high-or-critical findings, and supports copying a Markdown compare summary for PR review. Added focused tests for markdown export snapshots, JSON and SARIF shape, HTML escaping, privacy-safe share parsing, and compare-mode categorization behavior.
+
+### Commands Run
+
+- `npx prettier --write src/features/actions-analyzer/components/analyzer-page.tsx src/features/actions-analyzer/components/analyzer-workspace.tsx src/features/actions-analyzer/components/results-panel.tsx src/features/actions-analyzer/components/results-panel.test.tsx src/features/actions-analyzer/components/report-export-panel.tsx src/features/actions-analyzer/components/compare-reports-panel.tsx src/features/actions-analyzer/components/action-toast.tsx src/features/actions-analyzer/lib/report-compare.ts src/features/actions-analyzer/lib/report-compare.test.ts src/features/actions-analyzer/lib/report-share.ts src/features/actions-analyzer/lib/report-share.test.ts src/features/actions-analyzer/lib/report-exports.ts src/features/actions-analyzer/lib/report-exports.test.ts src/features/actions-analyzer/lib/browser-actions.ts src/features/actions-analyzer/lib/use-action-toast.ts`
+- `npx prettier --write src/features/actions-analyzer/lib/use-workflow-inputs.ts src/features/actions-analyzer/components/analyzer-page.tsx src/features/actions-analyzer/components/report-export-panel.tsx src/features/actions-analyzer/components/compare-reports-panel.tsx src/features/actions-analyzer/lib/report-exports.ts`
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+
+### Known Issues / Notes
+
+- Share links remain privacy-safe by default and intentionally do not support embedding full workflow content. Content-including compressed URL state is still deferred until there is a safer transport and size strategy.
+- The compare workflow currently uses either an explicitly analyzed previous input or the last analyzed current report as its baseline. That covers before/after review well today, but persistent saved report history is still a later enhancement.

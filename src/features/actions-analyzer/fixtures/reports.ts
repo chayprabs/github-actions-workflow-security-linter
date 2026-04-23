@@ -81,8 +81,9 @@ const sampleFindings: AnalyzerFinding[] = sortFindings([
 export const emptyAnalysisReport: WorkflowAnalysisReport = {
   generatedAt: "2026-01-01T00:00:00.000Z",
   files: [],
-  summary: buildAnalysisSummary([], 0, 0),
+  summary: buildAnalysisSummary([], 0, 0, 0),
   findings: [],
+  ignoredFindings: [],
   actionInventory: [],
   expressionSummary: {
     contexts: [],
@@ -93,8 +94,10 @@ export const emptyAnalysisReport: WorkflowAnalysisReport = {
   permissionSummary: {
     hasTopLevelPermissions: false,
     jobOverrides: [],
+    jobRecommendations: [],
     missingPermissions: [],
     topLevel: [],
+    workflowRecommendations: [],
     writeScopes: [],
     scopes: [],
     recommendedPermissions: [],
@@ -131,8 +134,9 @@ export const emptyAnalysisReport: WorkflowAnalysisReport = {
 export const sampleAnalysisReport: WorkflowAnalysisReport = {
   generatedAt: "2026-01-01T00:00:00.000Z",
   files: [sampleFile],
-  summary: buildAnalysisSummary(sampleFindings, 1, 1),
+  summary: buildAnalysisSummary(sampleFindings, 1, 1, 1),
   findings: sampleFindings,
+  ignoredFindings: [],
   actionInventory: [
     {
       action: "actions/checkout",
@@ -183,8 +187,69 @@ export const sampleAnalysisReport: WorkflowAnalysisReport = {
   permissionSummary: {
     hasTopLevelPermissions: false,
     jobOverrides: [],
+    jobRecommendations: [
+      {
+        copyableYaml: `jobs:
+  release:
+    permissions:
+      contents: write`,
+        currentPermissionsSource: "none",
+        currentPermissionsYaml: null,
+        currentWriteScopes: [],
+        filePath: sampleFile.path,
+        jobId: "release",
+        recommendedPermissions: {
+          contents: "write",
+        },
+        recommendedWriteScopes: ["contents"],
+        riskLabel: "high",
+        scopeRecommendations: [
+          {
+            currentAccess: null,
+            rationale:
+              "Job metadata includes `release`, which often signals release, tag, changelog, or version-bump work that may need repository writes. Review recommended because Authos is using static workflow heuristics, not runtime repository policy.",
+            recommendedAccess: "write",
+            scope: "contents",
+            status: "review-recommended",
+          },
+        ],
+        thirdPartyActions: [],
+        trustLevel: "untrusted",
+        workflowName: "Release",
+      },
+    ],
     missingPermissions: [sampleFile.path],
     topLevel: [],
+    workflowRecommendations: [
+      {
+        copyableYaml: `permissions:
+  contents: read
+
+jobs:
+  release:
+    permissions:
+      contents: write`,
+        currentPermissionsYaml: null,
+        currentWriteScopes: [],
+        filePath: sampleFile.path,
+        recommendedPermissions: {
+          contents: "read",
+        },
+        recommendedWriteScopes: [],
+        scopeRecommendations: [
+          {
+            currentAccess: null,
+            rationale:
+              "A read-only `contents` baseline is the conservative default for most jobs and supports standard checkout/read access.",
+            recommendedAccess: "read",
+            scope: "contents",
+            status: "not-inferred",
+          },
+        ],
+        trustLevel: "untrusted",
+        workflowName: "Release",
+      },
+    ],
     writeScopes: [],
     scopes: [],
     recommendedPermissions: ["contents: read"],
@@ -223,12 +288,21 @@ export const sampleAnalysisReport: WorkflowAnalysisReport = {
   attackPaths: [
     {
       id: "ap-001",
-      title: "Untrusted code can influence privileged workflow execution",
+      title: "PR head code could run with repository write access",
       description:
-        "The workflow uses pull_request_target with mutable action pinning, increasing the blast radius of upstream changes.",
+        "This `pull_request_target` job checks out pull request head content and still carries repository write access, which could allow untrusted pull request changes to influence a privileged execution path.",
+      heuristic:
+        "Static heuristic: pull_request_target plus PR head checkout plus a write-capable token.",
+      jobIds: ["release"],
+      mitigationChecklist: [
+        "Move untrusted pull request builds to `pull_request` and keep `pull_request_target` limited to metadata-only automation.",
+        "Do not check out pull request head code in a privileged follow-up job.",
+        "Reduce job permissions before checkout or shell steps run.",
+      ],
       severity: "high",
-      relatedRuleIds: ["GHA100", "GHA201"],
+      relatedRuleIds: ["GHA100", "GHA201", "GHA103", "GHA104"],
       filePaths: [sampleFile.path],
+      stepLabels: ["step-1"],
     },
   ],
   settings: defaultAnalyzerSettings,

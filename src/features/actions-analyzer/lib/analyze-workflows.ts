@@ -1,20 +1,20 @@
 import { buildActionInventory } from "@/features/actions-analyzer/lib/action-inventory";
+import { buildAttackPaths } from "@/features/actions-analyzer/lib/attack-paths";
 import { expandMatrix } from "@/features/actions-analyzer/lib/expand-matrix";
 import {
   buildExpressionSummary,
   collectExpressionsFromWorkflow,
   hydrateWorkflowExpressions,
 } from "@/features/actions-analyzer/lib/expression-utils";
+import { applyIgnoreComments } from "@/features/actions-analyzer/lib/ignore-comments";
 import { normalizeParsedWorkflow } from "@/features/actions-analyzer/lib/normalize-workflow";
 import { parseWorkflowYamlFiles } from "@/features/actions-analyzer/lib/parse-workflow-yaml";
+import { buildPermissionSummary } from "@/features/actions-analyzer/lib/permission-minimizer";
 import { registeredRuleModules } from "@/features/actions-analyzer/lib/rules";
 import { getRuleDefinition } from "@/features/actions-analyzer/lib/rule-catalog";
 import {
-  buildPermissionDeclarationSummary,
-  getBroadWriteScopes,
   isSecurityPackRuleId,
   summarizeTriggerKinds,
-  toPermissionScopes,
 } from "@/features/actions-analyzer/lib/security-utils";
 import { resolveAnalyzerSettings } from "@/features/actions-analyzer/lib/settings";
 import {
@@ -26,10 +26,10 @@ import type {
   ActionInventoryItem,
   AnalyzerFinding,
   AnalyzerSettings,
+  IgnoredFinding,
   MatrixJobSummary,
   MatrixSummary,
   NormalizedWorkflow,
-  PermissionSummary,
   RuleContext,
   RuleModule,
   SecuritySummary,
@@ -83,14 +83,25 @@ export function analyzeWorkflowFiles(
     context,
     applyRuleSettings(registeredRuleModules, resolvedSettings),
   );
+  const enabledFindings = filterFindingsBySettings(
+    [...parseFindings, ...ruleFindings],
+    resolvedSettings,
+  );
+  const ignoreCommentResult = applyIgnoreComments(files, enabledFindings);
   const findings = finalizeFindings(
     filterFindingsBySettings(
-      [...parseFindings, ...ruleFindings],
+      [...ignoreCommentResult.findings, ...ignoreCommentResult.warnings],
       resolvedSettings,
     ),
   );
+  const ignoredFindings = finalizeIgnoredFindings(
+    ignoreCommentResult.ignoredFindings,
+  );
   const triggerSummary = buildTriggerSummary(normalizedWorkflows);
-  const permissionSummary = buildPermissionSummary(normalizedWorkflows);
+  const permissionSummary = buildPermissionSummary(
+    normalizedWorkflows,
+    actionInventory,
+  );
 
   return {
     generatedAt: new Date().toISOString(),
@@ -99,15 +110,24 @@ export function analyzeWorkflowFiles(
       findings,
       files.length,
       normalizedWorkflows.length,
+      normalizedWorkflows.reduce(
+        (sum, workflow) => sum + workflow.jobs.length,
+        0,
+      ),
     ),
     findings,
+    ignoredFindings,
     actionInventory,
     expressionSummary: buildExpressionSummary(expressions),
     permissionSummary,
     securitySummary: buildSecuritySummary(findings),
     triggerSummary,
     matrixSummary,
-    attackPaths: [],
+    attackPaths: buildAttackPaths({
+      actionInventory,
+      findings,
+      normalizedWorkflows,
+    }),
     settings: resolvedSettings,
   };
 }
@@ -121,8 +141,9 @@ export function createEmptyReport(
   return {
     generatedAt: new Date().toISOString(),
     files,
-    summary: buildAnalysisSummary([], files.length, 0),
+    summary: buildAnalysisSummary([], files.length, 0, 0),
     findings: [],
+    ignoredFindings: [],
     actionInventory: [],
     expressionSummary: {
       contexts: [],
@@ -133,8 +154,10 @@ export function createEmptyReport(
     permissionSummary: {
       hasTopLevelPermissions: false,
       jobOverrides: [],
+      jobRecommendations: [],
       missingPermissions: [],
       topLevel: [],
+      workflowRecommendations: [],
       writeScopes: [],
       scopes: [],
       recommendedPermissions: [],
@@ -270,91 +293,6 @@ function buildMatrixSummary(
   };
 }
 
-function buildPermissionSummary(
-  normalizedWorkflows: NormalizedWorkflow[],
-): PermissionSummary {
-  const jobOverrides = normalizedWorkflows.flatMap((workflow) =>
-    workflow.jobs.flatMap((job) => {
-      return job.permissions
-        ? [
-            buildPermissionDeclarationSummary(
-              workflow.filePath,
-              job.permissions,
-              "job",
-              job.id,
-            ),
-          ]
-        : [];
-    }),
-  );
-  const missingPermissions = normalizedWorkflows
-    .filter((workflow) => workflow.permissions === null)
-    .map((workflow) => workflow.filePath);
-  const scopes = normalizedWorkflows.flatMap((workflow) => [
-    ...(workflow.permissions
-      ? toPermissionScopes(workflow.filePath, workflow.permissions, "top-level")
-      : []),
-    ...workflow.jobs.flatMap((job) =>
-      job.permissions
-        ? toPermissionScopes(workflow.filePath, job.permissions, "job", job.id)
-        : [],
-    ),
-  ]);
-  const topLevel = normalizedWorkflows.flatMap((workflow) =>
-    workflow.permissions
-      ? [
-          buildPermissionDeclarationSummary(
-            workflow.filePath,
-            workflow.permissions,
-            "top-level",
-          ),
-        ]
-      : [],
-  );
-  const writeScopes = normalizedWorkflows.flatMap((workflow) => [
-    ...topLevelWriteScopes(workflow),
-    ...workflow.jobs.flatMap((job) =>
-      (job.permissions ? getBroadWriteScopes(job.permissions) : []).map(
-        (scope) => ({
-          access: "write",
-          filePath: workflow.filePath,
-          jobName: job.id,
-          location:
-            job.permissions?.scopeLocations[scope] ?? job.permissions?.location,
-          scope,
-          source: "job" as const,
-        }),
-      ),
-    ),
-  ]);
-  const warnings: string[] = [];
-
-  for (const workflow of normalizedWorkflows) {
-    if (!workflow.permissions) {
-      warnings.push(
-        `${workflow.filePath} does not declare top-level permissions.`,
-      );
-    }
-  }
-
-  return {
-    hasTopLevelPermissions: normalizedWorkflows.some(
-      (workflow) => workflow.permissions !== null,
-    ),
-    jobOverrides,
-    missingPermissions,
-    topLevel,
-    writeScopes,
-    scopes,
-    recommendedPermissions:
-      normalizedWorkflows.length > 0 &&
-      normalizedWorkflows.some((workflow) => workflow.permissions === null)
-        ? ["contents: read"]
-        : [],
-    warnings,
-  };
-}
-
 function buildSecuritySummary(findings: AnalyzerFinding[]): SecuritySummary {
   const securityFindings = findings.filter((finding) =>
     isSecurityPackRuleId(finding.ruleId),
@@ -441,6 +379,33 @@ function finalizeFindings(findings: AnalyzerFinding[]): AnalyzerFinding[] {
   );
 }
 
+function finalizeIgnoredFindings(
+  ignoredFindings: IgnoredFinding[],
+): IgnoredFinding[] {
+  const hydrated = ignoredFindings.map((ignoredFinding, index) => ({
+    ...ignoredFinding,
+    finding: hydrateFindingWithDefinition(ignoredFinding.finding, index),
+  }));
+  const sortOrder = new Map(
+    sortFindings(hydrated.map((ignoredFinding) => ignoredFinding.finding)).map(
+      (finding, index) => [finding.id, index],
+    ),
+  );
+
+  return [...hydrated].sort((left, right) => {
+    const leftSortOrder =
+      sortOrder.get(left.finding.id) ?? Number.MAX_SAFE_INTEGER;
+    const rightSortOrder =
+      sortOrder.get(right.finding.id) ?? Number.MAX_SAFE_INTEGER;
+
+    if (leftSortOrder !== rightSortOrder) {
+      return leftSortOrder - rightSortOrder;
+    }
+
+    return left.line - right.line;
+  });
+}
+
 function hydrateFindingWithDefinition(
   finding: AnalyzerFinding,
   index: number,
@@ -482,20 +447,4 @@ function isRuleEnabled(
   }
 
   return !disabledRuleIds.includes(ruleId);
-}
-
-function topLevelWriteScopes(workflow: NormalizedWorkflow) {
-  if (!workflow.permissions) {
-    return [];
-  }
-
-  return getBroadWriteScopes(workflow.permissions).map((scope) => ({
-    access: "write",
-    filePath: workflow.filePath,
-    location:
-      workflow.permissions?.scopeLocations[scope] ??
-      workflow.permissions?.location,
-    scope,
-    source: "top-level" as const,
-  }));
 }

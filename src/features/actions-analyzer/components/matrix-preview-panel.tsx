@@ -211,11 +211,16 @@ function MatrixJobCard({
       ) : (
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full border-separate border-spacing-y-2 text-sm">
+            <caption className="sr-only">
+              Matrix combinations for job {job.jobId}
+            </caption>
             <thead>
               <tr className="text-left text-xs uppercase tracking-[0.14em] text-muted-foreground">
-                <th className="px-3 py-2 font-medium">#</th>
+                <th className="px-3 py-2 font-medium" scope="col">
+                  #
+                </th>
                 {job.combinationKeys.map((key) => (
-                  <th className="px-3 py-2 font-medium" key={key}>
+                  <th className="px-3 py-2 font-medium" key={key} scope="col">
                     {key}
                   </th>
                 ))}

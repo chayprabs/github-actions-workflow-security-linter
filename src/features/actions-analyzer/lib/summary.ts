@@ -29,6 +29,7 @@ export function buildAnalysisSummary(
   findings: AnalyzerFinding[],
   analyzedFileCount: number,
   workflowCount: number,
+  jobCount: number,
 ): AnalysisSummary {
   const severityCounts = createEmptySeverityCounts();
   const categoryCounts = createEmptyCategoryCounts();
@@ -48,5 +49,6 @@ export function buildAnalysisSummary(
     grade: gradeFromScore(score),
     analyzedFileCount,
     workflowCount,
+    jobCount,
   };
 }

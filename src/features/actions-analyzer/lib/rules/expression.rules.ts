@@ -1,4 +1,5 @@
 import { createRuleFinding } from "@/features/actions-analyzer/lib/create-rule-finding";
+import { createManualSnippetFix } from "@/features/actions-analyzer/lib/fix-builders";
 import { requireRuleDefinition } from "@/features/actions-analyzer/lib/rules/rule-helpers";
 import type {
   RuleModule,
@@ -216,6 +217,24 @@ export const untrustedContextRule: RuleModule = {
           {
             evidence: expression.rawExpression,
             filePath: expression.filePath,
+            fix:
+              expression.fieldType === "run"
+                ? createManualSnippetFix(
+                    [
+                      "env:",
+                      "  UNTRUSTED_INPUT: ${{ github.event.pull_request.title }}",
+                      "run: |",
+                      '  printf \'%s\\n\' \"$UNTRUSTED_INPUT\"',
+                    ].join("\n"),
+                    {
+                      description:
+                        "Move the untrusted expression into `env` first, then consume the environment variable inside the script with normal shell quoting.",
+                      filePath: expression.filePath,
+                      label: "Copy env-boundary example",
+                      safety: "manual",
+                    },
+                  )
+                : undefined,
             location: expression.location,
             message: `Expression in \`${expression.fieldPathLabel}\` uses potentially untrusted GitHub event data directly: ${riskyReferences
               .map((reference) => `\`${reference}\``)

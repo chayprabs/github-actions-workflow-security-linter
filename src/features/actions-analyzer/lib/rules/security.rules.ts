@@ -1,5 +1,9 @@
 import { createRuleFinding } from "@/features/actions-analyzer/lib/create-rule-finding";
 import {
+  createInsertFixAtOffset,
+  findTopLevelInsertionOffset,
+} from "@/features/actions-analyzer/lib/fix-builders";
+import {
   buildEvidence,
   findPathLocation,
   getStepLabel,
@@ -19,6 +23,7 @@ import {
   longLivedCloudSecretNames,
   shouldRelaxBroadWriteSeverity,
 } from "@/features/actions-analyzer/lib/security-utils";
+import { detectLineEnding } from "@/features/actions-analyzer/lib/source-location-utils";
 import type {
   AnalyzerFinding,
   RuleModule,
@@ -53,8 +58,24 @@ export const missingTopLevelPermissionsRule: RuleModule = {
 
       const parsedFile = context.getParsedFile(workflow.filePath);
       const location = getWorkflowAnchorLocation(workflow, parsedFile);
-      const canSuggestReadOnlyBaseline =
-        !workflow.jobs.some((job) => isDeploymentLikeJob(job));
+      const fix = parsedFile
+        ? createInsertFixAtOffset(
+            parsedFile.content,
+            findTopLevelInsertionOffset(parsedFile.content),
+            [
+              "permissions:",
+              "  contents: read",
+              "",
+            ].join(detectLineEnding(parsedFile.content)),
+            {
+              description:
+                "Insert an explicit read-only workflow baseline at the top of the file.",
+              filePath: workflow.filePath,
+              label: "Add permissions: contents: read",
+              safety: "safe",
+            },
+          )
+        : undefined;
 
       return [
         createRuleFinding(
@@ -64,22 +85,12 @@ export const missingTopLevelPermissionsRule: RuleModule = {
             evidence:
               buildEvidence(parsedFile, location) ?? "permissions: <missing>",
             filePath: workflow.filePath,
-            fix: canSuggestReadOnlyBaseline
-              ? {
-                  description:
-                    "Add `permissions: contents: read` near the top of the workflow and widen only the jobs that truly need more access.",
-                  filePath: workflow.filePath,
-                  kind: "manual",
-                  label: "Add explicit read-only baseline",
-                  safety: "safe",
-                }
-              : undefined,
+            fix,
             location,
             message:
               "This workflow does not declare top-level `permissions`, so the `GITHUB_TOKEN` baseline is not explicit in the workflow file.",
-            remediation: canSuggestReadOnlyBaseline
-              ? "Declare workflow-level permissions explicitly. Safe baseline suggestion: add `permissions: contents: read` near the top of the file, then widen only the jobs that need more access."
-              : "Declare workflow-level permissions explicitly so reviewers can verify least privilege. If some jobs require broader access, keep the workflow baseline narrow and override only those jobs.",
+            remediation:
+              "Declare workflow-level permissions explicitly. Start with `permissions: contents: read`, then widen only the jobs that truly need broader access.",
             severity: getMissingPermissionsSeverity(context.settings.profile),
           },
           index,

@@ -585,6 +585,50 @@ export const ruleCatalog = [
     tags: ["timeouts", "reliability", "ci"],
   },
   {
+    id: "GHA402",
+    title: "Deploy-style job is missing concurrency",
+    description:
+      "Deployment-like jobs should usually declare concurrency so overlapping runs do not step on each other.",
+    category: "reliability",
+    defaultSeverity: "medium",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["concurrency", "deployments", "reliability"],
+  },
+  {
+    id: "GHA403",
+    title: "Step enables continue-on-error",
+    description:
+      "continue-on-error can hide failing commands and should be used only when the step is intentionally non-blocking.",
+    category: "reliability",
+    defaultSeverity: "medium",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["steps", "continue-on-error", "reliability"],
+  },
+  {
+    id: "GHA404",
+    title: "Cache key may be too broad",
+    description:
+      "Cache keys that omit dependency fingerprints can reuse stale data across changes and make builds harder to reason about.",
+    category: "performance",
+    defaultSeverity: "medium",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["cache", "performance", "dependencies"],
+  },
+  {
+    id: "GHA405",
+    title: "Artifact retention-days is not set explicitly",
+    description:
+      "Explicit artifact retention helps control storage cost and makes lifecycle expectations clearer during review.",
+    category: "reliability",
+    defaultSeverity: "low",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["artifacts", "retention", "storage"],
+  },
+  {
     id: "GHA412",
     title: "Matrix include or exclude entry does not match the base matrix",
     description:
@@ -626,6 +670,16 @@ export const ruleCatalog = [
     defaultSeverity: "info",
     enabledByDefault: true,
     tags: ["input", "workflow", "empty-state"],
+  },
+  {
+    id: "GHA901",
+    title: "Ignore comment is missing a reason",
+    description:
+      "Authos ignore comments should include a short reason after the rule id so future reviewers understand the suppression.",
+    category: "maintainability",
+    defaultSeverity: "low",
+    enabledByDefault: true,
+    tags: ["ignore-comments", "review", "maintainability"],
   },
 ] satisfies RuleDefinition[];
 

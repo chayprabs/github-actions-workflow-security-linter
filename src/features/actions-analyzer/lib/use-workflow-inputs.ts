@@ -292,6 +292,7 @@ export function useWorkflowInputs({
     selectSample,
     setActiveFileId: setActiveFile,
     setIncludeAllYamlFiles,
+    setSettings,
     settings,
     totalSizeBytes,
     totalSizeLabel,

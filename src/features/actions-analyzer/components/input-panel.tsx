@@ -1,4 +1,4 @@
-import { FolderOpen, Upload, WandSparkles, X } from "lucide-react";
+import { FolderOpen, Upload, X } from "lucide-react";
 
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -14,24 +14,39 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { PrivacyNotice } from "@/features/actions-analyzer/components/privacy-notice";
+import {
+  type WorkflowEditorJumpTarget,
+  WorkflowCodeEditor,
+} from "@/features/actions-analyzer/components/workflow-code-editor";
 import {
   workflowSamples,
   type WorkflowSampleId,
 } from "@/features/actions-analyzer/fixtures/samples";
 import {
+  getFindingCountsByFile,
+  getFindingsForFile,
+  getSeverityTone,
+  severityDisplayOrder,
+} from "@/features/actions-analyzer/lib/finding-presentation";
+import {
   formatBytes,
   getWorkflowFileSourceLabel,
+  normalizeWorkflowPath,
   uploadFileAcceptValue,
 } from "@/features/actions-analyzer/lib/workflow-input-utils";
-import type { WorkflowInputFile } from "@/features/actions-analyzer/types";
+import type {
+  WorkflowAnalysisReport,
+  WorkflowInputFile,
+} from "@/features/actions-analyzer/types";
 
 interface InputPanelProps {
   activeFile: WorkflowInputFile | null;
   activeFileId: string | null;
+  activeFindingId: string | null;
   canAnalyze: boolean;
   defaultVirtualPath: string;
+  editorJumpTarget: WorkflowEditorJumpTarget | null;
   errors: string[];
   fileCount: number;
   files: WorkflowInputFile[];
@@ -53,6 +68,7 @@ interface InputPanelProps {
   onSampleChange: (sampleId: WorkflowSampleId | "manual") => void;
   onSelectFile: (fileId: string) => void;
   onToggleIncludeAllYamlFiles: (checked: boolean) => void;
+  report: WorkflowAnalysisReport | null;
   selectedSampleId: WorkflowSampleId | "manual";
   totalSizeLabel: string;
 }
@@ -60,8 +76,10 @@ interface InputPanelProps {
 export function InputPanel({
   activeFile,
   activeFileId,
+  activeFindingId,
   canAnalyze,
   defaultVirtualPath,
+  editorJumpTarget,
   errors,
   fileCount,
   files,
@@ -83,9 +101,19 @@ export function InputPanel({
   onSampleChange,
   onSelectFile,
   onToggleIncludeAllYamlFiles,
+  report,
   selectedSampleId,
   totalSizeLabel,
 }: InputPanelProps) {
+  const reportFindings = report?.findings ?? [];
+  const findingCountsByFile = getFindingCountsByFile(reportFindings);
+  const activeFileFindings = activeFile
+    ? getFindingsForFile(reportFindings, activeFile.path)
+    : [];
+  const activeFinding =
+    activeFileFindings.find((finding) => finding.id === activeFindingId) ??
+    null;
+
   return (
     <Card data-testid="input-panel">
       <CardHeader>
@@ -130,6 +158,7 @@ export function InputPanel({
         <div
           className="flex flex-wrap items-center gap-2 rounded-xl border border-border/80 bg-background/70 p-2"
           data-testid="workflow-file-list"
+          role="tablist"
         >
           {files.length === 0 ? (
             <EmptyState
@@ -140,6 +169,14 @@ export function InputPanel({
           ) : (
             files.map((file) => {
               const isActive = file.id === activeFileId;
+              const normalizedPath = normalizeWorkflowPath(
+                file.path,
+              ).toLowerCase();
+              const severityCounts = findingCountsByFile.get(normalizedPath);
+              const totalFindingCount = severityDisplayOrder.reduce(
+                (sum, severity) => sum + (severityCounts?.[severity] ?? 0),
+                0,
+              );
 
               return (
                 <div
@@ -152,8 +189,10 @@ export function InputPanel({
                 >
                   <button
                     aria-current={isActive ? "page" : undefined}
+                    aria-selected={isActive}
                     className="flex min-w-0 flex-1 flex-col items-start gap-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     onClick={() => onSelectFile(file.id)}
+                    role="tab"
                     type="button"
                   >
                     <span className="truncate text-sm font-medium text-foreground">
@@ -166,6 +205,30 @@ export function InputPanel({
                       <span>{formatBytes(file.sizeBytes)}</span>
                       {isActive ? <span>Selected</span> : null}
                     </span>
+                    {totalFindingCount > 0 ? (
+                      <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {severityDisplayOrder.map((severity) => {
+                          const count = severityCounts?.[severity] ?? 0;
+
+                          if (count === 0) {
+                            return null;
+                          }
+
+                          return (
+                            <Badge
+                              key={severity}
+                              tone={getSeverityTone(severity)}
+                            >
+                              {count} {severity}
+                            </Badge>
+                          );
+                        })}
+                      </span>
+                    ) : report ? (
+                      <span className="mt-1 text-xs text-muted-foreground">
+                        No findings in this file
+                      </span>
+                    ) : null}
                   </button>
                   <Button
                     aria-label={`Remove ${file.path}`}
@@ -328,37 +391,23 @@ export function InputPanel({
         </div>
 
         <div className="grid gap-2">
-          <label
-            className="text-sm font-medium text-foreground"
-            htmlFor="workflow-yaml-textarea"
-          >
-            Workflow YAML
-          </label>
-          <Textarea
-            data-testid="workflow-yaml-textarea"
-            id="workflow-yaml-textarea"
-            onChange={(event) => onInputChange(event.target.value)}
-            placeholder="name: CI&#10;on: [push]&#10;jobs: ..."
-            rows={18}
-            value={inputText}
-          />
-        </div>
-
-        <div className="rounded-xl border border-dashed border-border/80 bg-background/60 p-4">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-lg bg-accent/10 p-2 text-accent">
-              <WandSparkles className="h-4 w-4" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">
-                Editor upgrade placeholder
-              </p>
-              <p className="text-sm leading-6 text-muted-foreground">
-                CodeMirror, line diagnostics, and richer workflow comparisons
-                will be added in later prompts. This textarea is now backed by a
-                real browser-only ingestion layer.
-              </p>
-            </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">Workflow YAML</p>
+            <p className="text-sm text-muted-foreground">
+              The active file stays editable locally, with diagnostics limited
+              to the selected file after each analysis run.
+            </p>
+          </div>
+          <div id="workflow-yaml-editor-region">
+            <WorkflowCodeEditor
+              activeFinding={activeFinding}
+              diagnostics={activeFileFindings}
+              filePath={activeFile?.path ?? defaultVirtualPath}
+              jumpTarget={editorJumpTarget}
+              label="Workflow YAML"
+              onChange={onInputChange}
+              value={inputText}
+            />
           </div>
         </div>
 
