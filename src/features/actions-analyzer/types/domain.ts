@@ -73,6 +73,15 @@ export interface WorkflowInputFile {
   content: string;
   sizeBytes: number;
   sourceKind: WorkflowInputSourceKind;
+  sourceMetadata?: WorkflowInputSourceMetadata | undefined;
+}
+
+export interface WorkflowInputSourceMetadata {
+  githubImportUrl?: string | undefined;
+  githubPath?: string | undefined;
+  githubRef?: string | undefined;
+  sampleId?: string | undefined;
+  sampleLabel?: string | undefined;
 }
 
 export interface AnalyzerSettings {

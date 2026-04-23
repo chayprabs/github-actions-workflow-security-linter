@@ -1,6 +1,7 @@
 import type {
   WorkflowInputFile,
   WorkflowInputSourceKind,
+  WorkflowInputSourceMetadata,
 } from "@/features/actions-analyzer/types";
 
 export const DEFAULT_WORKFLOW_VIRTUAL_PATH = ".github/workflows/workflow.yml";
@@ -43,6 +44,7 @@ interface CreateWorkflowInputFileOptions {
   path: string;
   sizeBytes?: number | undefined;
   sourceKind: WorkflowInputSourceKind;
+  sourceMetadata?: WorkflowInputSourceMetadata | undefined;
 }
 
 export function normalizeWorkflowPath(path: string): string {
@@ -148,6 +150,7 @@ export function createWorkflowInputFile({
   path,
   sizeBytes,
   sourceKind,
+  sourceMetadata,
 }: CreateWorkflowInputFileOptions): WorkflowInputFile {
   const normalizedPath = normalizeWorkflowPath(path);
   const computedSizeBytes = sizeBytes ?? getFileSizeBytes(content);
@@ -164,6 +167,7 @@ export function createWorkflowInputFile({
     content,
     sizeBytes: computedSizeBytes,
     sourceKind,
+    sourceMetadata,
   };
 }
 

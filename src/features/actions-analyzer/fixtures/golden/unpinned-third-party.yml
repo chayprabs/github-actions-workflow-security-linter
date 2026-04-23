@@ -1,0 +1,13 @@
+name: Unpinned Third Party
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567
+      - uses: vendor/dependency-audit@main
+      - run: npm audit

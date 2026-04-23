@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, Manrope } from "next/font/google";
 
 import { PageShell } from "@/components/layout/page-shell";
+import {
+  initialThemeScript,
+  ThemeProvider,
+} from "@/components/layout/theme-provider";
+import { siteConfig } from "@/lib/site";
 
 import "./globals.css";
 
@@ -17,6 +22,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: {
     default: "Authos",
     template: "%s | Authos",
@@ -41,9 +47,13 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${manrope.variable} ${ibmPlexMono.variable} h-full scroll-smooth antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full bg-background text-foreground">
-        <PageShell>{children}</PageShell>
+        <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
+        <ThemeProvider>
+          <PageShell>{children}</PageShell>
+        </ThemeProvider>
       </body>
     </html>
   );

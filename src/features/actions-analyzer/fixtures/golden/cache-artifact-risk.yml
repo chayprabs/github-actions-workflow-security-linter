@@ -1,0 +1,19 @@
+name: Cache And Artifact Risk
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/cache@0123456789abcdef0123456789abcdef01234567
+        with:
+          path: ~/.npm
+          key: npm-cache
+      - uses: actions/upload-artifact@fedcba9876543210fedcba9876543210fedcba98
+        with:
+          name: build-output
+          path: dist

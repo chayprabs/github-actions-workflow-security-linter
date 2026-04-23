@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { usePushActionToast } from "@/features/actions-analyzer/components/action-toast-provider";
 import { AttackPathPanel } from "@/features/actions-analyzer/components/attack-path-panel";
 import { MatrixPreviewPanel } from "@/features/actions-analyzer/components/matrix-preview-panel";
 import { PermissionMinimizerPanel } from "@/features/actions-analyzer/components/permission-minimizer-panel";
@@ -107,6 +108,7 @@ export function ResultsPanel({
   selectedSampleLabel,
   view = "all",
 }: ResultsPanelProps) {
+  const pushToast = usePushActionToast();
   const findings = useMemo(() => report?.findings ?? [], [report]);
   const initialShareState = useMemo(() => readInitialResultsShareState(), []);
   const availableCategories = useMemo(() => {
@@ -280,6 +282,26 @@ export function ResultsPanel({
     tone: "danger" | "success" | "warning";
   } | null>(null);
 
+  function publishFixFeedback({
+    findingId,
+    message,
+    tone,
+  }: {
+    findingId: string;
+    message: string;
+    tone: "danger" | "success" | "warning";
+  }) {
+    setFixFeedback({
+      findingId,
+      message,
+      tone,
+    });
+    pushToast({
+      message,
+      tone,
+    });
+  }
+
   function handleApplyFixClick(finding: AnalyzerFinding) {
     if (!finding.fix) {
       return;
@@ -297,7 +319,7 @@ export function ResultsPanel({
       currentFileContent === undefined ||
       !onApplyFix
     ) {
-      setFixFeedback({
+      publishFixFeedback({
         findingId: finding.id,
         message: "Authos could not find the file content needed for this fix.",
         tone: "danger",
@@ -312,7 +334,7 @@ export function ResultsPanel({
     });
 
     if (!result.ok) {
-      setFixFeedback({
+      publishFixFeedback({
         findingId: finding.id,
         message: result.message,
         tone: result.code === "stale" ? "warning" : "danger",
@@ -322,7 +344,7 @@ export function ResultsPanel({
 
     const applied = onApplyFix(finding.fix.filePath, result.nextContent);
 
-    setFixFeedback({
+    publishFixFeedback({
       findingId: finding.id,
       message: applied
         ? "Fix applied locally. Re-run analysis to refresh the report."

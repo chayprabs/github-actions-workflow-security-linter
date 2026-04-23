@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { Copy, GitCompareArrows, History, Play } from "lucide-react";
 
-import { ActionToast } from "@/features/actions-analyzer/components/action-toast";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ import {
   compareWorkflowReports,
 } from "@/features/actions-analyzer/lib/report-compare";
 import { getSeverityTone } from "@/features/actions-analyzer/lib/finding-presentation";
-import { useActionToast } from "@/features/actions-analyzer/lib/use-action-toast";
+import { usePushActionToast } from "@/features/actions-analyzer/components/action-toast-provider";
 import type { WorkflowSampleId } from "@/features/actions-analyzer/fixtures/samples";
 import type {
   WorkflowAnalysisReport,
@@ -46,6 +45,7 @@ interface CompareReportsPanelProps {
   previousIncludeAllYamlFiles: boolean;
   previousInputText: string;
   previousIsAnalyzing: boolean;
+  previousMaxFileSizeBytes: number;
   previousMaxFileSizeLabel: string;
   previousReport: WorkflowAnalysisReport | null;
   previousSelectedSampleId: WorkflowSampleId | "manual";
@@ -56,13 +56,16 @@ interface CompareReportsPanelProps {
   onPreviousClearActiveInput: () => void;
   onPreviousFileUpload: (files: FileList | null) => void;
   onPreviousFileUploadFromFolder: (files: FileList | null) => void;
+  onPreviousGitHubImport: (files: WorkflowInputFile[]) => void | Promise<void>;
   onPreviousInputChange: (value: string) => void;
   onPreviousLoadSelectedSample: () => void;
   onPreviousRemoveFile: (fileId: string) => void;
   onPreviousRenameFile: (path: string) => void;
   onPreviousSampleChange: (sampleId: WorkflowSampleId | "manual") => void;
   onPreviousSelectFile: (fileId: string) => void;
+  onPreviousSoftWrapChange: (checked: boolean) => void;
   onPreviousToggleIncludeAllYamlFiles: (checked: boolean) => void;
+  previousSoftWrapEnabled: boolean;
 }
 
 export function CompareReportsPanel({
@@ -82,6 +85,7 @@ export function CompareReportsPanel({
   previousIncludeAllYamlFiles,
   previousInputText,
   previousIsAnalyzing,
+  previousMaxFileSizeBytes,
   previousMaxFileSizeLabel,
   previousReport,
   previousSelectedSampleId,
@@ -92,18 +96,21 @@ export function CompareReportsPanel({
   onPreviousClearActiveInput,
   onPreviousFileUpload,
   onPreviousFileUploadFromFolder,
+  onPreviousGitHubImport,
   onPreviousInputChange,
   onPreviousLoadSelectedSample,
   onPreviousRemoveFile,
   onPreviousRenameFile,
   onPreviousSampleChange,
   onPreviousSelectFile,
+  onPreviousSoftWrapChange,
   onPreviousToggleIncludeAllYamlFiles,
+  previousSoftWrapEnabled,
 }: CompareReportsPanelProps) {
   const [baselineSource, setBaselineSource] = useState<
     "input" | "last-current"
   >("input");
-  const { setToast, toast } = useActionToast();
+  const pushToast = usePushActionToast();
   const effectivePreviousReport =
     baselineSource === "last-current"
       ? lastAnalyzedCurrentReport
@@ -133,12 +140,12 @@ export function CompareReportsPanel({
           previousLabel: effectivePreviousLabel,
         }),
       );
-      setToast({
+      pushToast({
         message: "Compare summary copied for PR review.",
         tone: "success",
       });
     } catch {
-      setToast({
+      pushToast({
         message: "Authos could not copy the compare summary.",
         tone: "danger",
       });
@@ -146,174 +153,172 @@ export function CompareReportsPanel({
   }
 
   return (
-    <>
-      <section className="space-y-5" data-testid="compare-reports-panel">
-        <Card>
-          <CardHeader>
-            <CardTitle>Compare reports</CardTitle>
-            <CardDescription>
-              Compare the current analysis against a second workflow set or the
-              last analyzed current report to spot new, resolved, and unchanged
-              review findings.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => {
-                setBaselineSource("input");
-              }}
-              size="sm"
-              variant={baselineSource === "input" ? "primary" : "secondary"}
-            >
-              <GitCompareArrows className="h-4 w-4" />
-              Use previous input analysis
-            </Button>
-            <Button
-              disabled={!lastAnalyzedCurrentReport}
-              onClick={() => {
-                setBaselineSource("last-current");
-              }}
-              size="sm"
-              variant={
-                baselineSource === "last-current" ? "primary" : "secondary"
-              }
-            >
-              <History className="h-4 w-4" />
-              Use last analyzed report
-            </Button>
-            <Button
-              disabled={!previousCanAnalyze}
-              onClick={() => {
-                setBaselineSource("input");
-                onAnalyzePrevious();
-              }}
-              size="sm"
-              variant="secondary"
-            >
-              <Play className="h-4 w-4" />
-              {previousIsAnalyzing ? "Analyzing..." : "Analyze previous"}
-            </Button>
-            <Button
-              disabled={!comparison}
-              onClick={handleCopyCompareSummary}
-              size="sm"
-              variant="secondary"
-            >
-              <Copy className="h-4 w-4" />
-              Copy compare summary
-            </Button>
-          </CardContent>
-        </Card>
+    <section className="space-y-5" data-testid="compare-reports-panel">
+      <Card>
+        <CardHeader>
+          <CardTitle>Compare reports</CardTitle>
+          <CardDescription>
+            Compare the current analysis against a second workflow set or the
+            last analyzed current report to spot new, resolved, and unchanged
+            review findings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => {
+              setBaselineSource("input");
+            }}
+            size="sm"
+            variant={baselineSource === "input" ? "primary" : "secondary"}
+          >
+            <GitCompareArrows className="h-4 w-4" />
+            Use previous input analysis
+          </Button>
+          <Button
+            disabled={!lastAnalyzedCurrentReport}
+            onClick={() => {
+              setBaselineSource("last-current");
+            }}
+            size="sm"
+            variant={
+              baselineSource === "last-current" ? "primary" : "secondary"
+            }
+          >
+            <History className="h-4 w-4" />
+            Use last analyzed report
+          </Button>
+          <Button
+            disabled={!previousCanAnalyze}
+            onClick={() => {
+              setBaselineSource("input");
+              onAnalyzePrevious();
+            }}
+            size="sm"
+            variant="secondary"
+          >
+            <Play className="h-4 w-4" />
+            {previousIsAnalyzing ? "Analyzing..." : "Analyze previous"}
+          </Button>
+          <Button
+            disabled={!comparison}
+            onClick={handleCopyCompareSummary}
+            size="sm"
+            variant="secondary"
+          >
+            <Copy className="h-4 w-4" />
+            Copy compare summary
+          </Button>
+        </CardContent>
+      </Card>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
-          <div className="space-y-4">
-            {previousAnalysisError ? (
-              <Alert title="Previous analysis error" tone="danger">
-                {previousAnalysisError}
-              </Alert>
-            ) : null}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
+        <div className="min-w-0 space-y-4">
+          {previousAnalysisError ? (
+            <Alert title="Previous analysis error" tone="danger">
+              {previousAnalysisError}
+            </Alert>
+          ) : null}
 
-            <InputPanel
-              activeFile={previousActiveFile}
-              activeFileId={previousActiveFileId}
-              activeFindingId={null}
-              canAnalyze={previousCanAnalyze}
-              defaultVirtualPath={previousDefaultVirtualPath}
-              editorJumpTarget={null}
-              errors={previousErrors}
-              fileCount={previousFileCount}
-              files={previousFiles}
-              folderUploadSupported={previousFolderUploadSupported}
-              includeAllYamlFiles={previousIncludeAllYamlFiles}
-              inputText={previousInputText}
-              isAnalyzing={previousIsAnalyzing}
-              maxFileSizeLabel={previousMaxFileSizeLabel}
-              onAddPasteFile={onPreviousAddPasteFile}
-              onAnalyze={onAnalyzePrevious}
-              onClear={onPreviousClear}
-              onClearActiveInput={onPreviousClearActiveInput}
-              onFileUpload={onPreviousFileUpload}
-              onFileUploadFromFolder={onPreviousFileUploadFromFolder}
-              onInputChange={onPreviousInputChange}
-              onLoadSelectedSample={onPreviousLoadSelectedSample}
-              onRemoveFile={onPreviousRemoveFile}
-              onRenameFile={onPreviousRenameFile}
-              onSampleChange={onPreviousSampleChange}
-              onSelectFile={onPreviousSelectFile}
-              onToggleIncludeAllYamlFiles={onPreviousToggleIncludeAllYamlFiles}
-              report={baselineSource === "input" ? previousReport : null}
-              selectedSampleId={previousSelectedSampleId}
-              totalSizeLabel={previousTotalSizeLabel}
-            />
-          </div>
-
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Compare summary</CardTitle>
-                <CardDescription>
-                  Current: {currentSampleLabel} / Previous:{" "}
-                  {effectivePreviousLabel}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!currentReport ? (
-                  <EmptyState
-                    description="Run analysis on the current workspace first so Authos has a 'Current' report to compare."
-                    title="Analyze the current workspace first"
-                  />
-                ) : !effectivePreviousReport ? (
-                  <EmptyState
-                    description="Analyze a previous input set or switch to the last analyzed report to start the before/after comparison."
-                    title="No previous report selected"
-                  />
-                ) : comparison ? (
-                  <>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <CompareMetric
-                        label="Score change"
-                        value={formatScoreDelta(comparison.summary.scoreDelta)}
-                      />
-                      <CompareMetric
-                        label="New high/critical"
-                        value={String(
-                          comparison.summary.newHighOrCriticalCount,
-                        )}
-                      />
-                      <CompareMetric
-                        label="New findings"
-                        value={String(comparison.summary.newFindingCount)}
-                      />
-                      <CompareMetric
-                        label="Resolved findings"
-                        value={String(comparison.summary.resolvedFindingCount)}
-                      />
-                    </div>
-
-                    <FindingDeltaSection
-                      findings={comparison.newFindings}
-                      title="New findings"
-                    />
-                    <FindingDeltaSection
-                      findings={comparison.resolvedFindings}
-                      title="Resolved findings"
-                    />
-                    <FindingDeltaSection
-                      findings={comparison.unchangedFindings.map(
-                        (finding) => finding.current,
-                      )}
-                      title="Unchanged findings"
-                    />
-                  </>
-                ) : null}
-              </CardContent>
-            </Card>
-          </div>
+          <InputPanel
+            activeFile={previousActiveFile}
+            activeFileId={previousActiveFileId}
+            activeFindingId={null}
+            canAnalyze={previousCanAnalyze}
+            defaultVirtualPath={previousDefaultVirtualPath}
+            editorJumpTarget={null}
+            errors={previousErrors}
+            fileCount={previousFileCount}
+            files={previousFiles}
+            folderUploadSupported={previousFolderUploadSupported}
+            includeAllYamlFiles={previousIncludeAllYamlFiles}
+            inputText={previousInputText}
+            isAnalyzing={previousIsAnalyzing}
+            maxFileSizeBytes={previousMaxFileSizeBytes}
+            maxFileSizeLabel={previousMaxFileSizeLabel}
+            onAddPasteFile={onPreviousAddPasteFile}
+            onAnalyze={onAnalyzePrevious}
+            onClear={onPreviousClear}
+            onClearActiveInput={onPreviousClearActiveInput}
+            onFileUpload={onPreviousFileUpload}
+            onFileUploadFromFolder={onPreviousFileUploadFromFolder}
+            onGitHubImport={onPreviousGitHubImport}
+            onInputChange={onPreviousInputChange}
+            onLoadSelectedSample={onPreviousLoadSelectedSample}
+            onRemoveFile={onPreviousRemoveFile}
+            onRenameFile={onPreviousRenameFile}
+            onSampleChange={onPreviousSampleChange}
+            onSelectFile={onPreviousSelectFile}
+            onSoftWrapChange={onPreviousSoftWrapChange}
+            onToggleIncludeAllYamlFiles={onPreviousToggleIncludeAllYamlFiles}
+            report={baselineSource === "input" ? previousReport : null}
+            selectedSampleId={previousSelectedSampleId}
+            softWrapEnabled={previousSoftWrapEnabled}
+            totalSizeLabel={previousTotalSizeLabel}
+          />
         </div>
-      </section>
 
-      <ActionToast toast={toast} />
-    </>
+        <div className="min-w-0 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Compare summary</CardTitle>
+              <CardDescription>
+                Current: {currentSampleLabel} / Previous:{" "}
+                {effectivePreviousLabel}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!currentReport ? (
+                <EmptyState
+                  description="Run analysis on the current workspace first so Authos has a 'Current' report to compare."
+                  title="Analyze the current workspace first"
+                />
+              ) : !effectivePreviousReport ? (
+                <EmptyState
+                  description="Analyze a previous input set or switch to the last analyzed report to start the before/after comparison."
+                  title="No previous report selected"
+                />
+              ) : comparison ? (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <CompareMetric
+                      label="Score change"
+                      value={formatScoreDelta(comparison.summary.scoreDelta)}
+                    />
+                    <CompareMetric
+                      label="New high/critical"
+                      value={String(comparison.summary.newHighOrCriticalCount)}
+                    />
+                    <CompareMetric
+                      label="New findings"
+                      value={String(comparison.summary.newFindingCount)}
+                    />
+                    <CompareMetric
+                      label="Resolved findings"
+                      value={String(comparison.summary.resolvedFindingCount)}
+                    />
+                  </div>
+
+                  <FindingDeltaSection
+                    findings={comparison.newFindings}
+                    title="New findings"
+                  />
+                  <FindingDeltaSection
+                    findings={comparison.resolvedFindings}
+                    title="Resolved findings"
+                  />
+                  <FindingDeltaSection
+                    findings={comparison.unchangedFindings.map(
+                      (finding) => finding.current,
+                    )}
+                    title="Unchanged findings"
+                  />
+                </>
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </section>
   );
 }
 

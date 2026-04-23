@@ -1,0 +1,29 @@
+{
+  "safe-basic.yml": {
+    "exact": []
+  },
+  "invalid-yaml.yml": {
+    "exact": ["GHA001"]
+  },
+  "pull-request-target-danger.yml": {
+    "exact": ["GHA055", "GHA101", "GHA103", "GHA104", "GHA206"]
+  },
+  "unpinned-third-party.yml": {
+    "exact": ["GHA200", "GHA202"]
+  },
+  "self-hosted-pr.yml": {
+    "exact": ["GHA105"]
+  },
+  "workflow-run-artifact.yml": {
+    "exact": ["GHA106"]
+  },
+  "matrix-large.yml": {
+    "exact": ["GHA407"]
+  },
+  "cache-artifact-risk.yml": {
+    "exact": ["GHA404", "GHA405"]
+  },
+  "secrets-in-run.yml": {
+    "exact": ["GHA107"]
+  }
+}

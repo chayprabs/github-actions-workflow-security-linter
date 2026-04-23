@@ -1,4 +1,5 @@
 export type WorkflowSampleId =
+  | "deploy-release"
   | "invalid-workflow"
   | "matrix-workflow"
   | "risky-pull-request-target"
@@ -94,6 +95,34 @@ jobs:
       - run: npm test
 `;
 
+export const deployReleaseWorkflow = `name: Deploy Release
+on:
+  push:
+    tags: [v*]
+  workflow_dispatch:
+permissions:
+  contents: read
+  deployments: write
+  id-token: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
+      - name: Publish deployment
+        run: ./scripts/deploy.sh
+`;
+
 export const invalidWorkflow = `name: Broken Workflow
 on:
   push
@@ -134,6 +163,14 @@ export const workflowSamples = [
     id: "matrix-workflow",
     label: "Matrix workflow",
     path: ".github/workflows/test-matrix.yml",
+  },
+  {
+    content: deployReleaseWorkflow,
+    description:
+      "A deployment-oriented workflow with explicit permissions, OIDC, and concurrency controls.",
+    id: "deploy-release",
+    label: "Deployment workflow with permissions",
+    path: ".github/workflows/deploy-release.yml",
   },
   {
     content: invalidWorkflow,

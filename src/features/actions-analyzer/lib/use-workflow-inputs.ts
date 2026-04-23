@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
 import {
   workflowSamples,
@@ -57,7 +57,11 @@ export function useWorkflowInputs({
   const hasAnyContent = files.some((file) => file.content.trim().length > 0);
   const totalSizeBytes = files.reduce((sum, file) => sum + file.sizeBytes, 0);
   const totalSizeLabel = formatBytes(totalSizeBytes);
-  const folderUploadSupported = detectFolderUploadSupport();
+  const folderUploadSupported = useSyncExternalStore(
+    subscribeToFolderUploadSupport,
+    detectFolderUploadSupport,
+    getServerFolderUploadSupportSnapshot,
+  );
 
   function selectSample(sampleId: WorkflowSampleId | "manual") {
     setSelectedSampleId(sampleId);
@@ -68,9 +72,7 @@ export function useWorkflowInputs({
 
     const nextFile = files.find((file) => file.id === nextFileId);
 
-    if (nextFile?.sourceKind !== "sample") {
-      setSelectedSampleId("manual");
-    }
+    setSelectedSampleId(getSelectedSampleIdForFiles(files, nextFile ?? null));
   }
 
   function addPasteFile() {
@@ -84,7 +86,7 @@ export function useWorkflowInputs({
 
     setFiles(nextFiles);
     setActiveFileId(nextFile.id);
-    setSelectedSampleId("manual");
+    setSelectedSampleId(getSelectedSampleIdForFiles(nextFiles, nextFile));
     setErrors([]);
   }
 
@@ -157,8 +159,13 @@ export function useWorkflowInputs({
 
       setFiles(nextFiles);
       setActiveFileId(uploadedFiles[0]?.id ?? nextFiles[0]?.id ?? null);
-      setSelectedSampleId("manual");
+      setSelectedSampleId(
+        getSelectedSampleIdForFiles(nextFiles, uploadedFiles[0] ?? null),
+      );
       setErrors(validationResult.errors);
+      setDirtyFileIds((currentIds) =>
+        currentIds.filter((id) => nextFiles.some((file) => file.id === id)),
+      );
 
       return true;
     } catch (error) {
@@ -170,6 +177,28 @@ export function useWorkflowInputs({
 
       return false;
     }
+  }
+
+  async function addImportedFiles(importedFiles: WorkflowInputFile[]) {
+    if (importedFiles.length === 0) {
+      return false;
+    }
+
+    const nextFiles = shouldReplaceEmptyDraft(files, dirtyFileIds)
+      ? importedFiles
+      : mergeWorkflowFiles(files, importedFiles);
+
+    setFiles(nextFiles);
+    setActiveFileId(importedFiles[0]?.id ?? nextFiles[0]?.id ?? null);
+    setSelectedSampleId(
+      getSelectedSampleIdForFiles(nextFiles, importedFiles[0] ?? null),
+    );
+    setErrors([]);
+    setDirtyFileIds((currentIds) =>
+      currentIds.filter((id) => nextFiles.some((file) => file.id === id)),
+    );
+
+    return true;
   }
 
   function removeFile(fileId: string) {
@@ -187,10 +216,9 @@ export function useWorkflowInputs({
     setActiveFileId(nextActiveFile?.id ?? null);
     setDirtyFileIds((currentIds) => currentIds.filter((id) => id !== fileId));
     setErrors([]);
-
-    if (nextActiveFile?.sourceKind !== "sample") {
-      setSelectedSampleId("manual");
-    }
+    setSelectedSampleId(
+      getSelectedSampleIdForFiles(workspaceFiles, nextActiveFile),
+    );
   }
 
   function clearActiveInput() {
@@ -224,7 +252,6 @@ export function useWorkflowInputs({
     setSelectedSampleId("manual");
     setIncludeAllYamlFiles(false);
     setDirtyFileIds([]);
-    setSettings(defaultAnalyzerSettings);
   }
 
   function loadSample(sampleId: WorkflowSampleId) {
@@ -253,15 +280,37 @@ export function useWorkflowInputs({
       content: sample.content,
       path: sample.path,
       sourceKind: "sample",
+      sourceMetadata: {
+        sampleId: sample.id,
+        sampleLabel: sample.label,
+      },
     });
 
-    setFiles([sampleFile]);
-    setActiveFileId(sampleFile.id);
-    setSelectedSampleId(sampleId);
-    setDirtyFileIds([]);
-    setErrors([]);
+    replaceFiles([sampleFile], {
+      selectedSampleId: sampleId,
+    });
 
     return true;
+  }
+
+  function replaceFiles(
+    nextFiles: WorkflowInputFile[],
+    options: {
+      selectedSampleId?: WorkflowSampleId | "manual" | undefined;
+    } = {},
+  ) {
+    const safeFiles =
+      nextFiles.length > 0 ? nextFiles : [createEmptyPasteFile()];
+    const nextActiveFile = safeFiles[0] ?? null;
+
+    setFiles(safeFiles);
+    setActiveFileId(nextActiveFile?.id ?? null);
+    setSelectedSampleId(
+      options.selectedSampleId ??
+        getSelectedSampleIdForFiles(safeFiles, nextActiveFile),
+    );
+    setDirtyFileIds([]);
+    setErrors([]);
   }
 
   function resetSettings() {
@@ -272,6 +321,7 @@ export function useWorkflowInputs({
     activeFile,
     activeFileId,
     addPasteFile,
+    addImportedFiles,
     addUploadedFiles,
     clearActiveInput,
     clearAll,
@@ -286,6 +336,7 @@ export function useWorkflowInputs({
     maxFileSizeLabel: formatBytes(maxFileSizeBytes),
     removeFile,
     renameFile,
+    replaceFiles,
     resetSettings,
     selectedSample,
     selectedSampleId,
@@ -312,6 +363,14 @@ function detectFolderUploadSupport(): boolean {
   };
 
   return "webkitdirectory" in input || "mozdirectory" in input;
+}
+
+function subscribeToFolderUploadSupport() {
+  return () => {};
+}
+
+function getServerFolderUploadSupportSnapshot() {
+  return false;
 }
 
 async function readFileAsText(file: File): Promise<string> {
@@ -365,4 +424,26 @@ function mergeWorkflowFiles(
   );
 
   return [...preservedFiles, ...nextFiles];
+}
+
+function getSelectedSampleIdForFiles(
+  files: WorkflowInputFile[],
+  activeFile: WorkflowInputFile | null,
+): WorkflowSampleId | "manual" {
+  if (activeFile?.sourceKind !== "sample") {
+    return "manual";
+  }
+
+  const sampleIds = Array.from(
+    new Set(
+      files
+        .filter((file) => file.sourceKind === "sample")
+        .map((file) => file.sourceMetadata?.sampleId)
+        .filter((sampleId): sampleId is WorkflowSampleId => {
+          return typeof sampleId === "string";
+        }),
+    ),
+  );
+
+  return sampleIds.length === 1 ? (sampleIds[0] ?? "manual") : "manual";
 }

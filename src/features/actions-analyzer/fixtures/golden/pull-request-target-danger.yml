@@ -1,0 +1,14 @@
+name: Pull Request Target Danger
+on:
+  pull_request_target:
+    branches: [main]
+permissions: write-all
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: echo "${{ github.event.pull_request.title }}"

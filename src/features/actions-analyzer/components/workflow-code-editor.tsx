@@ -271,13 +271,15 @@ export interface WorkflowEditorJumpTarget {
   sequence: number;
 }
 
-interface WorkflowCodeEditorProps {
+export interface WorkflowCodeEditorProps {
   activeFinding: AnalyzerFinding | null;
   diagnostics: AnalyzerFinding[];
   filePath: string;
   jumpTarget: WorkflowEditorJumpTarget | null;
   label: string;
   onChange: (value: string) => void;
+  onSoftWrapChange: (enabled: boolean) => void;
+  softWrapEnabled: boolean;
   value: string;
 }
 
@@ -288,6 +290,8 @@ export function WorkflowCodeEditor({
   jumpTarget,
   label,
   onChange,
+  onSoftWrapChange,
+  softWrapEnabled,
   value,
 }: WorkflowCodeEditorProps) {
   const textareaId = useId();
@@ -298,7 +302,6 @@ export function WorkflowCodeEditor({
   const lastHandledJumpRef = useRef<number | null>(null);
   const applyingExternalValueRef = useRef(false);
   const wrapCompartmentRef = useRef(new Compartment());
-  const [softWrapEnabled, setSoftWrapEnabled] = useState(true);
   const [preferTextarea, setPreferTextarea] = useState(false);
   const [editorError, setEditorError] = useState<string | null>(null);
   const fileSizeBytes = getFileSizeBytes(value);
@@ -569,7 +572,7 @@ export function WorkflowCodeEditor({
         </Button>
         <Button
           onClick={() => {
-            setSoftWrapEnabled((current) => !current);
+            onSoftWrapChange(!softWrapEnabled);
           }}
           size="sm"
           variant={softWrapEnabled ? "primary" : "secondary"}

@@ -142,11 +142,8 @@ export function useWorkflowAnalysis({
           pendingRequests.delete(requestId);
         }
       };
-    } catch (workerError) {
-      console.warn(
-        "Authos could not initialize the analysis worker. Falling back to the main thread.",
-        workerError,
-      );
+    } catch {
+      workerRef.current = null;
     }
   }, []);
 

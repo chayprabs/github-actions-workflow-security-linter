@@ -208,11 +208,8 @@ export function runRules(
   for (const rule of rules) {
     try {
       findings.push(...rule.check(context));
-    } catch (error) {
-      console.error(
-        `Authos rule ${rule.definition.id} failed during analysis.`,
-        error,
-      );
+    } catch {
+      continue;
     }
   }
 

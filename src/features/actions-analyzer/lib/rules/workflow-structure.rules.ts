@@ -94,7 +94,7 @@ export const missingJobsRule: RuleModule = {
             message:
               "This workflow is missing the top-level `jobs` mapping, so it cannot define any runnable jobs.",
             remediation:
-              "Add a `jobs` section with at least one job. Manual skeleton: `jobs: { build: { runs-on: ubuntu-latest, steps: [{ run: \"echo TODO\" }] } }`.",
+              "Add a `jobs` section with at least one job. Manual skeleton: `jobs: { build: { runs-on: ubuntu-latest, steps: [{ run: \"echo build\" }] } }`.",
           },
           index,
         ),

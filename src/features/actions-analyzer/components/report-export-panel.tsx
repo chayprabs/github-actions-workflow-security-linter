@@ -2,7 +2,6 @@
 
 import { Copy, Download, Share2 } from "lucide-react";
 
-import { ActionToast } from "@/features/actions-analyzer/components/action-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +21,7 @@ import {
   getPrivacySafeShareableSampleId,
   type ResultsShareState,
 } from "@/features/actions-analyzer/lib/report-share";
-import { useActionToast } from "@/features/actions-analyzer/lib/use-action-toast";
+import { usePushActionToast } from "@/features/actions-analyzer/components/action-toast-provider";
 import type { WorkflowSampleId } from "@/features/actions-analyzer/fixtures/samples";
 import type {
   WorkflowAnalysisReport,
@@ -40,17 +39,17 @@ export function ReportExportPanel({
   resultsShareState: ResultsShareState;
   selectedSampleId: WorkflowSampleId | "manual";
 }) {
-  const { setToast, toast } = useActionToast();
+  const pushToast = usePushActionToast();
 
   async function handleCopyPrComment() {
     try {
       await copyTextToClipboard(buildPrCommentMarkdown(report));
-      setToast({
+      pushToast({
         message: "PR comment copied to the clipboard.",
         tone: "success",
       });
     } catch {
-      setToast({
+      pushToast({
         message: "Authos could not copy the PR comment.",
         tone: "danger",
       });
@@ -75,13 +74,13 @@ export function ReportExportPanel({
       });
 
       await copyTextToClipboard(shareUrl);
-      setToast({
+      pushToast({
         message:
           "Privacy-safe share link copied. Workflow content is not included.",
         tone: "success",
       });
     } catch {
-      setToast({
+      pushToast({
         message: "Authos could not copy the share link.",
         tone: "danger",
       });
@@ -99,12 +98,12 @@ export function ReportExportPanel({
         }),
         mimeType: "application/json",
       });
-      setToast({
+      pushToast({
         message: "JSON report download started.",
         tone: "success",
       });
     } catch {
-      setToast({
+      pushToast({
         message: "Authos could not start the JSON download.",
         tone: "danger",
       });
@@ -122,12 +121,12 @@ export function ReportExportPanel({
         }),
         mimeType: "application/sarif+json",
       });
-      setToast({
+      pushToast({
         message: "SARIF download started.",
         tone: "success",
       });
     } catch {
-      setToast({
+      pushToast({
         message: "Authos could not start the SARIF download.",
         tone: "danger",
       });
@@ -145,12 +144,12 @@ export function ReportExportPanel({
         }),
         mimeType: "text/html",
       });
-      setToast({
+      pushToast({
         message: "HTML report download started.",
         tone: "success",
       });
     } catch {
-      setToast({
+      pushToast({
         message: "Authos could not start the HTML download.",
         tone: "danger",
       });
@@ -158,60 +157,56 @@ export function ReportExportPanel({
   }
 
   return (
-    <>
-      <section
-        className="rounded-xl border border-border/80 bg-background/70 p-4"
-        data-testid="results-report-exports"
-      >
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="info">Exports</Badge>
-          <Badge tone="success">Ready</Badge>
-          <Badge tone="warning">Share links stay privacy-safe</Badge>
-        </div>
-        <h3 className="mt-3 text-sm font-semibold text-foreground">
-          Export and share
-        </h3>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Copy a PR-ready summary or download machine-readable reports. Share
-          links include filters and sample identifiers when possible, but this
-          version never embeds pasted or uploaded workflow content in the URL.
+    <section
+      className="rounded-xl border border-border/80 bg-background/70 p-4"
+      data-testid="results-report-exports"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge tone="info">Exports</Badge>
+        <Badge tone="success">Ready</Badge>
+        <Badge tone="warning">Share links stay privacy-safe</Badge>
+      </div>
+      <h3 className="mt-3 text-sm font-semibold text-foreground">
+        Export and share
+      </h3>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        Copy a PR-ready summary or download machine-readable reports. Share
+        links include filters and sample identifiers when possible, but this
+        version never embeds pasted or uploaded workflow content in the URL.
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button onClick={handleCopyPrComment} variant="secondary">
+          <Copy className="h-4 w-4" />
+          Copy PR comment
+        </Button>
+        <Button onClick={handleCopyShareLink} variant="secondary">
+          <Share2 className="h-4 w-4" />
+          Copy share link
+        </Button>
+        <Button onClick={handleDownloadJson} variant="secondary">
+          <Download className="h-4 w-4" />
+          Download JSON
+        </Button>
+        <Button onClick={handleDownloadSarif} variant="secondary">
+          <Download className="h-4 w-4" />
+          Download SARIF
+        </Button>
+        <Button onClick={handleDownloadHtml} variant="secondary">
+          <Download className="h-4 w-4" />
+          Download HTML
+        </Button>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-border/80 bg-card p-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          Privacy note
         </p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button onClick={handleCopyPrComment} variant="secondary">
-            <Copy className="h-4 w-4" />
-            Copy PR comment
-          </Button>
-          <Button onClick={handleCopyShareLink} variant="secondary">
-            <Share2 className="h-4 w-4" />
-            Copy share link
-          </Button>
-          <Button onClick={handleDownloadJson} variant="secondary">
-            <Download className="h-4 w-4" />
-            Download JSON
-          </Button>
-          <Button onClick={handleDownloadSarif} variant="secondary">
-            <Download className="h-4 w-4" />
-            Download SARIF
-          </Button>
-          <Button onClick={handleDownloadHtml} variant="secondary">
-            <Download className="h-4 w-4" />
-            Download HTML
-          </Button>
-        </div>
-
-        <div className="mt-4 rounded-xl border border-border/80 bg-card p-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Privacy note
-          </p>
-          <p className="mt-2 text-sm leading-6 text-foreground">
-            Content-including share links are intentionally deferred. Only
-            sample IDs, view state, and safe review filters are shared by URL.
-          </p>
-        </div>
-      </section>
-
-      <ActionToast toast={toast} />
-    </>
+        <p className="mt-2 text-sm leading-6 text-foreground">
+          Content-including share links are intentionally deferred. Only sample
+          IDs, view state, and safe review filters are shared by URL.
+        </p>
+      </div>
+    </section>
   );
 }

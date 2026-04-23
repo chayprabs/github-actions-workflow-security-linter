@@ -1,0 +1,17 @@
+name: Workflow Run Artifact
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  follow_up:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: workflow-run-follow-up
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@0123456789abcdef0123456789abcdef01234567
+      - run: echo "review artifacts before release"

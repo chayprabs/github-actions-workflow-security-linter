@@ -1,3 +1,4 @@
+import { lazy, Suspense, type ComponentType } from "react";
 import { FolderOpen, Upload, X } from "lucide-react";
 
 import { Alert } from "@/components/ui/alert";
@@ -14,10 +15,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { PrivacyNotice } from "@/features/actions-analyzer/components/privacy-notice";
+import { GitHubImportDialog } from "@/features/actions-analyzer/components/github-import-dialog";
 import {
+  type WorkflowCodeEditorProps,
   type WorkflowEditorJumpTarget,
-  WorkflowCodeEditor,
 } from "@/features/actions-analyzer/components/workflow-code-editor";
 import {
   workflowSamples,
@@ -40,6 +43,17 @@ import type {
   WorkflowInputFile,
 } from "@/features/actions-analyzer/types";
 
+const LazyWorkflowCodeEditor = lazy(async () => {
+  const editorModule = await import(
+    "@/features/actions-analyzer/components/workflow-code-editor"
+  );
+
+  return {
+    default:
+      editorModule.WorkflowCodeEditor as ComponentType<WorkflowCodeEditorProps>,
+  };
+});
+
 interface InputPanelProps {
   activeFile: WorkflowInputFile | null;
   activeFileId: string | null;
@@ -54,6 +68,7 @@ interface InputPanelProps {
   includeAllYamlFiles: boolean;
   inputText: string;
   isAnalyzing: boolean;
+  maxFileSizeBytes: number;
   maxFileSizeLabel: string;
   onAddPasteFile: () => void;
   onAnalyze: () => void;
@@ -61,15 +76,18 @@ interface InputPanelProps {
   onClearActiveInput: () => void;
   onFileUpload: (files: FileList | null) => void;
   onFileUploadFromFolder: (files: FileList | null) => void;
+  onGitHubImport: (files: WorkflowInputFile[]) => void | Promise<void>;
   onInputChange: (value: string) => void;
   onLoadSelectedSample: () => void;
   onRemoveFile: (fileId: string) => void;
   onRenameFile: (path: string) => void;
   onSampleChange: (sampleId: WorkflowSampleId | "manual") => void;
   onSelectFile: (fileId: string) => void;
+  onSoftWrapChange: (checked: boolean) => void;
   onToggleIncludeAllYamlFiles: (checked: boolean) => void;
   report: WorkflowAnalysisReport | null;
   selectedSampleId: WorkflowSampleId | "manual";
+  softWrapEnabled: boolean;
   totalSizeLabel: string;
 }
 
@@ -87,6 +105,7 @@ export function InputPanel({
   includeAllYamlFiles,
   inputText,
   isAnalyzing,
+  maxFileSizeBytes,
   maxFileSizeLabel,
   onAddPasteFile,
   onAnalyze,
@@ -94,15 +113,18 @@ export function InputPanel({
   onClearActiveInput,
   onFileUpload,
   onFileUploadFromFolder,
+  onGitHubImport,
   onInputChange,
   onLoadSelectedSample,
   onRemoveFile,
   onRenameFile,
   onSampleChange,
   onSelectFile,
+  onSoftWrapChange,
   onToggleIncludeAllYamlFiles,
   report,
   selectedSampleId,
+  softWrapEnabled,
   totalSizeLabel,
 }: InputPanelProps) {
   const reportFindings = report?.findings ?? [];
@@ -155,95 +177,101 @@ export function InputPanel({
           </Alert>
         ) : null}
 
-        <div
-          className="flex flex-wrap items-center gap-2 rounded-xl border border-border/80 bg-background/70 p-2"
-          data-testid="workflow-file-list"
-          role="tablist"
-        >
-          {files.length === 0 ? (
+        {files.length === 0 ? (
+          <div
+            className="rounded-xl border border-border/80 bg-background/70 p-2"
+            data-testid="workflow-file-list"
+          >
             <EmptyState
               className="w-full px-4 py-6"
               description="Create a paste draft, upload workflow files, or load a sample to populate the workspace."
               title="No workflow files yet"
             />
-          ) : (
-            files.map((file) => {
-              const isActive = file.id === activeFileId;
-              const normalizedPath = normalizeWorkflowPath(
-                file.path,
-              ).toLowerCase();
-              const severityCounts = findingCountsByFile.get(normalizedPath);
-              const totalFindingCount = severityDisplayOrder.reduce(
-                (sum, severity) => sum + (severityCounts?.[severity] ?? 0),
-                0,
-              );
+          </div>
+        ) : (
+          <div
+            className="overflow-x-auto rounded-xl border border-border/80 bg-background/70 p-2"
+            data-testid="workflow-file-list"
+          >
+            <div className="flex min-w-max gap-2" role="tablist">
+              {files.map((file) => {
+                const isActive = file.id === activeFileId;
+                const normalizedPath = normalizeWorkflowPath(
+                  file.path,
+                ).toLowerCase();
+                const severityCounts = findingCountsByFile.get(normalizedPath);
+                const totalFindingCount = severityDisplayOrder.reduce(
+                  (sum, severity) => sum + (severityCounts?.[severity] ?? 0),
+                  0,
+                );
 
-              return (
-                <div
-                  key={file.id}
-                  className={`flex min-w-[15rem] flex-1 items-center justify-between gap-3 rounded-[var(--radius-sm)] border px-3 py-2 ${
-                    isActive
-                      ? "border-accent bg-accent/10"
-                      : "border-border bg-card"
-                  }`}
-                >
-                  <button
-                    aria-current={isActive ? "page" : undefined}
-                    aria-selected={isActive}
-                    className="flex min-w-0 flex-1 flex-col items-start gap-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    onClick={() => onSelectFile(file.id)}
-                    role="tab"
-                    type="button"
+                return (
+                  <div
+                    key={file.id}
+                    className={`flex w-[17rem] shrink-0 items-center justify-between gap-3 rounded-[var(--radius-sm)] border px-3 py-2 ${
+                      isActive
+                        ? "border-accent bg-accent/10"
+                        : "border-border bg-card"
+                    }`}
                   >
-                    <span className="truncate text-sm font-medium text-foreground">
-                      {file.path}
-                    </span>
-                    <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <Badge tone={isActive ? "info" : "subtle"}>
-                        {getWorkflowFileSourceLabel(file.sourceKind)}
-                      </Badge>
-                      <span>{formatBytes(file.sizeBytes)}</span>
-                      {isActive ? <span>Selected</span> : null}
-                    </span>
-                    {totalFindingCount > 0 ? (
-                      <span className="mt-1 flex flex-wrap items-center gap-1.5">
-                        {severityDisplayOrder.map((severity) => {
-                          const count = severityCounts?.[severity] ?? 0;
-
-                          if (count === 0) {
-                            return null;
-                          }
-
-                          return (
-                            <Badge
-                              key={severity}
-                              tone={getSeverityTone(severity)}
-                            >
-                              {count} {severity}
-                            </Badge>
-                          );
-                        })}
+                    <button
+                      aria-current={isActive ? "page" : undefined}
+                      aria-selected={isActive}
+                      className="flex min-w-0 flex-1 flex-col items-start gap-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      onClick={() => onSelectFile(file.id)}
+                      role="tab"
+                      type="button"
+                    >
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {file.path}
                       </span>
-                    ) : report ? (
-                      <span className="mt-1 text-xs text-muted-foreground">
-                        No findings in this file
+                      <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <Badge tone={isActive ? "info" : "subtle"}>
+                          {getWorkflowFileSourceLabel(file.sourceKind)}
+                        </Badge>
+                        <span>{formatBytes(file.sizeBytes)}</span>
+                        {isActive ? <span>Selected</span> : null}
                       </span>
-                    ) : null}
-                  </button>
-                  <Button
-                    aria-label={`Remove ${file.path}`}
-                    onClick={() => onRemoveFile(file.id)}
-                    className="h-9 w-9 p-0"
-                    size="sm"
-                    variant="ghost"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              );
-            })
-          )}
-        </div>
+                      {totalFindingCount > 0 ? (
+                        <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                          {severityDisplayOrder.map((severity) => {
+                            const count = severityCounts?.[severity] ?? 0;
+
+                            if (count === 0) {
+                              return null;
+                            }
+
+                            return (
+                              <Badge
+                                key={severity}
+                                tone={getSeverityTone(severity)}
+                              >
+                                {count} {severity}
+                              </Badge>
+                            );
+                          })}
+                        </span>
+                      ) : report ? (
+                        <span className="mt-1 text-xs text-muted-foreground">
+                          No findings in this file
+                        </span>
+                      ) : null}
+                    </button>
+                    <Button
+                      aria-label={`Remove ${file.path}`}
+                      onClick={() => onRemoveFile(file.id)}
+                      className="h-9 w-9 p-0"
+                      size="sm"
+                      variant="ghost"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -295,6 +323,11 @@ export function InputPanel({
               }}
               type="file"
               {...({ webkitdirectory: "" } as Record<string, string>)}
+            />
+            <GitHubImportDialog
+              maxFileSizeBytes={maxFileSizeBytes}
+              maxFileSizeLabel={maxFileSizeLabel}
+              onImportFiles={onGitHubImport}
             />
             <Button
               disabled={selectedSampleId === "manual"}
@@ -399,20 +432,63 @@ export function InputPanel({
             </p>
           </div>
           <div id="workflow-yaml-editor-region">
-            <WorkflowCodeEditor
-              activeFinding={activeFinding}
-              diagnostics={activeFileFindings}
-              filePath={activeFile?.path ?? defaultVirtualPath}
-              jumpTarget={editorJumpTarget}
-              label="Workflow YAML"
-              onChange={onInputChange}
-              value={inputText}
-            />
+            <Suspense
+              fallback={
+                <WorkflowCodeEditorLoading
+                  label="Workflow YAML"
+                  onChange={onInputChange}
+                  softWrapEnabled={softWrapEnabled}
+                  value={inputText}
+                />
+              }
+            >
+              <LazyWorkflowCodeEditor
+                activeFinding={activeFinding}
+                diagnostics={activeFileFindings}
+                filePath={activeFile?.path ?? defaultVirtualPath}
+                jumpTarget={editorJumpTarget}
+                label="Workflow YAML"
+                onChange={onInputChange}
+                onSoftWrapChange={onSoftWrapChange}
+                softWrapEnabled={softWrapEnabled}
+                value={inputText}
+              />
+            </Suspense>
           </div>
         </div>
 
         <PrivacyNotice />
       </CardContent>
     </Card>
+  );
+}
+
+function WorkflowCodeEditorLoading({
+  label,
+  onChange,
+  softWrapEnabled,
+  value,
+}: Pick<
+  WorkflowCodeEditorProps,
+  "label" | "onChange" | "softWrapEnabled" | "value"
+>) {
+  return (
+    <div className="space-y-3" data-testid="workflow-code-editor-loading">
+      <Alert title="Loading advanced editor" tone="info">
+        Authos keeps a plain local textarea available while the richer editor
+        bundle loads.
+      </Alert>
+      <Textarea
+        aria-label={label}
+        className="min-h-[24rem] font-mono text-[0.925rem] leading-6"
+        data-testid="workflow-yaml-textarea-loading"
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="name: CI&#10;on: [push]&#10;jobs: ..."
+        rows={18}
+        spellCheck={false}
+        value={value}
+        wrap={softWrapEnabled ? "soft" : "off"}
+      />
+    </div>
   );
 }

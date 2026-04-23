@@ -248,7 +248,7 @@ export default function Home() {
                       aria-disabled="true"
                       className="text-sm font-medium text-muted-foreground"
                     >
-                      Future category placeholder
+                      Planned tool category
                     </span>
                   )}
                 </CardFooter>

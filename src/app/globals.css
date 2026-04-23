@@ -30,6 +30,27 @@
   --radius-lg: 1.25rem;
 }
 
+[data-theme="dark"] {
+  --background: 214 30% 10%;
+  --foreground: 38 44% 96%;
+  --muted: 216 23% 17%;
+  --muted-foreground: 214 18% 74%;
+  --border: 216 18% 28%;
+  --input: 216 18% 30%;
+  --card: 218 24% 14%;
+  --card-foreground: 38 44% 96%;
+  --accent: 180 70% 42%;
+  --accent-foreground: 210 40% 10%;
+  --success: 151 48% 52%;
+  --warning: 39 96% 61%;
+  --danger: 2 84% 67%;
+  --info: 205 82% 66%;
+  --severity-low: 205 82% 66%;
+  --severity-medium: 39 96% 61%;
+  --severity-high: 2 84% 67%;
+  --ring: 180 70% 42%;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -44,6 +65,10 @@
     color-scheme: light;
   }
 
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
   body {
     @apply min-h-full;
     @apply bg-background font-sans text-foreground;
@@ -53,6 +78,17 @@
         180deg,
         rgba(255, 255, 255, 0.7) 0%,
         rgba(250, 247, 240, 0.96) 100%
+      );
+  }
+
+  html[data-theme="dark"] body {
+    background-image:
+      radial-gradient(circle at top, rgba(45, 212, 191, 0.12), transparent 34%),
+      radial-gradient(circle at 18% 16%, rgba(56, 189, 248, 0.08), transparent 30%),
+      linear-gradient(
+        180deg,
+        rgba(12, 17, 29, 0.92) 0%,
+        rgba(15, 23, 42, 0.98) 100%
       );
   }
 

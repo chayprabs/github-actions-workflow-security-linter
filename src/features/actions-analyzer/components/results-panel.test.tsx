@@ -1,17 +1,23 @@
+import type { ReactElement } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { ActionToastProvider } from "@/features/actions-analyzer/components/action-toast-provider";
 import {
   emptyAnalysisReport,
   sampleAnalysisReport,
 } from "@/features/actions-analyzer/fixtures/reports";
 import { ResultsPanel } from "@/features/actions-analyzer/components/results-panel";
 
+function renderResultsPanel(panel: ReactElement) {
+  return render(<ActionToastProvider>{panel}</ActionToastProvider>);
+}
+
 describe("ResultsPanel", () => {
   it("calls onFindingSelect when a finding card is clicked", () => {
     const handleFindingSelect = vi.fn();
 
-    render(
+    renderResultsPanel(
       <ResultsPanel
         activeFileName=".github/workflows/release-risky.yml"
         activeFindingId={null}
@@ -44,7 +50,7 @@ describe("ResultsPanel", () => {
 
     expect(activeFinding).toBeDefined();
 
-    render(
+    renderResultsPanel(
       <ResultsPanel
         activeFileName=".github/workflows/release-risky.yml"
         activeFindingId={activeFinding!.id}
@@ -66,7 +72,7 @@ describe("ResultsPanel", () => {
   });
 
   it("renders score and inventory summary data", () => {
-    render(
+    renderResultsPanel(
       <ResultsPanel
         activeFileName=".github/workflows/release-risky.yml"
         activeFindingId={null}
@@ -102,7 +108,7 @@ describe("ResultsPanel", () => {
   });
 
   it("filters findings by search and shows the hidden-by-filters empty state", () => {
-    render(
+    renderResultsPanel(
       <ResultsPanel
         activeFileName=".github/workflows/release-risky.yml"
         activeFindingId={null}
@@ -134,7 +140,7 @@ describe("ResultsPanel", () => {
   });
 
   it("shows the clean success state when a valid report has no findings", () => {
-    render(
+    renderResultsPanel(
       <ResultsPanel
         activeFileName=".github/workflows/clean.yml"
         activeFindingId={null}
@@ -216,7 +222,7 @@ describe("ResultsPanel", () => {
       ],
     };
 
-    render(
+    renderResultsPanel(
       <ResultsPanel
         activeFileName=".github/workflows/release-risky.yml"
         activeFindingId={report.findings[0]!.id}

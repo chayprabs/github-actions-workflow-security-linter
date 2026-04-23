@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
@@ -11,7 +12,7 @@ export function SiteHeader() {
       className="border-b border-border/80 bg-background/90 backdrop-blur-sm"
       data-testid="site-header"
     >
-      <Container className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <Container className="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center justify-between gap-4">
           <Link
             className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -35,20 +36,23 @@ export function SiteHeader() {
           </Badge>
         </div>
 
-        <nav aria-label="Primary navigation" data-testid="site-nav">
-          <ul className="flex flex-wrap items-center gap-2">
-            {siteConfig.navigation.map((item) => (
-              <li key={item.href}>
-                <Link
-                  className={buttonVariants({ size: "sm", variant: "ghost" })}
-                  href={item.href}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
+          <ThemeToggle />
+          <nav aria-label="Primary navigation" data-testid="site-nav">
+            <ul className="flex flex-wrap items-center gap-2">
+              {siteConfig.navigation.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    className={buttonVariants({ size: "sm", variant: "ghost" })}
+                    href={item.href}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
       </Container>
     </header>
   );

@@ -11,7 +11,10 @@ export function ActionToast({ toast }: { toast: ActionToastState | null }) {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-30 max-w-sm">
+    <div
+      aria-live="polite"
+      className="fixed bottom-4 left-4 right-4 z-30 sm:left-auto sm:max-w-sm"
+    >
       <Alert title="Action status" tone={toast.tone}>
         {toast.message}
       </Alert>

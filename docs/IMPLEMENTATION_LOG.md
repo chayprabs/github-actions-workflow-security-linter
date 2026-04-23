@@ -357,3 +357,58 @@
 
 - Share links remain privacy-safe by default and intentionally do not support embedding full workflow content. Content-including compressed URL state is still deferred until there is a safer transport and size strategy.
 - The compare workflow currently uses either an explicitly analyzed previous input or the last analyzed current report as its baseline. That covers before/after review well today, but persistent saved report history is still a later enhancement.
+
+## Prompt 20
+
+- Status: Completed.
+- Outcome: Added optional public GitHub import as a browser-only workflow ingestion path with no login, OAuth, backend proxy, or private-repository support. The analyzer input toolbar now includes an `Import from GitHub` modal that auto-detects repository, blob, raw, and tree URLs; accepts an optional branch/ref override; shows public-only/privacy notices plus unauthenticated API rate-limit guidance; previews fetched workflow files before import when multiple files are found; and imports GitHub content into the existing `WorkflowInputFile` pipeline with source kind `github`. Added a dedicated `github-import` utility layer with URL parsing, blob-to-raw conversion, public file fetching, public workflow-directory listing with `main` to `master` fallback, workflow-path detection, and clear user-facing error mapping for invalid URLs, repo/file misses, missing workflows, rate limits, network/CORS failures, and file-size limits. Updated the privacy copy to reflect the live public GitHub import behavior and added focused unit tests for parser coverage, API response mapping, fallback behavior, and error cases.
+
+### Commands Run
+
+- `npx prettier --write src\\features\\actions-analyzer\\lib\\github-import.ts src\\features\\actions-analyzer\\lib\\github-import.test.ts src\\features\\actions-analyzer\\components\\github-import-dialog.tsx src\\features\\actions-analyzer\\lib\\use-workflow-inputs.ts src\\features\\actions-analyzer\\components\\input-panel.tsx src\\features\\actions-analyzer\\components\\analyzer-workspace.tsx src\\features\\actions-analyzer\\components\\compare-reports-panel.tsx src\\features\\actions-analyzer\\components\\analyzer-page.tsx src\\features\\actions-analyzer\\components\\privacy-notice.tsx src\\app\\privacy\\page.tsx`
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+
+### Known Issues / Notes
+
+- Public repository import uses GitHub's unauthenticated public API for directory listing, so rate limiting can still block repository browsing temporarily even though direct raw-file imports do not require a GitHub login.
+- GitHub imports stay in the live browser workspace and are not added to privacy-safe share links. There is still no persistent content-history feature in this app, so imported GitHub workflow content is not stored beyond the current session state.
+
+## Prompt 21
+
+- Status: Completed.
+- Outcome: Polished the GitHub Actions analyzer into a more reusable, bookmarkable product surface. Added a persistent settings drawer with analyzer profiles, rule toggles, matrix threshold control, auto-run, soft-wrap, and an explicit opt-in for remembering workflow content on the device. Added local recent-history storage that keeps metadata by default, can reopen public GitHub imports and samples without saving content, and only stores pasted/uploaded workflow YAML when the user explicitly enables local content memory. Added a reusable overlay panel foundation plus a recent history drawer and keyboard shortcuts dialog, wired global shortcuts for analyze, findings search, and PR-comment copy, and moved copy/download/import/apply-fix feedback onto the shared toast system.
+- Outcome continued: Added a theme toggle with system-preference support and dark theme CSS variables, tightened responsive behavior with overflow-safe layout updates and horizontally scrollable file tabs, improved privacy copy to explain local-history behavior, and added focused tests for preferences, history privacy behavior, and overlay accessibility/focus restoration.
+
+### Commands Run
+
+- `npx prettier --write src/features/actions-analyzer/components/analyzer-page.tsx src/features/actions-analyzer/components/analyzer-workspace.tsx src/features/actions-analyzer/components/workspace-toolbar.tsx src/features/actions-analyzer/components/report-export-panel.tsx src/features/actions-analyzer/components/compare-reports-panel.tsx src/features/actions-analyzer/components/github-import-dialog.tsx src/features/actions-analyzer/components/analyzer-settings-drawer.tsx src/features/actions-analyzer/components/analysis-history-panel.tsx src/features/actions-analyzer/components/keyboard-shortcuts-dialog.tsx src/features/actions-analyzer/components/privacy-notice.tsx src/features/actions-analyzer/components/action-toast.tsx src/features/actions-analyzer/components/results-panel.tsx src/features/actions-analyzer/components/results-panel.test.tsx src/features/actions-analyzer/lib/analyzer-preferences.test.ts src/features/actions-analyzer/lib/analysis-history.test.ts src/components/ui/overlay-panel.test.tsx src/test/setup.ts src/app/privacy/page.tsx src/features/actions-analyzer/lib/analyzer-preferences.ts src/features/actions-analyzer/lib/analysis-history.ts src/features/actions-analyzer/lib/use-workflow-inputs.ts src/components/layout/theme-provider.tsx`
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+
+### Known Issues / Notes
+
+- Local history still intentionally caps itself to recent runs and is device-local only. There is no backend sync, login-based portability, or server-side retention path in this prompt.
+- `test:e2e` remains configured but was not executed in this prompt.
+
+## Prompt 22
+
+- Status: Completed.
+- Outcome: Turned the GitHub Actions analyzer route into a more crawlable landing page without pushing the tool below the fold. Added page-specific title, description, Open Graph metadata, canonical configuration, and two JSON-LD blocks for `WebApplication` and `FAQPage`. Expanded the developer-focused content below the workspace to cover checks, use cases, workflow, examples, FAQ, and related tools, with each example wired to load a real sample back into the tool and scroll to the workspace. Added a deployment-friendly `NEXT_PUBLIC_SITE_URL` override so canonical, sitemap, robots, and structured data can emit a real origin in production while keeping a local fallback for development.
+- Outcome continued: Added `robots` and `sitemap` metadata routes for the home page, privacy page, and analyzer page; strengthened privacy-to-tool internal linking around the local-processing promise; and added focused tests for the structured data serialization and shapes.
+
+### Commands Run
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+
+### Known Issues / Notes
+
+- Canonical, sitemap, and structured-data URLs default to `https://authos.local` in local development. Set `NEXT_PUBLIC_SITE_URL` in deployment so crawlers see the real production origin.
+- `test:e2e` remains configured but was not executed in this prompt.

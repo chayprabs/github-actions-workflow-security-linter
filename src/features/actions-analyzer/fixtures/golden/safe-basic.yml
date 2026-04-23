@@ -1,0 +1,19 @@
+name: Safe Basic
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567
+      - uses: actions/setup-node@fedcba9876543210fedcba9876543210fedcba98
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
