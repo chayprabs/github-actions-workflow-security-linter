@@ -42,6 +42,25 @@ export function encodeWorkflowSharePayload(
   };
 }
 
+function isValidSharePayloadFile(
+  value: unknown,
+): value is WorkflowSharePayload["files"][number] {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<WorkflowSharePayload["files"][number]>;
+
+  return (
+    typeof candidate.content === "string" &&
+    typeof candidate.path === "string" &&
+    (candidate.sourceKind === "paste" ||
+      candidate.sourceKind === "upload" ||
+      candidate.sourceKind === "sample" ||
+      candidate.sourceKind === "github")
+  );
+}
+
 export function decodeWorkflowSharePayload(
   payloadParam: string,
 ): WorkflowSharePayload | null {
@@ -54,7 +73,12 @@ export function decodeWorkflowSharePayload(
 
     const parsed = JSON.parse(decompressed) as WorkflowSharePayload;
 
-    if (!parsed || !Array.isArray(parsed.files)) {
+    if (
+      !parsed ||
+      !Array.isArray(parsed.files) ||
+      parsed.files.length === 0 ||
+      !parsed.files.every(isValidSharePayloadFile)
+    ) {
       return null;
     }
 
