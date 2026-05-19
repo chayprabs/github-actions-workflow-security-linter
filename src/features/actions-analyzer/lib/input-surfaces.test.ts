@@ -7,10 +7,7 @@ import {
 import { parseAnalyzerShareState } from "@/features/actions-analyzer/lib/report-share";
 import { compressToEncodedURIComponent } from "lz-string";
 
-import {
-  decodeWorkflowSharePayload,
-  encodeWorkflowSharePayload,
-} from "@/features/actions-analyzer/lib/report-share-payload";
+import { decodeWorkflowSharePayload } from "@/features/actions-analyzer/lib/report-share-payload";
 import {
   normalizeWorkflowPath,
   validateWorkflowFileSelection,
