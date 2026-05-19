@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { usePushActionToast } from "@/features/actions-analyzer/components/action-toast-provider";
 import { PrivacyNotice } from "@/features/actions-analyzer/components/privacy-notice";
 import { GitHubImportDialog } from "@/features/actions-analyzer/components/github-import-dialog";
 import {
@@ -127,6 +128,7 @@ export function InputPanel({
   softWrapEnabled,
   totalSizeLabel,
 }: InputPanelProps) {
+  const pushToast = usePushActionToast();
   const reportFindings = report?.findings ?? [];
   const findingCountsByFile = getFindingCountsByFile(reportFindings);
   const activeFileFindings = activeFile
@@ -449,6 +451,12 @@ export function InputPanel({
                 jumpTarget={editorJumpTarget}
                 label="Workflow YAML"
                 onChange={onInputChange}
+                onFormatNotice={(message, tone) => {
+                  pushToast({
+                    message,
+                    tone: tone === "error" ? "danger" : tone,
+                  });
+                }}
                 onSoftWrapChange={onSoftWrapChange}
                 softWrapEnabled={softWrapEnabled}
                 value={inputText}

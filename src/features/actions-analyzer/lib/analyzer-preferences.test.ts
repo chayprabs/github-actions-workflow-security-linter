@@ -20,6 +20,7 @@ describe("analyzer preferences", () => {
       theme: "dark",
       ui: {
         autoRunAnalysis: false,
+        rememberReportSnapshots: false,
         rememberWorkflowContent: true,
         softWrapEditor: false,
       },

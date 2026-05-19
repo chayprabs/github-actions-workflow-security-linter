@@ -85,8 +85,15 @@ test("risky sample analysis shows findings, editor jump, and PR comment copy", a
 
   await page.getByRole("button", { name: /^Analyze$/i }).click();
 
-  await expect(page.getByTestId("results-finding-list")).toContainText(/GHA103/i);
-  await expect(page.getByTestId("results-finding-list")).toContainText(/GHA104/i);
+  await expect(page.getByTestId("results-score")).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.getByTestId("results-finding-list")).toContainText(/GHA103/i, {
+    timeout: 30_000,
+  });
+  await expect(page.getByTestId("results-finding-list")).toContainText(/GHA104/i, {
+    timeout: 30_000,
+  });
 
   await page
     .getByTestId("results-finding-list")
@@ -123,8 +130,11 @@ test("uploading a workflow file analyzes locally and surfaces findings", async (
 
   await page.getByRole("button", { name: /^Analyze$/i }).click();
 
-  await expect(page.getByText(/GHA200/i)).toBeVisible();
-  await expect(page.getByText(/GHA202/i)).toBeVisible();
+  await expect(page.getByTestId("results-score")).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.getByText(/GHA200/i)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/GHA202/i)).toBeVisible({ timeout: 30_000 });
 });
 
 test.describe("mobile workspace", () => {

@@ -16,6 +16,11 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { InputPanel } from "@/features/actions-analyzer/components/input-panel";
 import { copyTextToClipboard } from "@/features/actions-analyzer/lib/browser-actions";
+import { applyAllSafeFixes } from "@/features/actions-analyzer/lib/apply-safe-fixes";
+import {
+  applySuggestedFix,
+  canApplySuggestedFix,
+} from "@/features/actions-analyzer/lib/suggested-fixes";
 import {
   buildCompareMarkdownSummary,
   compareWorkflowReports,
@@ -29,8 +34,11 @@ import type {
 } from "@/features/actions-analyzer/types";
 
 interface CompareReportsPanelProps {
+  compareSnapshotReport: WorkflowAnalysisReport | null;
+  currentFiles: WorkflowInputFile[];
   currentReport: WorkflowAnalysisReport | null;
   currentSampleLabel: string;
+  onApplyFix?: ((filePath: string, nextContent: string) => boolean) | undefined;
   lastAnalyzedCurrentReport: WorkflowAnalysisReport | null;
   onAnalyzePrevious: () => void;
   previousActiveFile: WorkflowInputFile | null;
@@ -69,8 +77,11 @@ interface CompareReportsPanelProps {
 }
 
 export function CompareReportsPanel({
+  compareSnapshotReport,
+  currentFiles,
   currentReport,
   currentSampleLabel,
+  onApplyFix,
   lastAnalyzedCurrentReport,
   onAnalyzePrevious,
   previousActiveFile,
@@ -108,17 +119,21 @@ export function CompareReportsPanel({
   previousSoftWrapEnabled,
 }: CompareReportsPanelProps) {
   const [baselineSource, setBaselineSource] = useState<
-    "input" | "last-current"
+    "input" | "last-current" | "snapshot"
   >("input");
   const pushToast = usePushActionToast();
   const effectivePreviousReport =
-    baselineSource === "last-current"
-      ? lastAnalyzedCurrentReport
-      : previousReport;
+    baselineSource === "snapshot"
+      ? compareSnapshotReport
+      : baselineSource === "last-current"
+        ? lastAnalyzedCurrentReport
+        : previousReport;
   const effectivePreviousLabel =
-    baselineSource === "last-current"
-      ? "Last analyzed current report"
-      : previousSelectedSampleLabel;
+    baselineSource === "snapshot"
+      ? "Saved report snapshot"
+      : baselineSource === "last-current"
+        ? "Last analyzed current report"
+        : previousSelectedSampleLabel;
   const comparison = useMemo(() => {
     if (!currentReport || !effectivePreviousReport) {
       return null;
@@ -126,6 +141,36 @@ export function CompareReportsPanel({
 
     return compareWorkflowReports(currentReport, effectivePreviousReport);
   }, [currentReport, effectivePreviousReport]);
+
+  function handleApplyAllNewSafeFixes() {
+    if (!comparison || !onApplyFix) {
+      return;
+    }
+
+    const result = applyAllSafeFixes({
+      analyzedContentsByPath: Object.fromEntries(
+        currentFiles.map((file) => [file.path, file.content]),
+      ),
+      files: currentFiles,
+      findings: comparison.newFindings,
+    });
+
+    for (const file of result.files) {
+      const original = currentFiles.find((entry) => entry.path === file.path);
+
+      if (original && original.content !== file.content) {
+        onApplyFix(file.path, file.content);
+      }
+    }
+
+    pushToast({
+      message:
+        result.appliedCount > 0
+          ? `Applied ${result.appliedCount} safe fix${result.appliedCount === 1 ? "" : "es"} to new findings.`
+          : "No safe fixes could be applied to the new findings.",
+      tone: result.appliedCount > 0 ? "success" : "warning",
+    });
+  }
 
   async function handleCopyCompareSummary() {
     if (!comparison) {
@@ -188,6 +233,17 @@ export function CompareReportsPanel({
             Use last analyzed report
           </Button>
           <Button
+            disabled={!compareSnapshotReport}
+            onClick={() => {
+              setBaselineSource("snapshot");
+            }}
+            size="sm"
+            variant={baselineSource === "snapshot" ? "primary" : "secondary"}
+          >
+            <History className="h-4 w-4" />
+            Use saved snapshot
+          </Button>
+          <Button
             disabled={!previousCanAnalyze}
             onClick={() => {
               setBaselineSource("input");
@@ -207,6 +263,14 @@ export function CompareReportsPanel({
           >
             <Copy className="h-4 w-4" />
             Copy compare summary
+          </Button>
+          <Button
+            disabled={!comparison || !onApplyFix}
+            onClick={handleApplyAllNewSafeFixes}
+            size="sm"
+            variant="secondary"
+          >
+            Apply new safe fixes
           </Button>
         </CardContent>
       </Card>
@@ -299,7 +363,9 @@ export function CompareReportsPanel({
                   </div>
 
                   <FindingDeltaSection
+                    currentFiles={currentFiles}
                     findings={comparison.newFindings}
+                    onApplyFix={onApplyFix}
                     title="New findings"
                   />
                   <FindingDeltaSection
@@ -334,10 +400,14 @@ function CompareMetric({ label, value }: { label: string; value: string }) {
 }
 
 function FindingDeltaSection({
+  currentFiles = [],
   findings,
+  onApplyFix,
   title,
 }: {
+  currentFiles?: WorkflowInputFile[] | undefined;
   findings: WorkflowAnalysisReport["findings"];
+  onApplyFix?: ((filePath: string, nextContent: string) => boolean) | undefined;
   title: string;
 }) {
   return (
@@ -367,6 +437,37 @@ function FindingDeltaSection({
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 {finding.message}
               </p>
+              {onApplyFix &&
+              finding.fix &&
+              canApplySuggestedFix(finding.fix) ? (
+                <Button
+                  className="mt-3"
+                  onClick={() => {
+                    const file = currentFiles.find(
+                      (entry) => entry.path === finding.filePath,
+                    );
+                    const analyzedContent = file?.content ?? "";
+
+                    if (!file || !finding.fix) {
+                      return;
+                    }
+
+                    const result = applySuggestedFix({
+                      analyzedContent,
+                      currentContent: file.content,
+                      fix: finding.fix,
+                    });
+
+                    if (result.ok) {
+                      onApplyFix(finding.filePath, result.nextContent);
+                    }
+                  }}
+                  size="sm"
+                  variant="secondary"
+                >
+                  Apply safe fix
+                </Button>
+              ) : null}
             </article>
           ))}
         </div>

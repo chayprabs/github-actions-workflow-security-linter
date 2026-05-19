@@ -6,7 +6,7 @@
     "exact": ["GHA001"]
   },
   "pull-request-target-danger.yml": {
-    "exact": ["GHA055", "GHA101", "GHA103", "GHA104", "GHA206"]
+    "exact": ["GHA055", "GHA101", "GHA103", "GHA104", "GHA206", "GHA300"]
   },
   "unpinned-third-party.yml": {
     "exact": ["GHA200", "GHA202"]
@@ -25,5 +25,14 @@
   },
   "secrets-in-run.yml": {
     "exact": ["GHA107"]
+  },
+  "shell-injection.yml": {
+    "mustInclude": ["GHA300"]
+  },
+  "reusable-risk.yml": {
+    "mustInclude": ["GHA111", "GHA112"]
+  },
+  "reusable-path-traversal.yml": {
+    "mustInclude": ["GHA113"]
   }
 }

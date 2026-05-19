@@ -1,0 +1,10 @@
+name: Shell injection sample
+on:
+  issues:
+    types: [opened]
+jobs:
+  echo-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Unsafe event interpolation
+        run: echo "${{ github.event.issue.title }}"

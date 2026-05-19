@@ -7,7 +7,7 @@ Analyze GitHub Actions workflow YAML for syntax, reliability, permissions, trigg
 - Paste workflow YAML.
 - Upload `.yml` or `.yaml` files.
 - Upload multiple workflow files in one session.
-- Import a public GitHub repository later.
+- Import public GitHub workflow URLs and repositories (browser fetch; public repos only).
 
 ## Outputs
 

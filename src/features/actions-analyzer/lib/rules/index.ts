@@ -1,6 +1,17 @@
 import type { RuleModule } from "@/features/actions-analyzer/types";
 
 import {
+  reusableWorkflowRelativePathRule,
+  reusableWorkflowSecretsOnPrRule,
+  reusableWorkflowWriteAllRule,
+} from "@/features/actions-analyzer/lib/rules/reusable-workflow.rules";
+import {
+  commandSubstitutionInRunRule,
+  curlPipeEventDataRule,
+  githubScriptDynamicRule,
+  untrustedEventInRunRule,
+} from "@/features/actions-analyzer/lib/rules/shell.rules";
+import {
   malformedExpressionRule,
   matrixOutsideMatrixJobRule,
   secretsInIfRule,
@@ -109,6 +120,13 @@ export const registeredRuleModules: RuleModule[] = [
   longLivedCloudSecretRule,
   untrustedDeploymentRule,
   privilegedThirdPartyActionRule,
+  reusableWorkflowWriteAllRule,
+  reusableWorkflowSecretsOnPrRule,
+  reusableWorkflowRelativePathRule,
+  untrustedEventInRunRule,
+  commandSubstitutionInRunRule,
+  curlPipeEventDataRule,
+  githubScriptDynamicRule,
   thirdPartyUnpinnedRule,
   firstPartyMutableTagRule,
   branchReferenceRule,

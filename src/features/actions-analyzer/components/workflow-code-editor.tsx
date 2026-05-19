@@ -49,6 +49,7 @@ import {
   getSeverityTone,
   severityDisplayOrder,
 } from "@/features/actions-analyzer/lib/finding-presentation";
+import { formatWorkflowYaml } from "@/features/actions-analyzer/lib/format-workflow-yaml";
 import {
   formatBytes,
   getFileSizeBytes,
@@ -278,6 +279,7 @@ export interface WorkflowCodeEditorProps {
   jumpTarget: WorkflowEditorJumpTarget | null;
   label: string;
   onChange: (value: string) => void;
+  onFormatNotice?: ((message: string, tone: "error" | "success") => void) | undefined;
   onSoftWrapChange: (enabled: boolean) => void;
   softWrapEnabled: boolean;
   value: string;
@@ -290,6 +292,7 @@ export function WorkflowCodeEditor({
   jumpTarget,
   label,
   onChange,
+  onFormatNotice,
   onSoftWrapChange,
   softWrapEnabled,
   value,
@@ -592,14 +595,29 @@ export function WorkflowCodeEditor({
         >
           {preferTextarea ? "Use code editor" : "Use plain textarea"}
         </Button>
-        <Button disabled size="sm" variant="ghost">
+        <Button
+          disabled={value.trim().length === 0}
+          onClick={() => {
+            const result = formatWorkflowYaml(value);
+
+            if (!result.ok) {
+              onFormatNotice?.(result.reason, "error");
+              return;
+            }
+
+            onChange(result.content);
+            onFormatNotice?.("Workflow YAML formatted.", "success");
+          }}
+          size="sm"
+          variant="ghost"
+        >
           Format YAML
         </Button>
       </div>
 
       <p className="text-xs leading-6 text-muted-foreground">
-        YAML formatting is intentionally deferred for now so comments and layout
-        are not accidentally rewritten.
+        Formatting only runs on comment-free workflow files so ignore comments
+        and reviewer notes are not rewritten.
       </p>
 
       {isFallbackMode ? (

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { OverlayPanel } from "@/components/ui/overlay-panel";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { RuleTogglesPanel } from "@/features/actions-analyzer/components/rule-toggles-panel";
 import type { AnalyzerWorkspacePreferences } from "@/features/actions-analyzer/lib/analyzer-preferences";
 
 interface AnalyzerSettingsDrawerProps {
@@ -209,6 +210,19 @@ export function AnalyzerSettingsDrawer({
           </label>
         </section>
 
+        <RuleTogglesPanel
+          disabledRuleIds={preferences.analyzer.disabledRuleIds ?? []}
+          onChange={(disabledRuleIds) => {
+            onChange((current) => ({
+              ...current,
+              analyzer: {
+                ...current.analyzer,
+                disabledRuleIds,
+              },
+            }));
+          }}
+        />
+
         <section className="space-y-3 rounded-2xl border border-border/80 bg-background/70 p-4">
           <div className="space-y-1">
             <h3 className="text-sm font-semibold text-foreground">
@@ -242,6 +256,20 @@ export function AnalyzerSettingsDrawer({
                 ui: {
                   ...current.ui,
                   softWrapEditor: checked,
+                },
+              }));
+            }}
+          />
+          <SettingsSwitchRow
+            checked={preferences.ui.rememberReportSnapshots}
+            description="Keep saved analysis reports on this device for compare mode."
+            label="Remember report snapshots on this device"
+            onCheckedChange={(checked) => {
+              onChange((current) => ({
+                ...current,
+                ui: {
+                  ...current.ui,
+                  rememberReportSnapshots: checked,
                 },
               }));
             }}

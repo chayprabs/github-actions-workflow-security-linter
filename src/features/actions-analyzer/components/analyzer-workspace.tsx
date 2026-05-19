@@ -9,6 +9,7 @@ import { ResultsPanel } from "@/features/actions-analyzer/components/results-pan
 import type { WorkflowEditorJumpTarget } from "@/features/actions-analyzer/components/workflow-code-editor";
 import { WorkspaceToolbar } from "@/features/actions-analyzer/components/workspace-toolbar";
 import type { WorkflowSampleId } from "@/features/actions-analyzer/fixtures/samples";
+import type { ReportSnapshotEntry } from "@/features/actions-analyzer/lib/report-snapshots";
 import type {
   AnalyzerFinding,
   WorkflowAnalysisReport,
@@ -22,6 +23,7 @@ interface AnalyzerWorkspaceProps {
   analysisError: string | null;
   autoRunEnabled: boolean;
   canAnalyze: boolean;
+  compareSnapshotReport: WorkflowAnalysisReport | null;
   defaultVirtualPath: string;
   editorJumpTarget: WorkflowEditorJumpTarget | null;
   errors: string[];
@@ -75,6 +77,7 @@ interface AnalyzerWorkspaceProps {
   onSelectFile: (fileId: string) => void;
   onSoftWrapChange: (checked: boolean) => void;
   onToggleIncludeAllYamlFiles: (checked: boolean) => void;
+  onUseSnapshotForCompare: (snapshot: ReportSnapshotEntry) => void;
   onWorkspaceModeChange: (mode: "analyze" | "compare") => void;
   previousActiveFile: WorkflowInputFile | null;
   previousActiveFileId: string | null;
@@ -95,6 +98,7 @@ interface AnalyzerWorkspaceProps {
   previousSelectedSampleLabel: string;
   previousSoftWrapEnabled: boolean;
   previousTotalSizeLabel: string;
+  rememberReportSnapshots: boolean;
   report: WorkflowAnalysisReport | null;
   selectedSampleId: WorkflowSampleId | "manual";
   selectedSampleLabel: string;
@@ -110,6 +114,7 @@ export function AnalyzerWorkspace({
   analysisError,
   autoRunEnabled,
   canAnalyze,
+  compareSnapshotReport,
   defaultVirtualPath,
   editorJumpTarget,
   errors,
@@ -163,6 +168,7 @@ export function AnalyzerWorkspace({
   onSelectFile,
   onSoftWrapChange,
   onToggleIncludeAllYamlFiles,
+  onUseSnapshotForCompare,
   onWorkspaceModeChange,
   previousActiveFile,
   previousActiveFileId,
@@ -183,6 +189,7 @@ export function AnalyzerWorkspace({
   previousSelectedSampleLabel,
   previousSoftWrapEnabled,
   previousTotalSizeLabel,
+  rememberReportSnapshots,
   report,
   selectedSampleId,
   selectedSampleLabel,
@@ -300,6 +307,8 @@ export function AnalyzerWorkspace({
                 lastAnalyzedAt={lastAnalyzedAt}
                 onApplyFix={onApplyFix}
                 onFindingSelect={handleFindingSelect}
+                onUseSnapshotForCompare={onUseSnapshotForCompare}
+                rememberReportSnapshots={rememberReportSnapshots}
                 report={report}
                 selectedSampleId={selectedSampleId}
                 selectedSampleLabel={selectedSampleLabel}
@@ -365,6 +374,8 @@ export function AnalyzerWorkspace({
                   lastAnalyzedAt={lastAnalyzedAt}
                   onApplyFix={onApplyFix}
                   onFindingSelect={handleFindingSelect}
+                  onUseSnapshotForCompare={onUseSnapshotForCompare}
+                  rememberReportSnapshots={rememberReportSnapshots}
                   report={report}
                   selectedSampleId={selectedSampleId}
                   selectedSampleLabel={selectedSampleLabel}
@@ -382,6 +393,8 @@ export function AnalyzerWorkspace({
                   lastAnalyzedAt={lastAnalyzedAt}
                   onApplyFix={onApplyFix}
                   onFindingSelect={handleFindingSelect}
+                  onUseSnapshotForCompare={onUseSnapshotForCompare}
+                  rememberReportSnapshots={rememberReportSnapshots}
                   report={report}
                   selectedSampleId={selectedSampleId}
                   selectedSampleLabel={selectedSampleLabel}
@@ -394,8 +407,11 @@ export function AnalyzerWorkspace({
 
         <TabsContent value="compare">
           <CompareReportsPanel
+            compareSnapshotReport={compareSnapshotReport}
+            currentFiles={files}
             currentReport={report}
             currentSampleLabel={selectedSampleLabel}
+            onApplyFix={onApplyFix}
             lastAnalyzedCurrentReport={lastAnalyzedCurrentReport}
             onAnalyzePrevious={onAnalyzePrevious}
             onPreviousAddPasteFile={onPreviousAddPasteFile}

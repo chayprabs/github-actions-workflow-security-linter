@@ -17,6 +17,9 @@ import { AttackPathPanel } from "@/features/actions-analyzer/components/attack-p
 import { MatrixPreviewPanel } from "@/features/actions-analyzer/components/matrix-preview-panel";
 import { PermissionMinimizerPanel } from "@/features/actions-analyzer/components/permission-minimizer-panel";
 import { ReportExportPanel } from "@/features/actions-analyzer/components/report-export-panel";
+import { ReportSnapshotsPanel } from "@/features/actions-analyzer/components/report-snapshots-panel";
+import { applyAllSafeFixes } from "@/features/actions-analyzer/lib/apply-safe-fixes";
+import type { ReportSnapshotEntry } from "@/features/actions-analyzer/lib/report-snapshots";
 import { getRuleDefinition } from "@/features/actions-analyzer/lib/rule-catalog";
 import {
   applySuggestedFix,
@@ -67,6 +70,10 @@ interface ResultsPanelProps {
   lastAnalyzedAt?: number | null;
   onApplyFix?: ((filePath: string, nextContent: string) => boolean) | undefined;
   onFindingSelect: (finding: AnalyzerFinding) => void;
+  onUseSnapshotForCompare?:
+    | ((snapshot: ReportSnapshotEntry) => void)
+    | undefined;
+  rememberReportSnapshots?: boolean | undefined;
   report: WorkflowAnalysisReport | null;
   selectedSampleId: WorkflowSampleId | "manual";
   selectedSampleLabel: string;
@@ -103,6 +110,8 @@ export function ResultsPanel({
   lastAnalyzedAt,
   onApplyFix,
   onFindingSelect,
+  onUseSnapshotForCompare,
+  rememberReportSnapshots = false,
   report,
   selectedSampleId,
   selectedSampleLabel,
@@ -253,6 +262,44 @@ export function ResultsPanel({
   const reliabilitySummary = useMemo(() => {
     return report ? buildReliabilitySummary(report) : null;
   }, [report]);
+  const safeFixCount = useMemo(
+    () =>
+      findings.filter((finding) => finding.fix?.safety === "safe").length,
+    [findings],
+  );
+
+  function handleApplyAllSafeFixes() {
+    if (!report || !onApplyFix) {
+      return;
+    }
+
+    const result = applyAllSafeFixes({
+      analyzedContentsByPath: Object.fromEntries(
+        (report.files.length > 0 ? report.files : files).map((file) => [
+          file.path,
+          file.content,
+        ]),
+      ),
+      files: files.length > 0 ? files : report.files,
+      findings: report.findings,
+    });
+
+    for (const file of result.files) {
+      const original = files.find((entry) => entry.path === file.path);
+
+      if (original && original.content !== file.content) {
+        onApplyFix(file.path, file.content);
+      }
+    }
+
+    pushToast({
+      message:
+        result.appliedCount > 0
+          ? `Applied ${result.appliedCount} safe fix${result.appliedCount === 1 ? "" : "es"}.`
+          : "No safe fixes could be applied. Re-run analysis if the editor changed.",
+      tone: result.appliedCount > 0 ? "success" : "warning",
+    });
+  }
   const lastAnalyzedLabel = formatLastAnalyzedLabel(
     lastAnalyzedAt ?? (report ? Date.parse(report.generatedAt) : null),
   );
@@ -526,6 +573,18 @@ export function ResultsPanel({
                   workflows so you can scan broad issues first and then drill
                   into a specific rule or file.
                 </p>
+                {safeFixCount > 0 && onApplyFix ? (
+                  <div className="mt-3">
+                    <Button
+                      data-testid="apply-all-safe-fixes"
+                      onClick={handleApplyAllSafeFixes}
+                      size="sm"
+                      variant="secondary"
+                    >
+                      Apply all safe fixes ({safeFixCount})
+                    </Button>
+                  </div>
+                ) : null}
               </div>
 
               <div className="space-y-4" data-testid="results-finding-list">
@@ -744,6 +803,12 @@ export function ResultsPanel({
             maxCombinationsBeforeWarning={
               report.settings.maxMatrixCombinationsBeforeWarning
             }
+          />
+
+          <ReportSnapshotsPanel
+            onCompareSnapshot={onUseSnapshotForCompare}
+            rememberSnapshots={rememberReportSnapshots}
+            report={report}
           />
 
           <ReportExportPanel
@@ -1660,6 +1725,9 @@ function ActionInventoryPanel({
                       Pinning
                     </th>
                     <th className="px-3 py-2 font-medium" scope="col">
+                      Pin strategy
+                    </th>
+                    <th className="px-3 py-2 font-medium" scope="col">
                       File and job
                     </th>
                     <th className="px-3 py-2 font-medium" scope="col">
@@ -1708,6 +1776,11 @@ function ActionInventoryPanel({
                         </Badge>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {item.mutable ? "Mutable ref" : "Immutable ref"}
+                        </p>
+                      </td>
+                      <td className="px-3 py-3">
+                        <p className="text-sm text-foreground">
+                          {item.provenance.recommendedPinStrategy}
                         </p>
                       </td>
                       <td className="px-3 py-3">

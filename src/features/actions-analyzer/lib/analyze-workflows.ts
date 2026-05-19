@@ -31,6 +31,7 @@ import type {
   MatrixSummary,
   NormalizedWorkflow,
   RuleContext,
+  RuleExecutionFailure,
   RuleModule,
   SecuritySummary,
   TriggerSummary,
@@ -79,7 +80,7 @@ export function analyzeWorkflowFiles(
     parsedFiles,
     settings: resolvedSettings,
   });
-  const ruleFindings = runRules(
+  const { failures: ruleExecutionFailures, findings: ruleFindings } = runRules(
     context,
     applyRuleSettings(registeredRuleModules, resolvedSettings),
   );
@@ -90,7 +91,11 @@ export function analyzeWorkflowFiles(
   const ignoreCommentResult = applyIgnoreComments(files, enabledFindings);
   const findings = finalizeFindings(
     filterFindingsBySettings(
-      [...ignoreCommentResult.findings, ...ignoreCommentResult.warnings],
+      [
+        ...ignoreCommentResult.findings,
+        ...ignoreCommentResult.warnings,
+        ...buildRuleExecutionFailureFindings(ruleExecutionFailures, files),
+      ],
       resolvedSettings,
     ),
   );
@@ -128,6 +133,7 @@ export function analyzeWorkflowFiles(
       findings,
       normalizedWorkflows,
     }),
+    ruleExecutionFailures,
     settings: resolvedSettings,
   };
 }
@@ -188,6 +194,7 @@ export function createEmptyReport(
       jobs: [],
     },
     attackPaths: [],
+    ruleExecutionFailures: [],
     settings: resolvedSettings,
   };
 }
@@ -202,18 +209,65 @@ export function applyRuleSettings(
 export function runRules(
   context: RuleContext,
   rules: RuleModule[],
-): AnalyzerFinding[] {
+): {
+  failures: RuleExecutionFailure[];
+  findings: AnalyzerFinding[];
+} {
   const findings: AnalyzerFinding[] = [];
+  const failures: RuleExecutionFailure[] = [];
 
   for (const rule of rules) {
     try {
       findings.push(...rule.check(context));
-    } catch {
-      continue;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown analyzer rule error.";
+
+      failures.push({
+        message,
+        ruleId: rule.definition.id,
+      });
+
+      if (process.env.NODE_ENV !== "production") {
+        console.error(
+          `[Authos] Rule ${rule.definition.id} failed during analysis.`,
+          error,
+        );
+      }
     }
   }
 
-  return findings;
+  return {
+    failures,
+    findings,
+  };
+}
+
+function buildRuleExecutionFailureFindings(
+  failures: RuleExecutionFailure[],
+  files: WorkflowInputFile[],
+): AnalyzerFinding[] {
+  if (failures.length === 0) {
+    return [];
+  }
+
+  const filePath = files[0]?.path ?? "workspace";
+
+  return failures.map((failure) => ({
+    id: "",
+    ruleId: "GHA902",
+    title: "Analyzer rule failed unexpectedly",
+    message: `Rule ${failure.ruleId} could not finish: ${failure.message}`,
+    severity: "info",
+    category: "maintainability",
+    confidence: "high",
+    filePath,
+    remediation:
+      "Re-run analysis after updating Authos. If this persists, report the rule id and workflow sample.",
+    tags: ["analyzer", "internal", failure.ruleId],
+    relatedJobs: [],
+    relatedSteps: [],
+  }));
 }
 
 export function dedupeFindings(findings: AnalyzerFinding[]): AnalyzerFinding[] {

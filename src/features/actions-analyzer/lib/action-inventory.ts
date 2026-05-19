@@ -12,6 +12,7 @@ import type {
   ActionInventoryItem,
   ActionInventoryKind,
   ActionInventoryPermissionContext,
+  ActionInventoryProvenance,
   ActionOriginKind,
   ActionRefKind,
   NormalizedWorkflow,
@@ -186,6 +187,7 @@ function createStepActionInventoryItem(
     permissions: itemContext.permissions,
     pinned: classification.pinned,
     privilegedReasons: itemContext.privilegedReasons,
+    provenance: buildActionProvenance(classification),
     ref: classification.ref,
     refKind: classification.refKind,
     repo: uses.repo,
@@ -220,6 +222,7 @@ function createReusableWorkflowInventoryItem(
     permissions: itemContext.permissions,
     pinned: classification.pinned,
     privilegedReasons: itemContext.privilegedReasons,
+    provenance: buildActionProvenance(classification),
     ref: classification.ref,
     refKind: classification.refKind,
     repo: reusableWorkflowCall.repo,
@@ -506,6 +509,47 @@ function toInventoryKind(origin: ActionOriginKind): ActionInventoryKind {
     default:
       return "unknown";
   }
+}
+
+function buildActionProvenance(classification: {
+  mutable: boolean;
+  refKind: ActionRefKind;
+}): ActionInventoryProvenance {
+  return {
+    mutable: classification.mutable,
+    refKind: classification.refKind,
+    recommendedPinStrategy: getRecommendedPinStrategy(
+      classification.refKind,
+      classification.mutable,
+    ),
+  };
+}
+
+function getRecommendedPinStrategy(
+  refKind: ActionRefKind,
+  mutable: boolean,
+): string {
+  if (refKind === "full-sha" || refKind === "digest") {
+    return "Keep the immutable SHA or digest reference.";
+  }
+
+  if (refKind === "semver-tag") {
+    return mutable
+      ? "Pin to a full commit SHA instead of a floating semver tag."
+      : "Review the exact tag before release.";
+  }
+
+  if (refKind === "major-tag" || refKind === "branch") {
+    return "Pin to a full commit SHA; branch and major tags can move.";
+  }
+
+  if (refKind === "expression") {
+    return "Avoid dynamic refs; use a static SHA or trusted tag.";
+  }
+
+  return mutable
+    ? "Pin to a full commit SHA when the action source is known."
+    : "No additional pinning guidance.";
 }
 
 interface CommonInventoryContext {

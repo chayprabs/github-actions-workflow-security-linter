@@ -42,6 +42,8 @@ import {
   parseGitHubUrl,
 } from "@/features/actions-analyzer/lib/github-import";
 import { buildPrCommentMarkdown } from "@/features/actions-analyzer/lib/report-exports";
+import { decodeWorkflowSharePayload } from "@/features/actions-analyzer/lib/report-share-payload";
+import type { ReportSnapshotEntry } from "@/features/actions-analyzer/lib/report-snapshots";
 import { parseAnalyzerShareState } from "@/features/actions-analyzer/lib/report-share";
 import { useWorkflowAnalysis } from "@/features/actions-analyzer/lib/use-workflow-analysis";
 import { useWorkflowInputs } from "@/features/actions-analyzer/lib/use-workflow-inputs";
@@ -78,15 +80,32 @@ function AnalyzerPageContent() {
       const storedPreferences = readStoredAnalyzerWorkspacePreferences();
       const shareState = parseAnalyzerShareState(window.location.search);
 
-      if (!shareState.settings) {
-        return storedPreferences;
-      }
+      const sharedSettings = shareState.settings ?? {};
 
       return {
         ...storedPreferences,
         analyzer: {
           ...storedPreferences.analyzer,
-          ...shareState.settings,
+          allowSelfHostedOnPullRequest:
+            sharedSettings.allowSelfHostedOnPullRequest ??
+            storedPreferences.analyzer.allowSelfHostedOnPullRequest,
+          detectSecretsInInput:
+            sharedSettings.detectSecretsInInput ??
+            storedPreferences.analyzer.detectSecretsInInput,
+          maxMatrixCombinationsBeforeWarning:
+            sharedSettings.maxMatrixCombinationsBeforeWarning ??
+            storedPreferences.analyzer.maxMatrixCombinationsBeforeWarning,
+          profile:
+            sharedSettings.profile ?? storedPreferences.analyzer.profile,
+          requireShaPinning:
+            sharedSettings.requireShaPinning ??
+            storedPreferences.analyzer.requireShaPinning,
+          warnOnMissingTopLevelPermissions:
+            sharedSettings.warnOnMissingTopLevelPermissions ??
+            storedPreferences.analyzer.warnOnMissingTopLevelPermissions,
+          disabledRuleIds:
+            shareState.disabledRuleIds ??
+            storedPreferences.analyzer.disabledRuleIds,
         },
       };
     },
@@ -103,9 +122,12 @@ function AnalyzerPageContent() {
   const [reloadingHistoryEntryId, setReloadingHistoryEntryId] = useState<
     string | null
   >(null);
+  const [compareSnapshotReport, setCompareSnapshotReport] =
+    useState<WorkflowAnalysisReport | null>(null);
   const workflowInputs = useWorkflowInputs({
     confirmReplace: (message) => window.confirm(message),
   });
+  const { replaceFiles: replaceWorkflowFiles } = workflowInputs;
   const compareWorkflowInputs = useWorkflowInputs({
     confirmReplace: (message) => window.confirm(message),
   });
@@ -208,7 +230,31 @@ function AnalyzerPageContent() {
     }
 
     hasInitializedShareStateRef.current = true;
+    const params = new URLSearchParams(window.location.search);
     const shareState = parseAnalyzerShareState(window.location.search);
+    const payloadParam = params.get("payload");
+
+    if (payloadParam) {
+      const payload = decodeWorkflowSharePayload(payloadParam);
+
+      if (payload) {
+        replaceWorkflowFiles(
+          payload.files.map((file) =>
+            createWorkflowInputFile({
+              content: file.content,
+              path: file.path,
+              sourceKind: file.sourceKind,
+            }),
+          ),
+        );
+        params.delete("payload");
+        window.history.replaceState(
+          {},
+          "",
+          `${window.location.pathname}?${params.toString()}`,
+        );
+      }
+    }
 
     if (shareState.sampleId) {
       loadCurrentSample(shareState.sampleId);
@@ -217,7 +263,7 @@ function AnalyzerPageContent() {
     if (shareState.previousSampleId) {
       loadPreviousSample(shareState.previousSampleId);
     }
-  }, [loadCurrentSample, loadPreviousSample]);
+  }, [loadCurrentSample, loadPreviousSample, replaceWorkflowFiles]);
 
   useEffect(() => {
     if (!preferences.ui.autoRunAnalysis || analysisFiles.length === 0) {
@@ -396,6 +442,15 @@ function AnalyzerPageContent() {
     );
   }
 
+  function handleUseSnapshotForCompare(snapshot: ReportSnapshotEntry) {
+    setCompareSnapshotReport(snapshot.report);
+    setWorkspaceMode("compare");
+    pushToast({
+      message: "Compare tab now uses the selected snapshot as the baseline.",
+      tone: "success",
+    });
+  }
+
   function handleApplyFix(filePath: string, nextContent: string) {
     const normalizedTargetPath = normalizeWorkflowPath(filePath).toLowerCase();
     const matchedFile = workflowInputs.files.find((file) => {
@@ -509,6 +564,7 @@ function AnalyzerPageContent() {
           analysisError={visibleAnalysisError}
           autoRunEnabled={preferences.ui.autoRunAnalysis}
           canAnalyze={!analysis.isAnalyzing}
+          compareSnapshotReport={compareSnapshotReport}
           defaultVirtualPath={workflowInputs.defaultVirtualPath}
           editorJumpTarget={editorJumpTarget}
           errors={workflowInputs.errors}
@@ -661,7 +717,9 @@ function AnalyzerPageContent() {
             }));
           }}
           onToggleIncludeAllYamlFiles={workflowInputs.setIncludeAllYamlFiles}
+          onUseSnapshotForCompare={handleUseSnapshotForCompare}
           onWorkspaceModeChange={setWorkspaceMode}
+          rememberReportSnapshots={preferences.ui.rememberReportSnapshots}
           previousActiveFile={compareActiveFile}
           previousActiveFileId={compareWorkflowInputs.activeFileId}
           previousAnalysisError={compareAnalysis.error}

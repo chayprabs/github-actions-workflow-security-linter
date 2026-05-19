@@ -128,6 +128,7 @@ export const emptyAnalysisReport: WorkflowAnalysisReport = {
     jobs: [],
   },
   attackPaths: [],
+  ruleExecutionFailures: [],
   settings: defaultAnalyzerSettings,
 };
 
@@ -168,6 +169,12 @@ export const sampleAnalysisReport: WorkflowAnalysisReport = {
       },
       pinned: false,
       privilegedReasons: [],
+      provenance: {
+        mutable: true,
+        recommendedPinStrategy:
+          "Pin to a full commit SHA; branch and major tags can move.",
+        refKind: "major-tag",
+      },
       ref: "v4",
       refKind: "major-tag",
       repo: "checkout",
@@ -305,5 +312,6 @@ jobs:
       stepLabels: ["step-1"],
     },
   ],
+  ruleExecutionFailures: [],
   settings: defaultAnalyzerSettings,
 };

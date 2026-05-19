@@ -39,7 +39,7 @@ export default function PrivacyPage() {
           className="font-medium text-foreground underline-offset-4 hover:text-accent hover:underline"
           href={siteConfig.primaryTool.href}
         >
-          GitHub Actions analyzer
+          {siteConfig.primaryTool.name}
         </Link>{" "}
         for the current browser-local processing flow.
       </Alert>

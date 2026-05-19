@@ -120,9 +120,28 @@ Vercel notes:
 - Set `NEXT_PUBLIC_SITE_URL` to the deployed HTTPS origin so metadata and sitemap output use the public hostname.
 - The public GitHub import feature works client-side and does not need a server proxy.
 
+## Verify locally
+
+```bash
+npm run verify
+```
+
+Optional browser suite:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
 ## Additional docs
 
-- [docs/RULES.md](</C:/Users/chait/OneDrive/Desktop/authos - apps/tools/5/docs/RULES.md>)
-- [docs/QA_CHECKLIST.md](</C:/Users/chait/OneDrive/Desktop/authos - apps/tools/5/docs/QA_CHECKLIST.md>)
-- [docs/LAUNCH_CHECKLIST.md](</C:/Users/chait/OneDrive/Desktop/authos - apps/tools/5/docs/LAUNCH_CHECKLIST.md>)
-- [docs/ROADMAP.md](</C:/Users/chait/OneDrive/Desktop/authos - apps/tools/5/docs/ROADMAP.md>)
+- [docs/RULES.md](docs/RULES.md)
+- [docs/ECOSYSTEM.md](docs/ECOSYSTEM.md) — Authos product context and resolved deployment facts
+- [docs/ACCURACY.md](docs/ACCURACY.md) — How findings are tested without telemetry
+- [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md)
+- [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md)
+- [docs/ROADMAP.md](docs/ROADMAP.md)
+
+## License
+
+MIT — see [LICENSE](LICENSE).

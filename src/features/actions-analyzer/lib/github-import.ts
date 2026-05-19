@@ -783,6 +783,67 @@ async function mapGitHubResponseError({
   });
 }
 
+export async function fetchPublicGitHubDefaultBranch({
+  fetchImpl = fetch,
+  owner,
+  repo,
+  signal,
+}: {
+  fetchImpl?: typeof fetch | undefined;
+  owner: string;
+  repo: string;
+  signal?: AbortSignal | undefined;
+}): Promise<string | null> {
+  let response: Response;
+
+  try {
+    response = await fetchImpl(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+      createFetchInit({
+        headers: {
+          Accept: "application/vnd.github+json",
+        },
+        signal,
+      }),
+    );
+  } catch {
+    throw new GitHubImportError({
+      code: "network",
+      message:
+        "The browser could not reach GitHub. Check your connection or try again in a moment.",
+    });
+  }
+
+  if (!response.ok) {
+    throw await mapGitHubResponseError({
+      response,
+      missingCode: "repo-not-found",
+      missingMessage:
+        "GitHub could not find that public repository. Check the owner/repo and make sure it is public.",
+    });
+  }
+
+  const payload = (await response.json()) as { default_branch?: string | undefined };
+
+  return payload.default_branch ?? null;
+}
+
+export function buildSuggestedGitRefs(defaultBranch: string | null | undefined) {
+  const refs: string[] = [];
+  const seen = new Set<string>();
+
+  for (const candidate of [defaultBranch, "main", "master"]) {
+    if (!candidate || seen.has(candidate)) {
+      continue;
+    }
+
+    seen.add(candidate);
+    refs.push(candidate);
+  }
+
+  return refs;
+}
+
 interface GitHubApiContentEntry {
   download_url?: string | null | undefined;
   html_url?: string | null | undefined;

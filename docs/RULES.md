@@ -71,7 +71,21 @@ Authos currently ships the following rule IDs in the GitHub Actions analyzer. Ea
 - `GHA413` | `high` | `matrix` | A matrix resolves to zero combinations.
 - `GHA414` | `low` | `matrix` | A matrix cannot be expanded statically and remains unresolved.
 
+## Reusable workflows
+
+- `GHA111` | `high` | `security` | A reusable workflow caller grants `permissions: write-all`.
+- `GHA112` | `high` | `security` | A reusable workflow uses `secrets: inherit` on an untrusted pull request trigger.
+- `GHA113` | `medium` | `security` | A reusable workflow path includes a parent-directory segment.
+
+## Shell and command construction
+
+- `GHA300` | `high` | `security` | A `run` script embeds `github.event` data directly in shell code.
+- `GHA301` | `medium` | `security` | A `run` script uses command substitution around a GitHub Actions expression.
+- `GHA302` | `high` | `security` | A `run` script pipes remote download output into a shell interpreter.
+- `GHA303` | `medium` | `security` | `actions/github-script` runs a dynamic `script` input containing expressions.
+
 ## Tooling and review hygiene
 
 - `GHA900` | `info` | `maintainability` | Analysis was requested with no workflow files in the workspace.
 - `GHA901` | `low` | `maintainability` | An `# authos-ignore` comment omitted its reason.
+- `GHA902` | `info` | `maintainability` | An internal analyzer rule threw an error; other rules still ran.

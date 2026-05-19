@@ -412,3 +412,20 @@
 
 - Canonical, sitemap, and structured-data URLs default to `https://authos.local` in local development. Set `NEXT_PUBLIC_SITE_URL` in deployment so crawlers see the real production origin.
 - `test:e2e` remains configured but was not executed in this prompt.
+
+## Phase 0 — Baseline lock (100% build plan)
+
+- Status: Completed.
+- Outcome: Confirmed clean-clone verification on Node with `npm run verify` (typecheck, lint, 193 unit tests, production build). Added GitHub Actions CI workflow, MIT license, Zod preferences validation, GHA902 rule failure surfacing, vitest thread pool fix for Windows, and ecosystem/accuracy docs.
+- Commands: `npm ci`, `npm run verify`, `npm run test:e2e` (4/4 pass).
+
+### Known Issues / Notes
+
+- Production deployment and `NEXT_PUBLIC_SITE_URL` on a live host remain for Phase 1.
+
+## Phase 100 — Complete (100% build plan)
+
+- Status: Completed locally.
+- Outcome: Shipped rule toggles, safe YAML format, opt-in content share links, report snapshots with compare baseline, apply-all-safe-fixes, shell/reusable rule packs, action provenance column, GitHub ref suggestions, Open Graph images, bundle analyzer, multi-browser Playwright, and docs (`FIX_COVERAGE.md`, `PERFORMANCE.md`, updated `RULES.md`).
+- Commands: `npm run verify` (203 unit tests), `npm run test:e2e` (chromium/firefox/webkit), `npm run smoke:prod` (requires `SMOKE_BASE_URL` after deploy).
+- Notes: Push `main` and set `NEXT_PUBLIC_SITE_URL` on the host to finish production checklist items that require a live URL.

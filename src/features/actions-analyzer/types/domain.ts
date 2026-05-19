@@ -194,6 +194,12 @@ export interface ActionInventoryPermissionContext {
   writeScopes: string[];
 }
 
+export interface ActionInventoryProvenance {
+  mutable: boolean;
+  recommendedPinStrategy: string;
+  refKind: ActionRefKind;
+}
+
 export interface ActionInventoryItem {
   action: string;
   filePath: string;
@@ -207,6 +213,7 @@ export interface ActionInventoryItem {
   path: string | null;
   permissions: ActionInventoryPermissionContext;
   pinned: boolean;
+  provenance: ActionInventoryProvenance;
   uses: string;
   refKind: ActionRefKind;
   ref: string | null;
@@ -400,6 +407,11 @@ export interface AnalysisSummary {
   jobCount: number;
 }
 
+export interface RuleExecutionFailure {
+  message: string;
+  ruleId: string;
+}
+
 export interface WorkflowAnalysisReport {
   generatedAt: string;
   files: WorkflowInputFile[];
@@ -413,5 +425,6 @@ export interface WorkflowAnalysisReport {
   triggerSummary: TriggerSummary;
   matrixSummary: MatrixSummary;
   attackPaths: AttackPath[];
+  ruleExecutionFailures: RuleExecutionFailure[];
   settings: AnalyzerSettings;
 }

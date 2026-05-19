@@ -1,8 +1,6 @@
+import { parseAnalyzerWorkspacePreferences } from "@/features/actions-analyzer/lib/preferences-schema";
 import { defaultAnalyzerSettings } from "@/features/actions-analyzer/lib/settings";
-import type {
-  AnalyzerProfile,
-  AnalyzerSettings,
-} from "@/features/actions-analyzer/types";
+import type { AnalyzerSettings } from "@/features/actions-analyzer/types";
 
 export type ThemePreference = "system" | "light" | "dark";
 
@@ -21,15 +19,22 @@ export interface AnalyzerWorkspacePreferences {
     | "profile"
     | "requireShaPinning"
     | "warnOnMissingTopLevelPermissions"
-  >;
+  > & {
+    disabledRuleIds: string[];
+  };
   theme: ThemePreference;
-  ui: AnalyzerUiPreferences;
+  ui: AnalyzerUiPreferences & {
+    rememberReportSnapshots: boolean;
+  };
 }
 
 const analyzerPreferencesStorageKey = "authos.actions-analyzer.preferences.v1";
 
-export const defaultAnalyzerUiPreferences: AnalyzerUiPreferences = {
+export const defaultAnalyzerUiPreferences: AnalyzerUiPreferences & {
+  rememberReportSnapshots: boolean;
+} = {
   autoRunAnalysis: true,
+  rememberReportSnapshots: false,
   rememberWorkflowContent: false,
   softWrapEditor: true,
 };
@@ -46,6 +51,7 @@ export const defaultAnalyzerWorkspacePreferences: AnalyzerWorkspacePreferences =
       requireShaPinning: defaultAnalyzerSettings.requireShaPinning,
       warnOnMissingTopLevelPermissions:
         defaultAnalyzerSettings.warnOnMissingTopLevelPermissions,
+      disabledRuleIds: [],
     },
     theme: "system",
     ui: defaultAnalyzerUiPreferences,
@@ -93,89 +99,5 @@ export function toAnalyzerSettings(
 export function sanitizeAnalyzerWorkspacePreferences(
   value: unknown,
 ): AnalyzerWorkspacePreferences {
-  if (!value || typeof value !== "object") {
-    return defaultAnalyzerWorkspacePreferences;
-  }
-
-  const candidate = value as Partial<AnalyzerWorkspacePreferences>;
-  const analyzerCandidate =
-    candidate.analyzer && typeof candidate.analyzer === "object"
-      ? (candidate.analyzer as Partial<
-          AnalyzerWorkspacePreferences["analyzer"]
-        >)
-      : {};
-  const uiCandidate =
-    candidate.ui && typeof candidate.ui === "object"
-      ? (candidate.ui as Partial<AnalyzerUiPreferences>)
-      : {};
-
-  return {
-    analyzer: {
-      allowSelfHostedOnPullRequest:
-        typeof analyzerCandidate.allowSelfHostedOnPullRequest === "boolean"
-          ? analyzerCandidate.allowSelfHostedOnPullRequest
-          : defaultAnalyzerWorkspacePreferences.analyzer
-              .allowSelfHostedOnPullRequest,
-      detectSecretsInInput:
-        typeof analyzerCandidate.detectSecretsInInput === "boolean"
-          ? analyzerCandidate.detectSecretsInInput
-          : defaultAnalyzerWorkspacePreferences.analyzer.detectSecretsInInput,
-      maxMatrixCombinationsBeforeWarning: sanitizePositiveNumber(
-        analyzerCandidate.maxMatrixCombinationsBeforeWarning,
-        defaultAnalyzerWorkspacePreferences.analyzer
-          .maxMatrixCombinationsBeforeWarning,
-      ),
-      profile: isAnalyzerProfile(analyzerCandidate.profile)
-        ? analyzerCandidate.profile
-        : defaultAnalyzerWorkspacePreferences.analyzer.profile,
-      requireShaPinning:
-        typeof analyzerCandidate.requireShaPinning === "boolean"
-          ? analyzerCandidate.requireShaPinning
-          : defaultAnalyzerWorkspacePreferences.analyzer.requireShaPinning,
-      warnOnMissingTopLevelPermissions:
-        typeof analyzerCandidate.warnOnMissingTopLevelPermissions === "boolean"
-          ? analyzerCandidate.warnOnMissingTopLevelPermissions
-          : defaultAnalyzerWorkspacePreferences.analyzer
-              .warnOnMissingTopLevelPermissions,
-    },
-    theme: isThemePreference(candidate.theme)
-      ? candidate.theme
-      : defaultAnalyzerWorkspacePreferences.theme,
-    ui: {
-      autoRunAnalysis:
-        typeof uiCandidate.autoRunAnalysis === "boolean"
-          ? uiCandidate.autoRunAnalysis
-          : defaultAnalyzerWorkspacePreferences.ui.autoRunAnalysis,
-      rememberWorkflowContent:
-        typeof uiCandidate.rememberWorkflowContent === "boolean"
-          ? uiCandidate.rememberWorkflowContent
-          : defaultAnalyzerWorkspacePreferences.ui.rememberWorkflowContent,
-      softWrapEditor:
-        typeof uiCandidate.softWrapEditor === "boolean"
-          ? uiCandidate.softWrapEditor
-          : defaultAnalyzerWorkspacePreferences.ui.softWrapEditor,
-    },
-  };
-}
-
-function sanitizePositiveNumber(value: unknown, fallback: number) {
-  if (typeof value !== "number" || Number.isNaN(value)) {
-    return fallback;
-  }
-
-  return Math.max(1, Math.round(value));
-}
-
-function isAnalyzerProfile(value: unknown): value is AnalyzerProfile {
-  return (
-    value === "balanced" ||
-    value === "strict-security" ||
-    value === "open-source" ||
-    value === "private-app" ||
-    value === "deploy-release"
-  );
-}
-
-function isThemePreference(value: unknown): value is ThemePreference {
-  return value === "system" || value === "light" || value === "dark";
+  return parseAnalyzerWorkspacePreferences(value);
 }

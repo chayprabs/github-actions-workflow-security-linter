@@ -465,6 +465,39 @@ export const ruleCatalog = [
     tags: ["permissions", "third-party-actions", "token"],
   },
   {
+    id: "GHA111",
+    title: "Reusable workflow caller grants write-all permissions",
+    description:
+      "Reusable workflow callers should not grant `permissions: write-all` unless every called workflow truly needs full repository write access.",
+    category: "security",
+    defaultSeverity: "high",
+    docsUrl: reusableWorkflowDocsUrl,
+    enabledByDefault: true,
+    tags: ["reusable-workflows", "permissions"],
+  },
+  {
+    id: "GHA112",
+    title: "Reusable workflow inherits secrets on untrusted pull request triggers",
+    description:
+      "Calling reusable workflows with `secrets: inherit` on untrusted pull request triggers can expose repository secrets to untrusted code paths.",
+    category: "security",
+    defaultSeverity: "high",
+    docsUrl: reusableWorkflowDocsUrl,
+    enabledByDefault: true,
+    tags: ["reusable-workflows", "secrets", "pull-request"],
+  },
+  {
+    id: "GHA113",
+    title: "Reusable workflow path escapes the workflows directory",
+    description:
+      "Local reusable workflow references should stay inside `.github/workflows` and avoid `..` traversal segments.",
+    category: "security",
+    defaultSeverity: "medium",
+    docsUrl: reusableWorkflowDocsUrl,
+    enabledByDefault: true,
+    tags: ["reusable-workflows", "path"],
+  },
+  {
     id: "GHA200",
     title: "Third-party reference is not pinned to a full commit SHA",
     description:
@@ -575,6 +608,50 @@ export const ruleCatalog = [
     tags: ["matrix", "reliability", "ci-scale"],
   },
   {
+    id: "GHA300",
+    title: "Untrusted github.event data is embedded in a shell run script",
+    description:
+      "Pull request and issue event fields should cross into shell scripts through `env` boundaries instead of direct expression interpolation.",
+    category: "security",
+    defaultSeverity: "high",
+    docsUrl: expressionsDocsUrl,
+    enabledByDefault: true,
+    tags: ["shell", "expressions", "injection"],
+  },
+  {
+    id: "GHA301",
+    title: "Shell command substitution wraps a GitHub Actions expression",
+    description:
+      "Backtick command substitution around expressions makes quoting and review harder and increases injection risk.",
+    category: "security",
+    defaultSeverity: "medium",
+    docsUrl: expressionsDocsUrl,
+    enabledByDefault: true,
+    tags: ["shell", "expressions"],
+  },
+  {
+    id: "GHA302",
+    title: "Remote download output is piped into a shell",
+    description:
+      "Piping `curl` or `wget` output directly into a shell interpreter can execute untrusted remote content.",
+    category: "security",
+    defaultSeverity: "high",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["shell", "supply-chain"],
+  },
+  {
+    id: "GHA303",
+    title: "github-script step uses a dynamic script input",
+    description:
+      "Dynamic `actions/github-script` bodies composed from expressions are harder to review than static workflow script content.",
+    category: "security",
+    defaultSeverity: "medium",
+    docsUrl: workflowSyntaxDocsUrl,
+    enabledByDefault: true,
+    tags: ["shell", "github-script"],
+  },
+  {
     id: "GHA401",
     title: "Job is missing timeout-minutes",
     description:
@@ -680,6 +757,16 @@ export const ruleCatalog = [
     defaultSeverity: "low",
     enabledByDefault: true,
     tags: ["ignore-comments", "review", "maintainability"],
+  },
+  {
+    id: "GHA902",
+    title: "Analyzer rule failed unexpectedly",
+    description:
+      "An internal rule threw an error while analyzing this workflow. Other rules still ran, but results for the failed rule may be incomplete until the analyzer is updated.",
+    category: "maintainability",
+    defaultSeverity: "info",
+    enabledByDefault: true,
+    tags: ["analyzer", "internal", "reliability"],
   },
 ] satisfies RuleDefinition[];
 

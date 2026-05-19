@@ -29,6 +29,7 @@ export interface ResultsShareState {
 }
 
 export interface AnalyzerShareState {
+  disabledRuleIds?: string[] | undefined;
   previousSampleId?: WorkflowSampleId | undefined;
   results?: ResultsShareState | undefined;
   sampleId?: WorkflowSampleId | undefined;
@@ -68,6 +69,7 @@ export function buildPrivacySafeShareUrl({
   params.delete("view");
   params.delete("warnings");
   params.delete("workspace");
+  params.delete("rulesOff");
 
   for (const settingKey of shareableSettingKeys) {
     params.delete(settingKey);
@@ -127,6 +129,10 @@ export function buildPrivacySafeShareUrl({
     }
   }
 
+  if (state.disabledRuleIds && state.disabledRuleIds.length > 0) {
+    params.set("rulesOff", state.disabledRuleIds.join(","));
+  }
+
   if (state.settings) {
     for (const key of shareableSettingKeys) {
       const value = state.settings[key];
@@ -165,6 +171,7 @@ export function parseAnalyzerShareState(search: string): AnalyzerShareState {
       view: (params.get("view") as ShareableResultsView | null) ?? "all",
     },
     sampleId: (params.get("sample") as WorkflowSampleId | null) ?? undefined,
+    disabledRuleIds: parseDisabledRuleIds(params.get("rulesOff")),
     settings: parseSharedSettings(params),
     workspaceMode:
       (params.get("workspace") as ShareableWorkspaceMode | null) ?? "analyze",
@@ -192,6 +199,19 @@ export function getPrivacySafeShareableSampleId({
   }
 
   return selectedSampleId;
+}
+
+function parseDisabledRuleIds(value: string | null) {
+  if (!value) {
+    return undefined;
+  }
+
+  const ruleIds = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => /^GHA\d{3}$/u.test(entry));
+
+  return ruleIds.length > 0 ? ruleIds : undefined;
 }
 
 function parseSeverityList(value: string | null) {

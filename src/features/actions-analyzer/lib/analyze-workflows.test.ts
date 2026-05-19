@@ -5,6 +5,7 @@ import {
   analyzeWorkflowFiles,
   applyRuleSettings,
   createEmptyReport,
+  runRules,
 } from "@/features/actions-analyzer/lib/analyze-workflows";
 import { registeredRuleModules } from "@/features/actions-analyzer/lib/rules";
 import { createWorkflowInputFile } from "@/features/actions-analyzer/lib/workflow-input-utils";
@@ -227,5 +228,34 @@ jobs:
       maxParallel: 3,
     });
     expect(report.matrixSummary.jobs[0]?.sampleCombinations).toHaveLength(18);
+  });
+});
+
+describe("runRules", () => {
+  it("records rule execution failures instead of failing silently", () => {
+    const result = runRules({} as never, [
+      {
+        definition: {
+          id: "GHA100",
+          title: "test",
+          description: "test",
+          category: "security",
+          defaultSeverity: "high",
+          enabledByDefault: true,
+          tags: [],
+        },
+        check() {
+          throw new Error("synthetic rule failure");
+        },
+      },
+    ]);
+
+    expect(result.findings).toEqual([]);
+    expect(result.failures).toEqual([
+      {
+        message: "synthetic rule failure",
+        ruleId: "GHA100",
+      },
+    ]);
   });
 });

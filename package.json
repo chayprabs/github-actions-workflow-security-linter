@@ -2,7 +2,19 @@
   "name": "authos-github-actions-workflow-analyzer",
   "version": "0.1.0",
   "private": true,
+  "description": "Browser-local GitHub Actions workflow security and lint analyzer (Authos tool 5).",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chayprabs/github-actions-workflow-security-linter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chayprabs/github-actions-workflow-security-linter/issues"
+  },
+  "homepage": "https://github.com/chayprabs/github-actions-workflow-security-linter#readme",
   "scripts": {
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "smoke:prod": "node scripts/post-deploy-smoke.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -11,6 +23,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "analyze": "cross-env ANALYZE=true next build",
     "format": "prettier --write ."
   },
   "dependencies": {
@@ -21,6 +34,7 @@
     "@codemirror/view": "^6.41.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.8.0",
+    "lz-string": "^1.5.0",
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -29,14 +43,17 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.6",
     "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@types/lz-string": "^1.3.34",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.5.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "happy-dom": "^20.9.0",

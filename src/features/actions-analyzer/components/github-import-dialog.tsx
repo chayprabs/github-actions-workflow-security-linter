@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { OverlayPanel } from "@/components/ui/overlay-panel";
 import { usePushActionToast } from "@/features/actions-analyzer/components/action-toast-provider";
 import {
+  buildSuggestedGitRefs,
+  fetchPublicGitHubDefaultBranch,
   fetchPublicGitHubFile,
   fetchPublicGitHubWorkflowDirectory,
   getGitHubImportErrorMessage,
@@ -56,8 +58,15 @@ export function GitHubImportDialog({
     string[]
   >([]);
   const [urlInput, setUrlInput] = useState("");
+  const [suggestedRefs, setSuggestedRefs] = useState<string[]>([]);
 
   const parsedUrl = safelyParseGitHubUrl(urlInput);
+  const branchSuggestions =
+    suggestedRefs.length > 0
+      ? suggestedRefs
+      : parsedUrl?.mode === "repo"
+        ? buildSuggestedGitRefs(null)
+        : [];
   const selectedPreviewFiles =
     preview?.files.filter((file) => {
       return (
@@ -108,6 +117,12 @@ export function GitHubImportDialog({
     setIsLoading(true);
 
     try {
+      const defaultBranch = await fetchPublicGitHubDefaultBranch({
+        owner: parsedRepoUrl.owner,
+        repo: parsedRepoUrl.repo,
+      }).catch(() => null);
+      setSuggestedRefs(buildSuggestedGitRefs(defaultBranch));
+
       const directoryPreview = await fetchPublicGitHubWorkflowDirectory({
         directoryPath: getWorkflowDirectoryPath(parsedRepoUrl),
         maxFileSizeBytes,
@@ -293,6 +308,7 @@ export function GitHubImportDialog({
                   id={urlInputId}
                   onChange={(event) => {
                     clearPreviewState();
+                    setSuggestedRefs([]);
                     setUrlInput(event.target.value);
                   }}
                   placeholder="https://github.com/owner/repo or a workflow file URL"
@@ -324,6 +340,27 @@ export function GitHubImportDialog({
                   Leave blank to use the detected ref or default to{" "}
                   <span className="font-medium text-foreground">main</span>.
                 </p>
+                {branchSuggestions.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                      Try
+                    </span>
+                    {branchSuggestions.map((ref) => (
+                      <Button
+                        key={ref}
+                        onClick={() => {
+                          clearPreviewState();
+                          setBranchRef(ref);
+                        }}
+                        size="sm"
+                        type="button"
+                        variant="secondary"
+                      >
+                        {ref}
+                      </Button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </div>
 
