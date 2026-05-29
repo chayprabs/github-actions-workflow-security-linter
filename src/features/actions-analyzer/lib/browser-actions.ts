@@ -31,7 +31,7 @@ export async function copyTextToClipboard(value: string) {
   document.body.removeChild(textarea);
 
   if (!didCopy) {
-    throw new Error("Authos could not copy this text.");
+    throw new Error("The analyzer could not copy this text.");
   }
 }
 
@@ -83,14 +83,14 @@ export function createReportDownloadBaseName(report: WorkflowAnalysisReport) {
     const fileName = report.files[0]?.path.split("/").at(-1) ?? "workflow";
     const withoutExtension = fileName.replace(/\.[A-Za-z0-9]+$/u, "");
 
-    return `authos-${sanitizeFileNameSegment(withoutExtension)}`;
+    return `gha-${sanitizeFileNameSegment(withoutExtension)}`;
   }
 
   if (report.files.length > 1) {
-    return "authos-workspace-report";
+    return "gha-workspace-report";
   }
 
-  return "authos-workflow-report";
+  return "gha-workflow-report";
 }
 
 export function createSafeDownloadFileName({
@@ -103,7 +103,7 @@ export function createSafeDownloadFileName({
   timestamp?: string | undefined;
 }) {
   const normalizedBaseName =
-    sanitizeFileNameSegment(baseName) || "authos-report";
+    sanitizeFileNameSegment(baseName) || "gha-report";
   const normalizedTimestamp = timestamp
     ? timestamp
         .replace(/[-:]/gu, "")

@@ -5,7 +5,7 @@ import type {
   WorkflowInputSourceKind,
 } from "@/features/actions-analyzer/types";
 
-const analysisHistoryStorageKey = "authos.actions-analyzer.history.v1";
+const analysisHistoryStorageKey = "gha-workflow-analyzer.history.v1";
 const maxStoredAnalysisHistoryEntries = 12;
 
 export interface RecentAnalysisHistoryEntry {

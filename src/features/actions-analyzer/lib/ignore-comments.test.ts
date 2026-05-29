@@ -23,7 +23,7 @@ describe("ignore comments", () => {
     const report = analyze(`name: Ignore
 on: push
 jobs:
-  # authos-ignore GHA401: this benchmark intentionally runs without a timeout
+  # gha-ignore GHA401: this benchmark intentionally runs without a timeout
   build:
     runs-on: ubuntu-latest
   test:
@@ -50,7 +50,7 @@ jobs:
     const report = analyze(`name: Ignore
 on: push
 jobs:
-  # authos-ignore GHA401
+  # gha-ignore GHA401
   build:
     runs-on: ubuntu-latest
 `);

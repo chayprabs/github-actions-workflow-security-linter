@@ -214,7 +214,7 @@ export const sampleAnalysisReport: WorkflowAnalysisReport = {
           {
             currentAccess: null,
             rationale:
-              "Job metadata includes `release`, which often signals release, tag, changelog, or version-bump work that may need repository writes. Review recommended because Authos is using static workflow heuristics, not runtime repository policy.",
+              "Job metadata includes `release`, which often signals release, tag, changelog, or version-bump work that may need repository writes. Review recommended because This tool is using static workflow heuristics, not runtime repository policy.",
             recommendedAccess: "write",
             scope: "contents",
             status: "review-recommended",

@@ -522,7 +522,7 @@ function formatScopeRationale({
   scopeKind: "job" | "workflow";
 }) {
   if (reasons.length > 0) {
-    return `${reasons.join(" ")} Review recommended because Authos is using static workflow heuristics, not runtime repository policy.`;
+    return `${reasons.join(" ")} Review recommended because This tool is using static workflow heuristics, not runtime repository policy.`;
   }
 
   if (scope === "contents" && recommendedAccess === "read") {
@@ -535,8 +535,8 @@ function formatScopeRationale({
 
   if (currentAccess === "write" || currentAccess === "write-all") {
     return scopeKind === "workflow"
-      ? `Authos did not find a strong static signal that every job needs \`${scope}: write\` at the workflow level. Move this write scope into only the jobs that truly need it after review.`
-      : `Authos did not find a strong static signal that this job needs \`${scope}: write\`. Review before removing it because scripts, API calls, or reusable workflows can require scopes that are not obvious from static YAML alone.`;
+      ? `The analyzer did not find a strong static signal that every job needs \`${scope}: write\` at the workflow level. Move this write scope into only the jobs that truly need it after review.`
+      : `The analyzer did not find a strong static signal that this job needs \`${scope}: write\`. Review before removing it because scripts, API calls, or reusable workflows can require scopes that are not obvious from static YAML alone.`;
   }
 
   if (currentAccess === "read" && recommendedAccess === "read") {

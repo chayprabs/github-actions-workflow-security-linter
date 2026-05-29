@@ -62,7 +62,7 @@ export function parseWorkflowYaml(file: WorkflowInputFile): ParsedYamlFile {
       message:
         error instanceof Error
           ? error.message
-          : "Authos could not parse this YAML file.",
+          : "The analyzer could not parse this YAML file.",
       remediation:
         "Fix the YAML syntax so the workflow can be parsed deterministically.",
       ruleId: "GHA001",

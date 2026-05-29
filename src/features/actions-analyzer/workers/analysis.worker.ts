@@ -26,7 +26,7 @@ self.addEventListener(
         error:
           error instanceof Error
             ? error.message
-            : "Authos could not analyze this workflow locally.",
+            : "The analyzer could not analyze this workflow locally.",
         requestId: event.data.requestId,
       };
 

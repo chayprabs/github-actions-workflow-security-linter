@@ -144,7 +144,7 @@ export function InputPanel({
         <CardTitle>Input</CardTitle>
         <CardDescription>
           Paste workflow YAML, upload one or more local files, load a sample, or
-          scan a folder from your browser without sending content to Authos.
+          scan a folder from your browser without sending content to This tool.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -396,7 +396,7 @@ export function InputPanel({
           </Select>
           <p className="text-sm text-muted-foreground">
             Sample loading replaces the current workspace with one realistic
-            example. If you have typed content open, Authos asks before
+            example. If you have typed content open, You will be asked before
             replacing it.
           </p>
         </div>
@@ -483,7 +483,7 @@ function WorkflowCodeEditorLoading({
   return (
     <div className="space-y-3" data-testid="workflow-code-editor-loading">
       <Alert title="Loading advanced editor" tone="info">
-        Authos keeps a plain local textarea available while the richer editor
+        This tool keeps a plain local textarea available while the richer editor
         bundle loads.
       </Alert>
       <Textarea

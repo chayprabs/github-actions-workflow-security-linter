@@ -28,7 +28,7 @@ export interface AnalyzerWorkspacePreferences {
   };
 }
 
-const analyzerPreferencesStorageKey = "authos.actions-analyzer.preferences.v1";
+const analyzerPreferencesStorageKey = "gha-workflow-analyzer.preferences.v1";
 
 export const defaultAnalyzerUiPreferences: AnalyzerUiPreferences & {
   rememberReportSnapshots: boolean;

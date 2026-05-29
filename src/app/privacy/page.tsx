@@ -16,7 +16,7 @@ import { siteConfig } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Privacy",
   description:
-    "Authos tools are designed to keep analysis local in the browser wherever possible.",
+    "This tool tools are designed to keep analysis local in the browser wherever possible.",
 };
 
 export default function PrivacyPage() {
@@ -24,7 +24,7 @@ export default function PrivacyPage() {
     <Container className="space-y-8 py-16 sm:py-20" data-testid="privacy-page">
       <Toolbar
         data-testid="privacy-toolbar"
-        description="Authos tools are designed to keep analysis local in the browser where possible. This page captures the current privacy posture for the GitHub Actions analyzer."
+        description="This tool tools are designed to keep analysis local in the browser where possible. This page captures the current privacy posture for the GitHub Actions analyzer."
         title="Privacy"
       />
 

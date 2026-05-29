@@ -83,7 +83,7 @@ const activeLineField = StateField.define({
       nextDecorations = Decoration.set([
         Decoration.line({
           attributes: {
-            class: "cm-authos-active-finding-line",
+            class: "cm-gha-active-finding-line",
           },
         }).range(line.from),
       ]);
@@ -114,18 +114,18 @@ const editorTheme = EditorView.theme({
     backgroundColor: "hsl(var(--accent) / 0.06)",
     color: "hsl(var(--foreground))",
   },
-  ".cm-authos-active-finding-line": {
+  ".cm-gha-active-finding-line": {
     backgroundColor: "hsl(var(--warning) / 0.16)",
   },
-  ".cm-authos-diagnostic-error": {
+  ".cm-gha-diagnostic-error": {
     backgroundColor: "hsl(var(--danger) / 0.12)",
     textDecorationColor: "hsl(var(--danger))",
   },
-  ".cm-authos-diagnostic-info": {
+  ".cm-gha-diagnostic-info": {
     backgroundColor: "hsl(var(--info) / 0.12)",
     textDecorationColor: "hsl(var(--info))",
   },
-  ".cm-authos-diagnostic-warning": {
+  ".cm-gha-diagnostic-warning": {
     backgroundColor: "hsl(var(--warning) / 0.16)",
     textDecorationColor: "hsl(var(--warning))",
   },
@@ -238,23 +238,23 @@ const editorTheme = EditorView.theme({
     backgroundColor: "hsl(var(--card))",
     border: "1px solid hsl(var(--border) / 0.8)",
   },
-  ".cm-authos-diagnostic-body": {
+  ".cm-gha-diagnostic-body": {
     display: "grid",
     gap: "0.45rem",
   },
-  ".cm-authos-diagnostic-copy": {
+  ".cm-gha-diagnostic-copy": {
     color: "hsl(var(--muted-foreground))",
     fontSize: "0.8125rem",
     lineHeight: "1.45",
   },
-  ".cm-authos-diagnostic-rule": {
+  ".cm-gha-diagnostic-rule": {
     color: "hsl(var(--foreground))",
     fontSize: "0.75rem",
     fontWeight: "700",
     letterSpacing: "0.08em",
     textTransform: "uppercase",
   },
-  ".cm-authos-diagnostic-title": {
+  ".cm-gha-diagnostic-title": {
     color: "hsl(var(--foreground))",
     fontSize: "0.875rem",
     fontWeight: "700",
@@ -546,14 +546,14 @@ export function WorkflowCodeEditor({
     <div className="space-y-3" data-testid="workflow-code-editor">
       {exceedsEditorThreshold ? (
         <Alert title="Large input fallback" tone="warning">
-          This file is {formatBytes(fileSizeBytes)}. Authos is using the plain
+          This file is {formatBytes(fileSizeBytes)}. This tool is using the plain
           textarea to avoid sluggish editor behavior above 1 MB.
         </Alert>
       ) : null}
 
       {editorError ? (
         <Alert title="Editor fallback" tone="warning">
-          CodeMirror could not initialize cleanly, so Authos kept the resilient
+          CodeMirror could not initialize cleanly, so This tool kept the resilient
           textarea available instead.
         </Alert>
       ) : null}
@@ -925,13 +925,13 @@ function getDiagnosticMarkClass(severity: Severity) {
   switch (severity) {
     case "critical":
     case "high":
-      return "cm-authos-diagnostic-error";
+      return "cm-gha-diagnostic-error";
     case "medium":
-      return "cm-authos-diagnostic-warning";
+      return "cm-gha-diagnostic-warning";
     case "low":
     case "info":
     default:
-      return "cm-authos-diagnostic-info";
+      return "cm-gha-diagnostic-info";
   }
 }
 
@@ -941,12 +941,12 @@ function createDiagnosticMessageNode(finding: AnalyzerFinding) {
   const title = window.document.createElement("div");
   const copy = window.document.createElement("div");
 
-  container.className = "cm-authos-diagnostic-body";
-  ruleId.className = "cm-authos-diagnostic-rule";
+  container.className = "cm-gha-diagnostic-body";
+  ruleId.className = "cm-gha-diagnostic-rule";
   ruleId.textContent = finding.ruleId;
-  title.className = "cm-authos-diagnostic-title";
+  title.className = "cm-gha-diagnostic-title";
   title.textContent = finding.title;
-  copy.className = "cm-authos-diagnostic-copy";
+  copy.className = "cm-gha-diagnostic-copy";
   copy.textContent = finding.message;
 
   container.append(ruleId, title, copy);

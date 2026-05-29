@@ -191,7 +191,7 @@ export function CompareReportsPanel({
       });
     } catch {
       pushToast({
-        message: "Authos could not copy the compare summary.",
+        message: "The analyzer could not copy the compare summary.",
         tone: "danger",
       });
     }
@@ -333,7 +333,7 @@ export function CompareReportsPanel({
             <CardContent className="space-y-4">
               {!currentReport ? (
                 <EmptyState
-                  description="Run analysis on the current workspace first so Authos has a 'Current' report to compare."
+                  description="Run analysis on the current workspace first so This tool has a 'Current' report to compare."
                   title="Analyze the current workspace first"
                 />
               ) : !effectivePreviousReport ? (

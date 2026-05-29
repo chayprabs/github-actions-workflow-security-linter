@@ -3,7 +3,7 @@
 ## Prompt 1
 
 - Status: Completed.
-- Outcome: Initialized a Next.js App Router project in the empty folder, converted styling to a config-driven Tailwind setup, added reusable UI primitives, scaffolded the Authos home page and the `/tools/github-actions-workflow-analyzer` route, created analyzer feature folders and deterministic seed logic, and wrote the requested docs.
+- Outcome: Initialized a Next.js App Router project in the empty folder, converted styling to a config-driven Tailwind setup, added reusable UI primitives, scaffolded the This tool home page and the `/tools/github-actions-workflow-analyzer` route, created analyzer feature folders and deterministic seed logic, and wrote the requested docs.
 
 ## Commands Run
 
@@ -50,7 +50,7 @@
 ## Prompt 3
 
 - Status: Completed.
-- Outcome: Rebuilt the home page into a credible Authos tools-directory landing page, added a typed tool registry in `src/content/tools.ts`, promoted the GitHub Actions analyzer as the first real tool, updated site-level copy and footer structure to reflect a growing browser-based tools collection, and kept future categories clearly non-interactive instead of adding fake pages.
+- Outcome: Rebuilt the home page into a credible This tool tools-directory landing page, added a typed tool registry in `src/content/tools.ts`, promoted the GitHub Actions analyzer as the first real tool, updated site-level copy and footer structure to reflect a growing browser-based tools collection, and kept future categories clearly non-interactive instead of adding fake pages.
 
 ### Commands Run
 
@@ -307,7 +307,7 @@
 ## Prompt 17
 
 - Status: Completed.
-- Outcome: Added a full finding-detail and remediation workflow across both the analyzer engine and the Results UI. The report contract now carries `ignoredFindings`, the analyzer parses `# authos-ignore RULE_ID: reason` comments, suppresses one matching finding on the relevant next line, and emits low-severity `GHA901` when a suppression comment omits its reason. Added patchable `SuggestedFix` support with preview/apply helpers, stale-analysis protection, and new reliability rules `GHA401` through `GHA405` for missing job timeouts, missing deploy concurrency, `continue-on-error: true`, broad cache keys, and missing artifact retention. Safe fixes now exist for missing top-level permissions, missing job timeouts, artifact retention, and `actions/checkout` persisted credentials when the source range is reliable; review/manual previews now exist for deploy concurrency, `continue-on-error`, cache-key guidance, and untrusted-context env-boundary guidance. The Results panel now renders richer finding detail with why-it-matters copy, remediation, docs link, evidence, affected actions, Markdown/remediation/ignore-comment copy actions, suggested patch previews, explicit apply-fix controls, and a collapsed Ignored findings section.
+- Outcome: Added a full finding-detail and remediation workflow across both the analyzer engine and the Results UI. The report contract now carries `ignoredFindings`, the analyzer parses `# gha-ignore RULE_ID: reason` comments, suppresses one matching finding on the relevant next line, and emits low-severity `GHA901` when a suppression comment omits its reason. Added patchable `SuggestedFix` support with preview/apply helpers, stale-analysis protection, and new reliability rules `GHA401` through `GHA405` for missing job timeouts, missing deploy concurrency, `continue-on-error: true`, broad cache keys, and missing artifact retention. Safe fixes now exist for missing top-level permissions, missing job timeouts, artifact retention, and `actions/checkout` persisted credentials when the source range is reliable; review/manual previews now exist for deploy concurrency, `continue-on-error`, cache-key guidance, and untrusted-context env-boundary guidance. The Results panel now renders richer finding detail with why-it-matters copy, remediation, docs link, evidence, affected actions, Markdown/remediation/ignore-comment copy actions, suggested patch previews, explicit apply-fix controls, and a collapsed Ignored findings section.
 
 ### Commands Run
 
@@ -318,7 +318,7 @@
 
 ### Known Issues / Notes
 
-- Safe patch application is intentionally conservative. Authos only applies a fix when the finding includes an exact range and the current file content still matches the last analyzed snapshot; otherwise the UI asks the user to re-run analysis first.
+- Safe patch application is intentionally conservative. This tool only applies a fix when the finding includes an exact range and the current file content still matches the last analyzed snapshot; otherwise the UI asks the user to re-run analysis first.
 - Review/manual fixes intentionally favor explicit copied patches or snippets over automatic mutation when the target change depends on workflow intent, trust boundaries, or ecosystem-specific cache semantics.
 
 ## Prompt 18
@@ -410,7 +410,7 @@
 
 ### Known Issues / Notes
 
-- Canonical, sitemap, and structured-data URLs default to `https://authos.local` in local development. Set `NEXT_PUBLIC_SITE_URL` in deployment so crawlers see the real production origin.
+- Canonical, sitemap, and structured-data URLs default to `http://127.0.0.1:3000` in local development. Set `NEXT_PUBLIC_SITE_URL` in deployment so crawlers see the real production origin.
 - `test:e2e` remains configured but was not executed in this prompt.
 
 ## Phase 0 — Baseline lock (100% build plan)

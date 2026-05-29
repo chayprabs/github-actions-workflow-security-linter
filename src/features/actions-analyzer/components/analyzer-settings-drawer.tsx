@@ -204,7 +204,7 @@ export function AnalyzerSettingsDrawer({
               value={preferences.analyzer.maxMatrixCombinationsBeforeWarning}
             />
             <p className="text-sm text-muted-foreground">
-              Larger matrices stay previewable, but Authos starts warning after
+              Larger matrices stay previewable, but This tool starts warning after
               this threshold.
             </p>
           </label>

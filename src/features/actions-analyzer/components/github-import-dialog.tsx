@@ -259,7 +259,7 @@ export function GitHubImportDialog({
       </Button>
 
       <OverlayPanel
-        description="Authos fetches public workflow content directly from GitHub in your browser. No login, OAuth flow, backend proxy, or private repository access is involved."
+        description="This tool fetches public workflow content directly from GitHub in your browser. No login, OAuth flow, backend proxy, or private repository access is involved."
         onClose={resetDialog}
         open={isOpen}
         size="lg"
@@ -279,12 +279,12 @@ export function GitHubImportDialog({
             <CardDescription>
               Public imports are fetched by your browser straight from GitHub.
               No credentials are requested and nothing is proxied through
-              Authos.
+              This tool.
             </CardDescription>
             <div className="grid gap-3">
               <Alert title="No credentials requested" tone="info">
                 Public imports are fetched straight from GitHub by your browser.
-                Authos does not ask for tokens and does not proxy repository
+                This tool does not ask for tokens and does not proxy repository
                 content through a backend.
               </Alert>
               <Alert title="GitHub public API limits apply" tone="warning">

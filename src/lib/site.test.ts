@@ -10,13 +10,13 @@ describe("site URL resolution", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
 
     const { siteConfig: emptyConfig } = await import("@/lib/site");
-    expect(emptyConfig.url).toBe("https://authos.local");
+    expect(emptyConfig.url).toBe("http://127.0.0.1:3000");
 
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "not-a-valid-url");
     vi.resetModules();
 
     const { siteConfig: invalidConfig } = await import("@/lib/site");
-    expect(invalidConfig.url).toBe("https://authos.local");
+    expect(invalidConfig.url).toBe("http://127.0.0.1:3000");
   });
 
   it("normalizes a valid public site URL", async () => {

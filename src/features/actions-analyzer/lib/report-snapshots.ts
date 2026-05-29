@@ -8,7 +8,7 @@ export interface ReportSnapshotEntry {
   score: number;
 }
 
-const reportSnapshotsStorageKey = "authos.actions-analyzer.snapshots.v1";
+const reportSnapshotsStorageKey = "gha-workflow-analyzer.snapshots.v1";
 const maxReportSnapshots = 20;
 
 export function readReportSnapshots(): ReportSnapshotEntry[] {

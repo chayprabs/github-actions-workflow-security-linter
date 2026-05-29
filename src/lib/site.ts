@@ -4,7 +4,7 @@ import { featuredTool } from "@/content/tools";
 
 const homeRoute = "/" as Route;
 const privacyRoute = "/privacy" as Route;
-const fallbackSiteUrl = "https://authos.local";
+const fallbackSiteUrl = "http://127.0.0.1:3000";
 
 function resolveSiteUrl(input: string | undefined) {
   if (!input) {
@@ -21,7 +21,7 @@ function resolveSiteUrl(input: string | undefined) {
 const siteUrl = resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
 export const siteConfig = {
-  name: "Authos",
+  name: "GHA Workflow Analyzer",
   tagline: "Browser-based tools for CI, config, and infrastructure files",
   url: siteUrl,
   navigation: [

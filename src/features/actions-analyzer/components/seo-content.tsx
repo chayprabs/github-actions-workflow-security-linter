@@ -47,7 +47,7 @@ export function SeoContent({ onLoadExample }: SeoContentProps) {
               className="font-medium text-foreground underline-offset-4 hover:text-accent hover:underline"
               href="/"
             >
-              the Authos home page
+              the This tool home page
             </Link>{" "}
             or read the{" "}
             <Link
@@ -196,7 +196,7 @@ export function SeoContent({ onLoadExample }: SeoContentProps) {
             Related tools
           </h2>
           <p className="max-w-4xl text-base leading-7 text-muted-foreground">
-            Authos is starting with GitHub Actions workflow review and will add
+            This tool is starting with GitHub Actions workflow review and will add
             adjacent config tools later instead of pretending they already
             exist.
           </p>

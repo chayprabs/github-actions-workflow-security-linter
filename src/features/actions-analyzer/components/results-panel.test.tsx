@@ -214,7 +214,7 @@ describe("ResultsPanel", () => {
       ],
       ignoredFindings: [
         {
-          comment: "# authos-ignore GHA201: accepted in this sample",
+          comment: "# gha-ignore GHA201: accepted in this sample",
           finding: sampleAnalysisReport.findings[0]!,
           line: 7,
           reason: "accepted in this sample",

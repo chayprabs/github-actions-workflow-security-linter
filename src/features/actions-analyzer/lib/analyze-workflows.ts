@@ -230,7 +230,7 @@ export function runRules(
 
       if (process.env.NODE_ENV !== "production") {
         console.error(
-          `[Authos] Rule ${rule.definition.id} failed during analysis.`,
+          `[GHA Workflow Analyzer] Rule ${rule.definition.id} failed during analysis.`,
           error,
         );
       }
@@ -263,7 +263,7 @@ function buildRuleExecutionFailureFindings(
     confidence: "high",
     filePath,
     remediation:
-      "Re-run analysis after updating Authos. If this persists, report the rule id and workflow sample.",
+      "Re-run analysis after updating This tool. If this persists, report the rule id and workflow sample.",
     tags: ["analyzer", "internal", failure.ruleId],
     relatedJobs: [],
     relatedSteps: [],

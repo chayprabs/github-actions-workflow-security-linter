@@ -353,7 +353,7 @@ function AnalyzerPageContent() {
         });
       } catch {
         pushToast({
-          message: "Authos could not copy the PR comment.",
+          message: "The analyzer could not copy the PR comment.",
           tone: "danger",
         });
       }

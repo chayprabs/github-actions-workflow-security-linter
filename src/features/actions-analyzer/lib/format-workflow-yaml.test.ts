@@ -20,9 +20,9 @@ jobs:
     });
   });
 
-  it("blocks files with authos ignore comments", () => {
+  it("blocks files with gha ignore comments", () => {
     const result = formatWorkflowYaml(`name: CI
-# authos-ignore GHA401: benchmark
+# gha-ignore GHA401: benchmark
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -30,7 +30,7 @@ jobs:
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.reason).toContain("Authos ignore");
+      expect(result.reason).toContain("GHA ignore");
     }
   });
 

@@ -24,16 +24,16 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Authos",
-    template: "%s | Authos",
+    default: "GHA Workflow Analyzer",
+    template: "%s | GHA Workflow Analyzer",
   },
   description:
-    "Authos is a collection of browser-based developer tools for CI, config, schema, and infrastructure files.",
+    "This tool is a collection of browser-based developer tools for CI, config, schema, and infrastructure files.",
   openGraph: {
     description:
-      "Authos is a collection of browser-based developer tools for CI, config, schema, and infrastructure files.",
-    siteName: "Authos",
-    title: "Authos",
+      "This tool is a collection of browser-based developer tools for CI, config, schema, and infrastructure files.",
+    siteName: "GHA Workflow Analyzer",
+    title: "GHA Workflow Analyzer",
     type: "website",
   },
 };

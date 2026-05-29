@@ -1,6 +1,6 @@
 # Roadmap
 
-Post-launch improvements for the Authos analyzer should live here instead of as placeholder UI copy.
+Post-launch improvements for the This tool analyzer should live here instead of as placeholder UI copy.
 
 ## Analyzer depth
 
@@ -23,7 +23,7 @@ Post-launch improvements for the Authos analyzer should live here instead of as 
 ## Product surface
 
 - Add branded Open Graph images for the home page and tool page.
-- Expand the Authos tool catalog with adjacent config tools listed in the landing page.
+- Expand the This tool tool catalog with adjacent config tools listed in the landing page.
 - Add more end-to-end QA automation across browsers and deployment previews.
 
 ## Performance and operations

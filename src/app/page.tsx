@@ -23,21 +23,21 @@ import { Container } from "@/components/ui/container";
 
 const homeTitle = "Browser-Based Developer Tools";
 const homeDescription =
-  "Authos is a collection of browser-based developer tools for CI, config, schema, and infrastructure files. Start with the GitHub Actions analyzer for local, no-login diagnostics.";
+  "This tool is a collection of browser-based developer tools for CI, config, schema, and infrastructure files. Start with the GitHub Actions analyzer for local, no-login diagnostics.";
 
 export const metadata: Metadata = {
   title: homeTitle,
   description: homeDescription,
   openGraph: {
-    title: `Authos | ${homeTitle}`,
+    title: `This tool | ${homeTitle}`,
     description: homeDescription,
-    siteName: "Authos",
+    siteName: "GHA Workflow Analyzer",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     description: homeDescription,
-    title: `Authos | ${homeTitle}`,
+    title: `This tool | ${homeTitle}`,
   },
 };
 
@@ -81,7 +81,7 @@ export default function Home() {
             <Badge className="w-fit" tone="success">
               Launch-ready directory
             </Badge>
-            <CardTitle>Authos ships focused tools, not a grab bag.</CardTitle>
+            <CardTitle>This tool ships focused tools, not a grab bag.</CardTitle>
             <CardDescription>
               Start with one real browser-local analyzer now, then expand across
               CI, config, schema, and infrastructure workflows without changing
@@ -141,7 +141,7 @@ export default function Home() {
               </div>
               <div className="space-y-3 text-sm leading-7 text-muted-foreground">
                 <p>
-                  The GitHub Actions analyzer is the first live Authos tool. It
+                  The GitHub Actions analyzer is the first live This tool tool. It
                   works without login, processes workflow YAML locally in the
                   browser, and is designed to turn CI risk into readable,
                   exportable feedback.
@@ -209,7 +209,7 @@ export default function Home() {
               A credible directory now, with room to grow later.
             </h2>
             <p className="max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Authos is being built as a collection of focused tools. Only the
+              This tool is being built as a collection of focused tools. Only the
               live GitHub Actions analyzer links today; the remaining categories
               are clearly marked as future work instead of fake pages.
             </p>

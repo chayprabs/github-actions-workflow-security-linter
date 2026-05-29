@@ -752,7 +752,7 @@ export const ruleCatalog = [
     id: "GHA901",
     title: "Ignore comment is missing a reason",
     description:
-      "Authos ignore comments should include a short reason after the rule id so future reviewers understand the suppression.",
+      "This tool ignore comments should include a short reason after the rule id so future reviewers understand the suppression.",
     category: "maintainability",
     defaultSeverity: "low",
     enabledByDefault: true,

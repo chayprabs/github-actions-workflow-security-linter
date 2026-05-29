@@ -24,7 +24,7 @@ export default function NotFound() {
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="max-w-xl text-base leading-7 text-muted-foreground">
-            The Authos workspace is currently focused on the GitHub Actions
+            The This tool workspace is currently focused on the GitHub Actions
             analyzer foundation. Head back home or jump directly into the first
             tool route.
           </p>

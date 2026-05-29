@@ -105,7 +105,7 @@ function getSystemPrefersDark() {
 export const initialThemeScript = `
 (function () {
   try {
-    var key = "authos.actions-analyzer.preferences.v1";
+    var key = "gha-workflow-analyzer.preferences.v1";
     var rawValue = window.localStorage.getItem(key);
     var parsedValue = rawValue ? JSON.parse(rawValue) : null;
     var preference = parsedValue && typeof parsedValue.theme === "string"

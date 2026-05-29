@@ -32,7 +32,7 @@ export function AttackPathPanel({
       {attackPaths.length === 0 ? (
         <div className="mt-4">
           <EmptyState
-            description="Authos did not find a high-confidence chain from the enabled rules in this workflow set."
+            description="The analyzer did not find a high-confidence chain from the enabled rules in this workflow set."
             title="No high-confidence attack paths detected by enabled rules."
           />
         </div>

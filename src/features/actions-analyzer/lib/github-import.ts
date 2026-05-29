@@ -416,7 +416,7 @@ export async function fetchPublicGitHubWorkflowDirectory({
     return {
       fallbackMessage:
         currentRef !== requestedRef
-          ? `Could not find workflows on "${requestedRef}", so Authos fetched "${currentRef}" instead.`
+          ? `Could not find workflows on "${requestedRef}", so This tool fetched "${currentRef}" instead.`
           : undefined,
       files,
       refUsed: currentRef,

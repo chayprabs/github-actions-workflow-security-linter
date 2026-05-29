@@ -23,7 +23,7 @@ export default function OpenGraphImage() {
           width: "100%",
         }}
       >
-        <div style={{ fontSize: 28, opacity: 0.85 }}>Authos Analyzer</div>
+        <div style={{ fontSize: 28, opacity: 0.85 }}>GHA Workflow Security Linter</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 56, fontWeight: 700, lineHeight: 1.1 }}>
             GitHub Actions Workflow Security and Lint Analyzer

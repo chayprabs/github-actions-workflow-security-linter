@@ -12,7 +12,7 @@ async function installClipboardMock(page: Page) {
   await page.addInitScript(() => {
     const copiedTexts: string[] = [];
 
-    Object.defineProperty(window, "__authosCopiedTexts", {
+    Object.defineProperty(window, "__ghaCopiedTexts", {
       configurable: true,
       value: copiedTexts,
       writable: false,
@@ -99,7 +99,7 @@ test("risky sample analysis shows findings, editor jump, and PR comment copy", a
     .getByTestId("results-finding-list")
     .getByRole("button", { name: /GHA104/i })
     .click();
-  await expect(inputPanel.locator(".cm-authos-active-finding-line")).toBeVisible();
+  await expect(inputPanel.locator(".cm-gha-active-finding-line")).toBeVisible();
 
   await page.getByRole("button", { name: /Copy PR comment/i }).click();
 
@@ -107,13 +107,13 @@ test("risky sample analysis shows findings, editor jump, and PR comment copy", a
     return (
       (
         window as Window & {
-          __authosCopiedTexts?: string[] | undefined;
+          __ghaCopiedTexts?: string[] | undefined;
         }
-      ).__authosCopiedTexts?.at(-1) ?? null
+      ).__ghaCopiedTexts?.at(-1) ?? null
     );
   });
 
-  expect(copiedText).toContain("## Authos Review");
+  expect(copiedText).toContain("## Workflow Security Review");
   expect(copiedText).toContain("GHA103");
 });
 

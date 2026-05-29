@@ -11,7 +11,7 @@ describe("report share links", () => {
   it("builds privacy-safe share links without workflow content by default", () => {
     const url = buildPrivacySafeShareUrl({
       baseUrl:
-        "https://authos.local/tools/github-actions-workflow-analyzer?existing=1",
+        "http://127.0.0.1:3000/tools/github-actions-workflow-analyzer?existing=1",
       state: {
         results: {
           groupBy: "file",

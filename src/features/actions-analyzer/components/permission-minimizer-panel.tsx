@@ -20,7 +20,7 @@ export function PermissionMinimizerPanel({
         data-testid="results-permission-minimizer"
       >
         <EmptyState
-          description="Authos needs at least one parsed workflow before it can infer a reduced permissions baseline."
+          description="This tool needs at least one parsed workflow before it can infer a reduced permissions baseline."
           title="Permission minimizer unavailable"
         />
       </section>
@@ -48,7 +48,7 @@ export function PermissionMinimizerPanel({
         Best-effort permission minimizer
       </h3>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        Authos suggests a conservative `contents: read` baseline and then adds
+        This tool suggests a conservative `contents: read` baseline and then adds
         write scopes only where static workflow signals suggest they may be
         needed. These recommendations are heuristic, not proof, so keep human
         review in the loop before removing access.

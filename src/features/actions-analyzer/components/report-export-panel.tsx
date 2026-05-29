@@ -49,7 +49,7 @@ export function ReportExportPanel({
 
   function getShareBaseUrl() {
     return typeof window === "undefined"
-      ? "https://authos.local/tools/github-actions-workflow-analyzer"
+      ? "http://127.0.0.1:3000/tools/github-actions-workflow-analyzer"
       : `${window.location.origin}${window.location.pathname}`;
   }
 
@@ -74,7 +74,7 @@ export function ReportExportPanel({
       });
     } catch {
       pushToast({
-        message: "Authos could not copy the PR comment.",
+        message: "The analyzer could not copy the PR comment.",
         tone: "danger",
       });
     }
@@ -95,7 +95,7 @@ export function ReportExportPanel({
       });
     } catch {
       pushToast({
-        message: "Authos could not copy the share link.",
+        message: "The analyzer could not copy the share link.",
         tone: "danger",
       });
     }
@@ -133,7 +133,7 @@ export function ReportExportPanel({
       });
     } catch {
       pushToast({
-        message: "Authos could not copy the content share link.",
+        message: "The analyzer could not copy the content share link.",
         tone: "danger",
       });
     }
@@ -156,7 +156,7 @@ export function ReportExportPanel({
       });
     } catch {
       pushToast({
-        message: "Authos could not start the JSON download.",
+        message: "The analyzer could not start the JSON download.",
         tone: "danger",
       });
     }
@@ -179,7 +179,7 @@ export function ReportExportPanel({
       });
     } catch {
       pushToast({
-        message: "Authos could not start the SARIF download.",
+        message: "The analyzer could not start the SARIF download.",
         tone: "danger",
       });
     }
@@ -202,7 +202,7 @@ export function ReportExportPanel({
       });
     } catch {
       pushToast({
-        message: "Authos could not start the HTML download.",
+        message: "The analyzer could not start the HTML download.",
         tone: "danger",
       });
     }
@@ -269,7 +269,7 @@ export function ReportExportPanel({
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             This link embeds compressed YAML in the query string. Anyone with the
-            URL can read your workflow files. Authos still does not upload them to
+            URL can read your workflow files. This tool still does not upload them to
             a server.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

@@ -66,6 +66,6 @@ describe("report comparison", () => {
         currentLabel: "Current sample",
         previousLabel: "Previous sample",
       }),
-    ).toContain("## Authos Compare Summary");
+    ).toContain("## Workflow Compare Summary");
   });
 });

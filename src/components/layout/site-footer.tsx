@@ -13,7 +13,7 @@ export function SiteFooter() {
       <Container className="grid gap-8 py-8 text-sm text-muted-foreground lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
         <div className="space-y-3">
           <p className="text-base font-medium text-foreground">
-            Authos is a directory of browser-based developer tools for config,
+            This tool is a directory of browser-based developer tools for config,
             CI, schema, and infrastructure files.
           </p>
           <p>
@@ -33,7 +33,7 @@ export function SiteFooter() {
             Privacy
           </h2>
           <p>
-            Core Authos tools are designed to run locally in the browser where
+            Core This tool tools are designed to run locally in the browser where
             possible, without requiring login for baseline workflows.
           </p>
           <Link

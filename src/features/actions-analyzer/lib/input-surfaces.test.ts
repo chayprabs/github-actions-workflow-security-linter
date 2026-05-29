@@ -152,14 +152,14 @@ describe("upload file selection boundaries", () => {
 describe("analysis history localStorage input", () => {
   it("returns an empty list for corrupt stored history", () => {
     window.localStorage.setItem(
-      "authos.actions-analyzer.history.v1",
+      "gha-workflow-analyzer.history.v1",
       "{not-json",
     );
 
     expect(readStoredAnalysisHistory()).toEqual([]);
 
     window.localStorage.setItem(
-      "authos.actions-analyzer.history.v1",
+      "gha-workflow-analyzer.history.v1",
       JSON.stringify([{ id: 123 }]),
     );
 

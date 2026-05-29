@@ -80,7 +80,7 @@ function parseIgnoreDirectives(
   const directives: IgnoreDirective[] = [];
 
   lines.forEach((line, index) => {
-    const match = /#\s*authos-ignore\s+([A-Za-z]{3}\d{3})(?:\s*:(.*))?/u.exec(
+    const match = /#\s*gha-ignore\s+([A-Za-z]{3}\d{3})(?:\s*:(.*))?/u.exec(
       line,
     );
 
@@ -155,7 +155,7 @@ function createIgnoreCommentWarning(
     location,
     evidence: comment,
     remediation:
-      "Add a short reason after the rule id, for example `# authos-ignore GHA200: internal action is pinned elsewhere`.",
+      "Add a short reason after the rule id, for example `# gha-ignore GHA200: internal action is pinned elsewhere`.",
     docsUrl: definition.docsUrl,
     tags: definition.tags,
     relatedJobs: [],

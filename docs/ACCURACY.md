@@ -1,6 +1,6 @@
 # Analyzer Accuracy Model
 
-Authos does **not** phone home with workflow content or finding telemetry. Accuracy is maintained through **deterministic tests** and explicit reviewer heuristics.
+This tool does **not** phone home with workflow content or finding telemetry. Accuracy is maintained through **deterministic tests** and explicit reviewer heuristics.
 
 ## Golden workflows
 

@@ -1,6 +1,6 @@
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
-const authosIgnorePattern = /#\s*authos-ignore\b/u;
+const ghaIgnorePattern = /#\s*gha-ignore\b/u;
 
 export type FormatWorkflowYamlResult =
   | { ok: true; content: string }
@@ -14,11 +14,11 @@ export function canSafelyFormatWorkflowYaml(content: string) {
     };
   }
 
-  if (authosIgnorePattern.test(content)) {
+  if (ghaIgnorePattern.test(content)) {
     return {
       allowed: false,
       reason:
-        "This file contains Authos ignore comments. Formatting is blocked so suppressions stay in place.",
+        "This file contains This tool ignore comments. Formatting is blocked so suppressions stay in place.",
     };
   }
 
@@ -77,7 +77,7 @@ export function formatWorkflowYaml(content: string): FormatWorkflowYamlResult {
       reason:
         error instanceof Error
           ? error.message
-          : "Authos could not parse this YAML file.",
+          : "The analyzer could not parse this YAML file.",
     };
   }
 }

@@ -1,7 +1,7 @@
 import type { WorkflowSampleId } from "@/features/actions-analyzer/fixtures/samples";
 
 export const analyzerToolTitle =
-  "GitHub Actions Workflow Security and Lint Analyzer - Authos";
+  "GitHub Actions Workflow Security and Lint Analyzer - GHA Workflow Analyzer";
 
 export const analyzerToolDescription =
   "Paste or upload GitHub Actions workflow YAML to find syntax errors, risky permissions, unsafe triggers, unpinned actions, matrix issues, and CI reliability problems. Browser-local, no login.";
@@ -61,7 +61,7 @@ export const analyzerHowItWorksSteps = [
   },
   {
     description:
-      "Run deterministic checks locally without sending pasted or uploaded workflow content to Authos.",
+      "Run deterministic checks locally without sending pasted or uploaded workflow content to This tool.",
     title: "Analyze locally",
   },
   {
@@ -121,7 +121,7 @@ export const analyzerExampleWorkflows = [
 export const analyzerFaqItems = [
   {
     answer:
-      "Pasted and uploaded workflow content stays in your browser by default. Public GitHub imports are fetched directly from GitHub by your browser. Authos does not require login for this tool and does not proxy pasted or uploaded YAML through a backend.",
+      "Pasted and uploaded workflow content stays in your browser by default. Public GitHub imports are fetched directly from GitHub by your browser. This tool does not require login for this tool and does not proxy pasted or uploaded YAML through a backend.",
     question: "Is my workflow uploaded to a server?",
   },
   {

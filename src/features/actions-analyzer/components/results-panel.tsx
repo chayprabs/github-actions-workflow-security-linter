@@ -368,7 +368,7 @@ export function ResultsPanel({
     ) {
       publishFixFeedback({
         findingId: finding.id,
-        message: "Authos could not find the file content needed for this fix.",
+        message: "The analyzer could not find the file content needed for this fix.",
         tone: "danger",
       });
       return;
@@ -395,7 +395,7 @@ export function ResultsPanel({
       findingId: finding.id,
       message: applied
         ? "Fix applied locally. Re-run analysis to refresh the report."
-        : "Authos could not update the target file in the workspace.",
+        : "The analyzer could not update the target file in the workspace.",
       tone: applied ? "success" : "danger",
     });
 
@@ -430,7 +430,7 @@ export function ResultsPanel({
         >
           <div className="space-y-3">
             <p>
-              Authos hit an analyzer exception while reviewing your workflow.
+              The analyzer hit an analyzer exception while reviewing your workflow.
               The editor input stays local, and you can copy diagnostic context
               without exposing a raw stack trace in the page.
             </p>
@@ -1430,7 +1430,7 @@ function FindingDetailPanel({
               title="Re-run analysis first"
               tone="warning"
             >
-              The file changed after this analysis run, so Authos will not apply
+              The file changed after this analysis run, so The analyzer will not apply
               the patch until the finding is refreshed.
             </Alert>
           ) : null}
@@ -1466,7 +1466,7 @@ function FindingDetailPanel({
           Ignore syntax
         </p>
         <p className="mt-2 text-sm leading-6 text-foreground">
-          <code># authos-ignore {finding.ruleId}: reason here</code>
+          <code># gha-ignore {finding.ruleId}: reason here</code>
         </p>
       </div>
 
@@ -1511,7 +1511,7 @@ function IgnoredFindingsSection({
         Ignored findings ({ignoredFindings.length})
       </summary>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        These findings were suppressed by an inline Authos ignore comment and do
+        These findings were suppressed by an inline This tool ignore comment and do
         not affect the current score.
       </p>
       <div className="mt-4 space-y-2">
@@ -1866,7 +1866,7 @@ function formatFindingAsMarkdown(
 }
 
 function formatIgnoreComment(finding: AnalyzerFinding) {
-  return `# authos-ignore ${finding.ruleId}: explain why "${finding.title}" is acceptable here`;
+  return `# gha-ignore ${finding.ruleId}: explain why "${finding.title}" is acceptable here`;
 }
 
 function getAffectedActionLabels(

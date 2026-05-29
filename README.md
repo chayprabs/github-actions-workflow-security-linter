@@ -1,6 +1,6 @@
-# Authos GitHub Actions Workflow Security and Lint Analyzer
+# This tool GitHub Actions Workflow Security and Lint Analyzer
 
-Authos is a browser-local GitHub Actions workflow analyzer built for code review, CI hardening, and fast workflow debugging. Paste, upload, sample-load, or public GitHub-import workflow YAML and get deterministic findings for syntax, expressions, permissions, risky triggers, supply-chain pinning, matrix scale, and CI reliability.
+This tool is a browser-local GitHub Actions workflow analyzer built for code review, CI hardening, and fast workflow debugging. Paste, upload, sample-load, or public GitHub-import workflow YAML and get deterministic findings for syntax, expressions, permissions, risky triggers, supply-chain pinning, matrix scale, and CI reliability.
 
 ## What the product includes
 
@@ -29,7 +29,7 @@ npm run dev
 Optional environment variable:
 
 - `NEXT_PUBLIC_SITE_URL`
-  Use this in deployed environments so canonical URLs, JSON-LD, `robots.txt`, and `sitemap.xml` point at the real public origin. It is optional in local development because the app falls back to `https://authos.local`.
+  Use this in deployed environments so canonical URLs, JSON-LD, `robots.txt`, and `sitemap.xml` point at the real public origin. It is optional in local development because the app falls back to `http://127.0.0.1:3000`.
 
 ## Scripts
 
@@ -53,7 +53,7 @@ Run that once on a fresh machine before `npm run test:e2e`.
 ## Privacy model
 
 - Pasted and uploaded workflow content is analyzed locally in the browser.
-- Authos does not require login for the live analyzer.
+- This tool does not require login for the live analyzer.
 - There is no backend proxy or server upload path for pasted or uploaded workflow YAML.
 - Public GitHub import is the only network-backed product feature, and it is explicit in the UI.
 - Local history stores metadata only by default.
@@ -136,7 +136,7 @@ npm run test:e2e
 ## Additional docs
 
 - [docs/RULES.md](docs/RULES.md)
-- [docs/ECOSYSTEM.md](docs/ECOSYSTEM.md) — Authos product context and resolved deployment facts
+- [docs/ECOSYSTEM.md](docs/ECOSYSTEM.md) — This tool product context and resolved deployment facts
 - [docs/ACCURACY.md](docs/ACCURACY.md) — How findings are tested without telemetry
 - [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md)
 - [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md)
