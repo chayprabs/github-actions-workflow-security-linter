@@ -57,3 +57,5 @@ jobs:
 
       - name: End-to-end tests
         run: npm run test:e2e
+        env:
+          CI: "true"
