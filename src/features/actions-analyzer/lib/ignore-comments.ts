@@ -80,7 +80,8 @@ function parseIgnoreDirectives(
   const directives: IgnoreDirective[] = [];
 
   lines.forEach((line, index) => {
-    const match = /#\s*gha-ignore\s+([A-Za-z]{3}\d{3})(?:\s*:(.*))?/u.exec(
+    const match =
+      /#\s*(?:gha|authos)-ignore\s+([A-Za-z]{3}\d{3})(?:\s*:(.*))?/u.exec(
       line,
     );
 

@@ -11,13 +11,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       changeFrequency: "monthly",
-      priority: 0.5,
+      priority: 0.4,
       url: new URL(siteConfig.privacy.href, siteConfig.url).toString(),
     },
     {
-      changeFrequency: "weekly",
-      priority: 0.9,
-      url: new URL(siteConfig.primaryTool.href, siteConfig.url).toString(),
+      changeFrequency: "monthly",
+      priority: 0.4,
+      url: new URL(siteConfig.terms.href, siteConfig.url).toString(),
     },
   ];
 }

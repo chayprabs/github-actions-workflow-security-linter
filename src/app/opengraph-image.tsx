@@ -1,10 +1,9 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "GHA Workflow Security Linter";
-export const size = {
-  height: 630,
-  width: 1200,
-};
+import { siteConfig } from "@/lib/site";
+
+export const alt = siteConfig.name;
+export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function OpenGraphImage() {
@@ -12,23 +11,31 @@ export default function OpenGraphImage() {
     (
       <div
         style={{
-          alignItems: "flex-start",
-          background: "linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%)",
-          color: "#f8fafc",
+          alignItems: "center",
+          background: "#ffffff",
+          color: "#0f172a",
           display: "flex",
           flexDirection: "column",
           height: "100%",
-          justifyContent: "space-between",
-          padding: "64px",
+          justifyContent: "center",
+          padding: 80,
           width: "100%",
         }}
       >
-        <div style={{ fontSize: 28, opacity: 0.85 }}>GHA Workflow Security Linter</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ fontSize: 72, fontWeight: 700 }}>GHA Workflow Analyzer</div>
-          <div style={{ fontSize: 34, maxWidth: 900, opacity: 0.92 }}>
-            Browser-based tools for CI, config, and infrastructure files
-          </div>
+        <div style={{ fontSize: 28, opacity: 0.75 }}>Browser-local CI security</div>
+        <div style={{ fontSize: 64, fontWeight: 700, marginTop: 16 }}>
+          {siteConfig.shortName}
+        </div>
+        <div
+          style={{
+            fontSize: 26,
+            lineHeight: 1.4,
+            marginTop: 24,
+            maxWidth: 900,
+            textAlign: "center",
+          }}
+        >
+          {siteConfig.tagline}
         </div>
       </div>
     ),

@@ -11,9 +11,7 @@ describe("tool structured data", () => {
     const structuredData = buildAnalyzerWebApplicationStructuredData();
 
     expect(structuredData["@type"]).toBe("WebApplication");
-    expect(structuredData.url).toContain(
-      "/tools/github-actions-workflow-analyzer",
-    );
+    expect(structuredData.url).toMatch(/\/$/);
     expect(structuredData.featureList.length).toBeGreaterThan(3);
   });
 

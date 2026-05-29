@@ -1,114 +1,119 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Alert } from "@/components/ui/alert";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Container } from "@/components/ui/container";
-import { Toolbar } from "@/components/ui/toolbar";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Privacy",
+  title: "Privacy Policy",
   description:
-    "This tool tools are designed to keep analysis local in the browser wherever possible.",
+    "Privacy policy for the GHA Workflow Analyzer browser tool.",
 };
 
 export default function PrivacyPage() {
   return (
-    <Container className="space-y-8 py-16 sm:py-20" data-testid="privacy-page">
-      <Toolbar
-        data-testid="privacy-toolbar"
-        description="This tool tools are designed to keep analysis local in the browser where possible. This page captures the current privacy posture for the GitHub Actions analyzer."
-        title="Privacy"
-      />
+    <Container className="max-w-3xl space-y-8 py-12 sm:py-16" data-testid="privacy-page">
+      <header className="space-y-2" data-testid="privacy-toolbar">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+          Privacy Policy
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Last updated: May 29, 2026
+        </p>
+      </header>
 
-      <Alert
-        data-testid="privacy-alert"
-        title="Local-first by default"
-        tone="info"
-      >
-        The current product direction avoids login requirements, backend uploads
-        for pasted content, and unnecessary data retention. Review the{" "}
+      <div className="space-y-6 text-sm leading-7 text-muted-foreground">
+        <section>
+          <h2 className="text-base font-semibold text-foreground">Summary</h2>
+          <p className="mt-2">
+            {siteConfig.name} is designed for local, browser-first workflow
+            analysis. Pasted and uploaded workflow YAML is processed in your
+            browser and is not uploaded to our servers because we do not operate
+            a backend that receives that content.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-semibold text-foreground">
+            Data we do not collect
+          </h2>
+          <p className="mt-2">
+            We do not require login for the core analyzer. We do not sell
+            workflow content, run advertising trackers on the analyzer surface,
+            or operate a database that stores your pasted YAML by default.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-semibold text-foreground">
+            Local storage on your device
+          </h2>
+          <p className="mt-2">
+            The app may store analyzer preferences, optional analysis history
+            metadata, and—only if you explicitly enable it—workflow content in
+            your browser&apos;s local storage. You can clear this data from your
+            browser or through in-app settings where available.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-semibold text-foreground">
+            Public GitHub import
+          </h2>
+          <p className="mt-2">
+            When you import a public workflow, your browser contacts GitHub
+            directly. That request is subject to GitHub&apos;s privacy policy and
+            rate limits. We do not proxy private repositories or ask for OAuth
+            tokens in the current product.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-semibold text-foreground">
+            Hosting and logs
+          </h2>
+          <p className="mt-2">
+            If you access the deployed website, your hosting provider or CDN may
+            process standard web server logs (such as IP address, user agent, and
+            requested path) according to their policies. We do not use those logs
+            to reconstruct workflow file contents from analyzer usage.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-semibold text-foreground">Contact</h2>
+          <p className="mt-2">
+            Privacy questions may be directed via{" "}
+            <a
+              className="font-medium text-foreground underline-offset-4 hover:text-accent hover:underline"
+              href={siteConfig.personalWebsiteUrl}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {siteConfig.personalWebsiteUrl}
+            </a>
+            .
+          </p>
+        </section>
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        Return to the{" "}
         <Link
           className="font-medium text-foreground underline-offset-4 hover:text-accent hover:underline"
           href={siteConfig.primaryTool.href}
         >
-          {siteConfig.primaryTool.name}
+          analyzer
         </Link>{" "}
-        for the current browser-local processing flow.
-      </Alert>
-
-      <section className="grid gap-5 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Local browser analysis</CardTitle>
-            <CardDescription>
-              Tools are designed to run locally in the browser where possible.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm leading-6 text-muted-foreground">
-            The GitHub Actions analyzer is being built so parsing and inspection
-            can stay client-side by default.
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Pasted content</CardTitle>
-            <CardDescription>
-              Pasted content for the GitHub Actions analyzer is not uploaded.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm leading-6 text-muted-foreground">
-            Workflow YAML entered directly into the analyzer is intended to stay
-            in the user&apos;s browser session. Recent-history metadata can be
-            stored locally, but full workflow content remains off by default
-            unless the user explicitly enables local content memory.
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Public GitHub import</CardTitle>
-            <CardDescription>
-              Public GitHub import is browser-initiated and does not require a
-              login.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm leading-6 text-muted-foreground">
-            Public GitHub imports fetch workflow content straight from GitHub in
-            the user&apos;s browser without OAuth, backend proxying, or private
-            repository support. The analyzer&apos;s local processing promise is
-            that pasted YAML stays in the browser unless the user explicitly
-            enables on-device content memory in settings.
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="rounded-3xl border border-border/80 bg-card/85 p-6">
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">
-          Use the analyzer with privacy in mind
-        </h2>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-          The live{" "}
-          <Link
-            className="font-medium text-foreground underline-offset-4 hover:text-accent hover:underline"
-            href={siteConfig.primaryTool.href}
-          >
-            GitHub Actions Workflow Security and Lint Analyzer
-          </Link>{" "}
-          keeps workflow review browser-local by default, supports optional
-          public GitHub imports without login, and avoids storing private YAML
-          content in local history unless the user explicitly turns that on for
-          this device.
-        </p>
-      </section>
+        or read the{" "}
+        <Link
+          className="font-medium text-foreground underline-offset-4 hover:text-accent hover:underline"
+          href={siteConfig.terms.href}
+        >
+          Terms &amp; Conditions
+        </Link>
+        .
+      </p>
     </Container>
   );
 }

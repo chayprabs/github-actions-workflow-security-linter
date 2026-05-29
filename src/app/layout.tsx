@@ -24,16 +24,14 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "GHA Workflow Analyzer",
-    template: "%s | GHA Workflow Analyzer",
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
-  description:
-    "This tool is a collection of browser-based developer tools for CI, config, schema, and infrastructure files.",
+  description: siteConfig.description,
   openGraph: {
-    description:
-      "This tool is a collection of browser-based developer tools for CI, config, schema, and infrastructure files.",
-    siteName: "GHA Workflow Analyzer",
-    title: "GHA Workflow Analyzer",
+    description: siteConfig.description,
+    siteName: siteConfig.name,
+    title: siteConfig.name,
     type: "website",
   },
 };
@@ -47,9 +45,10 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${manrope.variable} ${ibmPlexMono.variable} h-full scroll-smooth antialiased`}
+      data-theme="light"
       suppressHydrationWarning
     >
-      <body className="min-h-full bg-background text-foreground">
+      <body className="min-h-full bg-white text-foreground">
         <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
         <ThemeProvider>
           <PageShell>{children}</PageShell>

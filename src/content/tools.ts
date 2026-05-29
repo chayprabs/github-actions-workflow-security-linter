@@ -30,7 +30,7 @@ export interface ToolCategoryCard {
 export const tools = [
   {
     category: "CI/CD and GitHub",
-    href: "/tools/github-actions-workflow-analyzer" as Route,
+    href: "/" as Route,
     name: "GitHub Actions Workflow Security and Lint Analyzer",
     privacy: "Browser-local analysis",
     shortDescription:

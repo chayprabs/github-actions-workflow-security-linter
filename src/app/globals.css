@@ -70,15 +70,7 @@
   }
 
   body {
-    @apply min-h-full;
-    @apply bg-background font-sans text-foreground;
-    background-image:
-      radial-gradient(circle at top, rgba(13, 148, 136, 0.12), transparent 38%),
-      linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.7) 0%,
-        rgba(250, 247, 240, 0.96) 100%
-      );
+    @apply min-h-full bg-white font-sans text-foreground;
   }
 
   html[data-theme="dark"] body {

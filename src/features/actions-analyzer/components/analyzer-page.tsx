@@ -60,15 +60,23 @@ import type {
 
 const validSampleIds = new Set(workflowSamples.map((sample) => sample.id));
 
-export function AnalyzerPage() {
+interface AnalyzerPageProps {
+  variant?: "embedded" | "full";
+}
+
+export function AnalyzerPage({ variant = "full" }: AnalyzerPageProps) {
   return (
     <ActionToastProvider>
-      <AnalyzerPageContent />
+      <AnalyzerPageContent variant={variant} />
     </ActionToastProvider>
   );
 }
 
-function AnalyzerPageContent() {
+function AnalyzerPageContent({
+  variant = "full",
+}: {
+  variant?: "embedded" | "full";
+}) {
   const { preference: themePreference } = useTheme();
   const pushToast = usePushActionToast();
   const [preferences, setPreferences] = useState<AnalyzerWorkspacePreferences>(
@@ -353,7 +361,7 @@ function AnalyzerPageContent() {
         });
       } catch {
         pushToast({
-          message: "The analyzer could not copy the PR comment.",
+          message: "Authos could not copy the PR comment.",
           tone: "danger",
         });
       }
@@ -553,10 +561,16 @@ function AnalyzerPageContent() {
   return (
     <>
       <Container
-        className="space-y-12 overflow-x-hidden py-16 sm:space-y-14 sm:py-20"
+        className={
+          variant === "embedded"
+            ? "space-y-6 overflow-x-hidden py-6 sm:py-8"
+            : "space-y-12 overflow-x-hidden py-16 sm:space-y-14 sm:py-20"
+        }
         data-testid="analyzer-page"
       >
-        <AnalyzerHero onLoadRiskySample={handleLoadRiskySample} />
+        {variant !== "embedded" ? (
+          <AnalyzerHero onLoadRiskySample={handleLoadRiskySample} />
+        ) : null}
         <AnalyzerWorkspace
           activeFile={activeFile}
           activeFileId={workflowInputs.activeFileId}
@@ -750,22 +764,24 @@ function AnalyzerPageContent() {
           totalSizeLabel={workflowInputs.totalSizeLabel}
           workspaceMode={workspaceMode}
         />
-        <SeoContent
-          onLoadExample={(sampleId) => {
-            const didLoad = handleSampleLoad(sampleId);
+        {variant !== "embedded" ? (
+          <SeoContent
+            onLoadExample={(sampleId) => {
+              const didLoad = handleSampleLoad(sampleId);
 
-            if (!didLoad || typeof document === "undefined") {
-              return;
-            }
+              if (!didLoad || typeof document === "undefined") {
+                return;
+              }
 
-            setWorkspaceMode("analyze");
-            window.setTimeout(() => {
-              document
-                .getElementById("analyzer-workspace")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }, 0);
-          }}
-        />
+              setWorkspaceMode("analyze");
+              window.setTimeout(() => {
+                document
+                  .getElementById("analyzer-workspace")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 0);
+            }}
+          />
+        ) : null}
       </Container>
 
       <AnalyzerSettingsDrawer

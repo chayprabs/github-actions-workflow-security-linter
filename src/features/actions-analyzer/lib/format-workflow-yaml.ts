@@ -18,7 +18,7 @@ export function canSafelyFormatWorkflowYaml(content: string) {
     return {
       allowed: false,
       reason:
-        "This file contains This tool ignore comments. Formatting is blocked so suppressions stay in place.",
+        "This file contains GHA ignore comments. Formatting is blocked so suppressions stay in place.",
     };
   }
 

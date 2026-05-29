@@ -1,7 +1,7 @@
 import type { WorkflowSampleId } from "@/features/actions-analyzer/fixtures/samples";
 
 export const analyzerToolTitle =
-  "GitHub Actions Workflow Security and Lint Analyzer - GHA Workflow Analyzer";
+  "GitHub Actions Workflow Security and Lint Analyzer";
 
 export const analyzerToolDescription =
   "Paste or upload GitHub Actions workflow YAML to find syntax errors, risky permissions, unsafe triggers, unpinned actions, matrix issues, and CI reliability problems. Browser-local, no login.";
@@ -61,7 +61,7 @@ export const analyzerHowItWorksSteps = [
   },
   {
     description:
-      "Run deterministic checks locally without sending pasted or uploaded workflow content to This tool.",
+      "Run deterministic checks locally without sending pasted or uploaded workflow content to this tool.",
     title: "Analyze locally",
   },
   {

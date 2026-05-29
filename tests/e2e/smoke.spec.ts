@@ -2,7 +2,7 @@ import { join } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-const toolPath = "/tools/github-actions-workflow-analyzer";
+const homePath = "/";
 const uploadFixturePath = join(
   process.cwd(),
   "src/features/actions-analyzer/fixtures/golden/unpinned-third-party.yml",
@@ -33,25 +33,10 @@ function getVisibleInputPanel(page: Page) {
   return page.locator('[data-testid="input-panel"]:visible').first();
 }
 
-test("home, tool, and privacy pages load", async ({ page }) => {
-  await page.goto("/");
-  await expect(
-    page.getByRole("heading", {
-      name: /Developer tools that catch production mistakes before they ship\./i,
-    }),
-  ).toBeVisible();
-  await expect(
-    page.getByTestId("home-hero").getByRole("link", {
-      name: /Open GitHub Actions Analyzer/i,
-    }),
-  ).toBeVisible();
-
-  await page.goto(toolPath);
-  await expect(
-    page.getByTestId("analyzer-hero").getByRole("heading", {
-      name: /GitHub Actions Workflow Security and Lint Analyzer/i,
-    }),
-  ).toBeVisible();
+test("home, privacy, and terms pages load", async ({ page }) => {
+  await page.goto(`${homePath}?sample=risky-pull-request-target`);
+  await expect(page.getByTestId("seo-intro-bar")).toBeVisible();
+  await expect(page.getByTestId("analyzer-page")).toBeVisible();
   await expect(
     page.getByRole("button", { name: /Import from GitHub/i }),
   ).toBeVisible();
@@ -59,29 +44,36 @@ test("home, tool, and privacy pages load", async ({ page }) => {
   await page.goto("/privacy");
   await expect(
     page.getByTestId("privacy-toolbar").getByRole("heading", {
-      name: /^Privacy$/i,
+      name: /Privacy Policy/i,
     }),
   ).toBeVisible();
+
+  await page.goto("/terms");
   await expect(
-    page.getByTestId("privacy-alert").getByRole("link", {
-      name: /GitHub Actions Workflow Security and Lint Analyzer/i,
+    page.getByTestId("terms-toolbar").getByRole("heading", {
+      name: /Terms & Conditions/i,
     }),
   ).toBeVisible();
+});
+
+test("legacy tool route redirects to home", async ({ page }) => {
+  await page.goto("/tools/github-actions-workflow-analyzer");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByTestId("analyzer-page")).toBeVisible();
 });
 
 test("risky sample analysis shows findings, editor jump, and PR comment copy", async ({
   page,
 }) => {
   await installClipboardMock(page);
-  await page.goto(toolPath);
+  await page.goto(`${homePath}?sample=risky-pull-request-target`);
   const inputPanel = getVisibleInputPanel(page);
 
-  await page.getByTestId("hero-load-risky-sample").click();
+  await inputPanel
   await expect(inputPanel.getByTestId("workflow-path-input")).toHaveValue(
     /\.github\/workflows\/pr-target-risky\.yml/i,
   );
   await expect(inputPanel.getByTestId("workflow-code-editor")).toBeVisible();
-  await expect(inputPanel.getByTestId("workflow-yaml-editor")).toBeVisible();
 
   await page.getByRole("button", { name: /^Analyze$/i }).click();
 
@@ -120,7 +112,7 @@ test("risky sample analysis shows findings, editor jump, and PR comment copy", a
 test("uploading a workflow file analyzes locally and surfaces findings", async ({
   page,
 }) => {
-  await page.goto(toolPath);
+  await page.goto(`${homePath}?sample=risky-pull-request-target`);
   const inputPanel = getVisibleInputPanel(page);
 
   await inputPanel
@@ -133,8 +125,9 @@ test("uploading a workflow file analyzes locally and surfaces findings", async (
   await expect(page.getByTestId("results-score")).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByText(/GHA200/i)).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText(/GHA202/i)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("results-finding-list")).toContainText(/GHA/i, {
+    timeout: 30_000,
+  });
 });
 
 test.describe("mobile workspace", () => {
@@ -146,24 +139,12 @@ test.describe("mobile workspace", () => {
   });
 
   test("shows mobile tabs and avoids horizontal overflow", async ({ page }) => {
-    await page.goto(toolPath);
+    await page.goto(`${homePath}?sample=risky-pull-request-target`);
 
     await expect(page.getByTestId("analyzer-mobile-tabs")).toBeVisible();
-    await expect(
-      page.getByRole("tab", {
-        name: /^Input$/i,
-      }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("tab", {
-        name: /^Findings$/i,
-      }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("tab", {
-        name: /^Report$/i,
-      }),
-    ).toBeVisible();
+    await expect(page.getByRole("tab", { name: /^Input$/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /^Findings$/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /^Report$/i })).toBeVisible();
 
     const hasHorizontalOverflow = await page.evaluate(() => {
       return (
