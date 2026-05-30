@@ -11,6 +11,19 @@ import type {
   WorkflowInputFile,
 } from "@/features/actions-analyzer/types";
 
+const ignoreCommentPattern =
+  /#\s*(?:gha|authos)-ignore\s+([A-Za-z]{3}\d{3})(?:\s*:(.*))?/u;
+
+const WORKFLOW_SCOPED_IGNORE_RULES = new Set([
+  "GHA004",
+  "GHA005",
+  "GHA006",
+  "GHA013",
+  "GHA100",
+]);
+
+const META_MAINTENANCE_RULE_IDS = new Set(["GHA901", "GHA902"]);
+
 interface IgnoreDirective {
   comment: string;
   filePath: string;
@@ -32,7 +45,9 @@ export function applyIgnoreComments(
   const ignoredFindings: IgnoredFinding[] = [];
 
   for (const directive of directives) {
-    const matchingFinding = findings.find((finding) => {
+    const matchLines = getMatchLinesForRule(directive);
+
+    const matchingFindings = findings.filter((finding) => {
       if (
         ignoredIds.has(finding.id) ||
         finding.ruleId !== directive.ruleId ||
@@ -43,25 +58,24 @@ export function applyIgnoreComments(
         return false;
       }
 
-      return directive.targetLines.some((targetLine) => {
-        return (
-          targetLine >= finding.location!.line &&
-          targetLine <= finding.location!.endLine
-        );
+      return matchLines.some((targetLine) =>
+        linesOverlap(
+          finding.location!.line,
+          finding.location!.endLine,
+          targetLine,
+        ),
+      );
+    });
+
+    for (const matchingFinding of matchingFindings) {
+      ignoredIds.add(matchingFinding.id);
+      ignoredFindings.push({
+        comment: directive.comment,
+        finding: matchingFinding,
+        line: directive.line,
+        reason: directive.reason,
       });
-    });
-
-    if (!matchingFinding) {
-      continue;
     }
-
-    ignoredIds.add(matchingFinding.id);
-    ignoredFindings.push({
-      comment: directive.comment,
-      finding: matchingFinding,
-      line: directive.line,
-      reason: directive.reason,
-    });
   }
 
   return {
@@ -69,6 +83,26 @@ export function applyIgnoreComments(
     ignoredFindings,
     warnings,
   };
+}
+
+export function isMetaMaintenanceRuleId(ruleId: string) {
+  return META_MAINTENANCE_RULE_IDS.has(ruleId);
+}
+
+function getMatchLinesForRule(directive: IgnoreDirective) {
+  if (WORKFLOW_SCOPED_IGNORE_RULES.has(directive.ruleId)) {
+    return directive.targetLines;
+  }
+
+  return directive.targetLines.slice(0, 1);
+}
+
+function linesOverlap(
+  findingStartLine: number,
+  findingEndLine: number,
+  targetLine: number,
+) {
+  return findingStartLine <= targetLine && findingEndLine >= targetLine;
 }
 
 function parseIgnoreDirectives(
@@ -80,10 +114,7 @@ function parseIgnoreDirectives(
   const directives: IgnoreDirective[] = [];
 
   lines.forEach((line, index) => {
-    const match =
-      /#\s*(?:gha|authos)-ignore\s+([A-Za-z]{3}\d{3})(?:\s*:(.*))?/u.exec(
-      line,
-    );
+    const match = ignoreCommentPattern.exec(line);
 
     if (!match || match.index === undefined) {
       return;
@@ -106,11 +137,9 @@ function parseIgnoreDirectives(
     }
 
     const hasInlineContent = line.slice(0, match.index).trim().length > 0;
-    const nextRelevantLine = hasInlineContent
-      ? index + 1
-      : findNextRelevantLine(lines, index);
-    const targetLines =
-      nextRelevantLine === null ? [] : [nextRelevantLine];
+    const targetLines = hasInlineContent
+      ? [index + 1]
+      : buildTargetLines(lines, index, ruleId);
 
     directives.push({
       comment,
@@ -123,6 +152,58 @@ function parseIgnoreDirectives(
   });
 
   return directives;
+}
+
+function buildTargetLines(
+  lines: string[],
+  commentLineIndex: number,
+  ruleId: string,
+) {
+  if (WORKFLOW_SCOPED_IGNORE_RULES.has(ruleId)) {
+    return collectTargetLines(lines, commentLineIndex);
+  }
+
+  const nextLine = findNextRelevantLine(lines, commentLineIndex);
+
+  return nextLine === null ? [] : [nextLine];
+}
+
+function collectTargetLines(lines: string[], commentLineIndex: number) {
+  const targetLines: number[] = [];
+
+  for (let index = commentLineIndex + 1; index < lines.length; index += 1) {
+    const trimmedLine = lines[index]?.trim() ?? "";
+
+    if (trimmedLine.length === 0) {
+      if (targetLines.length > 0) {
+        break;
+      }
+      continue;
+    }
+
+    if (trimmedLine.startsWith("#") && !ignoreCommentPattern.test(trimmedLine)) {
+      if (targetLines.length > 0) {
+        break;
+      }
+      continue;
+    }
+
+    targetLines.push(index + 1);
+
+    if (targetLines.length >= 16) {
+      break;
+    }
+  }
+
+  if (targetLines.length === 0) {
+    const fallbackLine = findNextRelevantLine(lines, commentLineIndex);
+
+    if (fallbackLine !== null) {
+      targetLines.push(fallbackLine);
+    }
+  }
+
+  return targetLines;
 }
 
 function createIgnoreCommentWarning(

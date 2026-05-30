@@ -221,9 +221,9 @@ export function parseWorkflowYaml(file: WorkflowInputFile): ParsedYamlFile {
     duplicateKeyWarnings,
     fileId: file.id,
     filePath: file.path,
-    isSuccessful: parseFindings.length === 0 && rootType === "map",
+    isSuccessful: syntaxErrors.length === 0 && rootType === "map",
     parsedValue:
-      parseFindings.length === 0 && rootType === "map" && document
+      syntaxErrors.length === 0 && rootType === "map" && document
         ? document.toJS({ maxAliasCount: 100 })
         : null,
     parseFindings,

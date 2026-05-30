@@ -1,6 +1,6 @@
 # Rule Inventory
 
-Authos currently ships the following rule IDs in the GitHub Actions analyzer. Each entry lists the default severity, primary category, and a short explanation of what the rule is trying to catch.
+The analyzer ships the following rule IDs. Each entry lists the default severity, primary category, and a short explanation of what the rule is trying to catch.
 
 ## Parse and syntax
 
@@ -87,5 +87,5 @@ Authos currently ships the following rule IDs in the GitHub Actions analyzer. Ea
 ## Tooling and review hygiene
 
 - `GHA900` | `info` | `maintainability` | Analysis was requested with no workflow files in the workspace.
-- `GHA901` | `low` | `maintainability` | A `# gha-ignore` comment omitted its reason.
+- `GHA901` | `low` | `maintainability` | An `# authos-ignore` comment omitted its reason.
 - `GHA902` | `info` | `maintainability` | An internal analyzer rule threw an error; other rules still ran.

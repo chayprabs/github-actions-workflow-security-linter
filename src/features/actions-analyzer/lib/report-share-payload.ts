@@ -3,6 +3,7 @@ import {
   decompressFromEncodedURIComponent,
 } from "lz-string";
 
+import { parseAnalyzerShareState } from "@/features/actions-analyzer/lib/report-share";
 import type { AnalyzerShareState } from "@/features/actions-analyzer/lib/report-share";
 import type { WorkflowInputFile } from "@/features/actions-analyzer/types";
 
@@ -61,6 +62,62 @@ function isValidSharePayloadFile(
   );
 }
 
+function sanitizeShareState(
+  shareState: unknown,
+): AnalyzerShareState | undefined {
+  if (!shareState || typeof shareState !== "object") {
+    return undefined;
+  }
+
+  const candidate = shareState as AnalyzerShareState;
+  const params = new URLSearchParams();
+
+  if (candidate.sampleId) {
+    params.set("sample", candidate.sampleId);
+  }
+
+  if (candidate.previousSampleId) {
+    params.set("prevSample", candidate.previousSampleId);
+  }
+
+  if (candidate.workspaceMode === "compare") {
+    params.set("workspace", "compare");
+  }
+
+  if (Array.isArray(candidate.disabledRuleIds)) {
+    params.set("rulesOff", candidate.disabledRuleIds.join(","));
+  }
+
+  const parsed = parseAnalyzerShareState(`?${params.toString()}`);
+  const sanitized: AnalyzerShareState = {};
+
+  if (parsed.sampleId) {
+    sanitized.sampleId = parsed.sampleId;
+  }
+
+  if (parsed.previousSampleId) {
+    sanitized.previousSampleId = parsed.previousSampleId;
+  }
+
+  if (parsed.workspaceMode === "compare") {
+    sanitized.workspaceMode = "compare";
+  }
+
+  if (parsed.disabledRuleIds) {
+    sanitized.disabledRuleIds = parsed.disabledRuleIds;
+  }
+
+  if (candidate.settings && typeof candidate.settings === "object") {
+    sanitized.settings = candidate.settings;
+  }
+
+  if (candidate.results && typeof candidate.results === "object") {
+    sanitized.results = parsed.results;
+  }
+
+  return Object.keys(sanitized).length > 0 ? sanitized : undefined;
+}
+
 export function decodeWorkflowSharePayload(
   payloadParam: string,
 ): WorkflowSharePayload | null {
@@ -68,6 +125,12 @@ export function decodeWorkflowSharePayload(
     const decompressed = decompressFromEncodedURIComponent(payloadParam);
 
     if (!decompressed) {
+      return null;
+    }
+
+    const decompressedSize = new TextEncoder().encode(decompressed).byteLength;
+
+    if (decompressedSize > maxSharePayloadBytes * 4) {
       return null;
     }
 
@@ -82,7 +145,10 @@ export function decodeWorkflowSharePayload(
       return null;
     }
 
-    return parsed;
+    return {
+      files: parsed.files,
+      shareState: sanitizeShareState(parsed.shareState),
+    };
   } catch {
     return null;
   }

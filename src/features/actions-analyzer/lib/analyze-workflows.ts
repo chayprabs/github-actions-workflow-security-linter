@@ -6,7 +6,10 @@ import {
   collectExpressionsFromWorkflow,
   hydrateWorkflowExpressions,
 } from "@/features/actions-analyzer/lib/expression-utils";
-import { applyIgnoreComments } from "@/features/actions-analyzer/lib/ignore-comments";
+import {
+  applyIgnoreComments,
+  isMetaMaintenanceRuleId,
+} from "@/features/actions-analyzer/lib/ignore-comments";
 import { normalizeParsedWorkflow } from "@/features/actions-analyzer/lib/normalize-workflow";
 import { parseWorkflowYamlFiles } from "@/features/actions-analyzer/lib/parse-workflow-yaml";
 import { buildPermissionSummary } from "@/features/actions-analyzer/lib/permission-minimizer";
@@ -230,7 +233,7 @@ export function runRules(
 
       if (process.env.NODE_ENV !== "production") {
         console.error(
-          `[GHA Workflow Analyzer] Rule ${rule.definition.id} failed during analysis.`,
+          `[Authos] Rule ${rule.definition.id} failed during analysis.`,
           error,
         );
       }
@@ -263,7 +266,7 @@ function buildRuleExecutionFailureFindings(
     confidence: "high",
     filePath,
     remediation:
-      "Re-run analysis after updating This tool. If this persists, report the rule id and workflow sample.",
+      "Re-run analysis after updating Authos. If this persists, report the rule id and workflow sample.",
     tags: ["analyzer", "internal", failure.ruleId],
     relatedJobs: [],
     relatedSteps: [],
@@ -419,7 +422,11 @@ function filterFindingsBySettings(
   findings: AnalyzerFinding[],
   settings: Pick<AnalyzerSettings, "disabledRuleIds" | "enabledRuleIds">,
 ): AnalyzerFinding[] {
-  return findings.filter((finding) => isRuleEnabled(finding.ruleId, settings));
+  return findings.filter(
+    (finding) =>
+      isMetaMaintenanceRuleId(finding.ruleId) ||
+      isRuleEnabled(finding.ruleId, settings),
+  );
 }
 
 function finalizeFindings(findings: AnalyzerFinding[]): AnalyzerFinding[] {

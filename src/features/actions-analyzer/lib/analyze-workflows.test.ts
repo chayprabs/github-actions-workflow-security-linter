@@ -229,6 +229,31 @@ jobs:
     });
     expect(report.matrixSummary.jobs[0]?.sampleCombinations).toHaveLength(18);
   });
+  it("continues security analysis when non-fatal parse warnings are present", () => {
+    const report = analyzeWorkflowFiles([
+      createInput(
+        ".github/workflows/warnings.yml",
+        `name: One
+---
+name: Two
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+`,
+      ),
+    ]);
+
+    expect(
+      report.findings.some((finding) => finding.ruleId === "GHA018"),
+    ).toBe(true);
+    expect(report.summary.workflowCount).toBe(1);
+    expect(
+      report.findings.some((finding) => finding.ruleId === "GHA018"),
+    ).toBe(true);
+  });
 });
 
 describe("runRules", () => {

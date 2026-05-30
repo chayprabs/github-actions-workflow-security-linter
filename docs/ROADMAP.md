@@ -1,33 +1,30 @@
 # Roadmap
 
-Post-launch improvements for the This tool analyzer should live here instead of as placeholder UI copy.
+Future improvements for the GHA Workflow Analyzer.
 
 ## Analyzer depth
 
-- Add more shell-execution and command-construction rules beyond the current untrusted-context coverage.
-- Expand reusable workflow and composite action heuristics.
-- Add richer action-version provenance and review metadata where static analysis can stay deterministic.
+- Richer shell-execution rules beyond current untrusted-context coverage.
+- Deeper reusable-workflow and composite-action call-site checks.
+- Optional action provenance metadata when it can stay deterministic.
 
 ## Editing and fixes
 
-- Add comment-preserving YAML formatting once the implementation can avoid destructive rewrites.
-- Expand the safe auto-fix catalog for reliability and permissions findings.
-- Add richer multi-file remediation workflows for compare mode and batch review.
+- Comment-preserving YAML formatting.
+- Broader safe auto-fix catalog (see `docs/FIX_COVERAGE.md`).
+- Batch remediation flows in compare mode.
 
 ## Imports and sharing
 
-- Consider richer public GitHub import ergonomics such as repo browsing hints and branch suggestions.
-- Evaluate private-repo import only as a separate product decision with an explicit privacy and auth design.
-- Explore opt-in local report snapshots for longer-lived on-device review sessions.
+- Improved public GitHub import ergonomics (branch hints, clearer rate-limit messaging).
+- Private-repo import only as a separate product decision with explicit auth and privacy design.
 
 ## Product surface
 
-- Add branded Open Graph images for the home page and tool page.
-- Expand the This tool tool catalog with adjacent config tools listed in the landing page.
-- Add more end-to-end QA automation across browsers and deployment previews.
+- Optional CLI or GitHub Action wrapper for CI pipelines using SARIF exports.
+- Additional Playwright coverage mapped to this checklist.
 
-## Performance and operations
+## Performance
 
-- Run bundle analysis periodically and keep trimming client-side dependencies.
-- Keep growing worker-path coverage so expensive analysis stays off the main thread.
-- Add lightweight production telemetry only if it can preserve the local-first privacy model.
+- Periodic bundle analysis and dependency trimming.
+- Expand Web Worker coverage for large workspaces.

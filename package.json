@@ -1,8 +1,8 @@
 {
-  "name": "github-actions-workflow-security-linter",
+  "name": "authos-github-actions-workflow-analyzer",
   "version": "0.1.0",
   "private": true,
-  "description": "Browser-local GitHub Actions workflow security and lint analyzer (standalone browser tool).",
+  "description": "Browser-local GitHub Actions workflow security and lint analyzer (Authos tool 5).",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -24,7 +24,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "analyze": "cross-env ANALYZE=true next build",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@codemirror/lang-yaml": "^6.1.3",

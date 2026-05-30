@@ -115,6 +115,30 @@ name: Two
     expect(parsed.parseFindings.map((finding) => finding.ruleId)).toContain(
       "GHA018",
     );
+    expect(parsed.isSuccessful).toBe(true);
+  });
+
+  it("still normalizes workflows when duplicate keys emit parse warnings", () => {
+    const parsed = parseWorkflowYaml(
+      createInput(
+        ".github/workflows/duplicate.yml",
+        `name: First
+name: Second
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+`,
+      ),
+    );
+
+    expect(parsed.isSuccessful).toBe(true);
+    expect(parsed.parseFindings.map((finding) => finding.ruleId)).toContain(
+      "GHA002",
+    );
+    expect(parsed.parsedValue).toMatchObject({
+      on: "push",
+    });
   });
 
   it("parses YAML anchors and aliases without crashing", () => {

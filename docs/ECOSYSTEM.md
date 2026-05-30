@@ -2,10 +2,10 @@
 
 ## Production URL and `NEXT_PUBLIC_SITE_URL`
 
-| Finding | Notes |
-|--------|--------|
-| **`NEXT_PUBLIC_SITE_URL` is optional locally** | `src/lib/site.ts` falls back to `http://127.0.0.1:3000` when unset |
-| **Production requirement** | Set `NEXT_PUBLIC_SITE_URL` to the deployed HTTPS origin so `robots.txt`, `sitemap.xml`, canonical URLs, and JSON-LD match the live site |
+| Finding                                        | Notes                                                                                                                                   |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **`NEXT_PUBLIC_SITE_URL` is optional locally** | `src/lib/site.ts` falls back to `http://127.0.0.1:3000` when unset                                                                      |
+| **Production requirement**                     | Set `NEXT_PUBLIC_SITE_URL` to the deployed HTTPS origin so `robots.txt`, `sitemap.xml`, canonical URLs, and JSON-LD match the live site |
 
 **Launch action:** Deploy as a standard Next.js app (Vercel or any host), set `NEXT_PUBLIC_SITE_URL`, verify `/` loads over HTTPS.
 

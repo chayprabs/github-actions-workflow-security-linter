@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Format check
+        run: npm run format:check
+
       - name: Unit tests
         run: npm run test
 
@@ -57,5 +60,3 @@ jobs:
 
       - name: End-to-end tests
         run: npm run test:e2e
-        env:
-          CI: "true"
