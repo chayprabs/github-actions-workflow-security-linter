@@ -53,7 +53,7 @@ export const defaultAnalyzerWorkspacePreferences: AnalyzerWorkspacePreferences =
         defaultAnalyzerSettings.warnOnMissingTopLevelPermissions,
       disabledRuleIds: [],
     },
-    theme: "system",
+    theme: "light",
     ui: defaultAnalyzerUiPreferences,
   };
 
