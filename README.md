@@ -63,6 +63,9 @@ Set `NEXT_PUBLIC_SITE_URL` to your HTTPS origin. Vercel: import as a standard Ne
 - [docs/RULES.md](docs/RULES.md) — rule catalog
 - [docs/ACCURACY.md](docs/ACCURACY.md) — testing and heuristics
 - [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md)
+- [docs/CI_INTEGRATION.md](docs/CI_INTEGRATION.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [CHANGELOG.md](CHANGELOG.md)
 - [SECURITY.md](SECURITY.md)
 
 ## License
