@@ -17,7 +17,7 @@ const fallbackPreferences: AnalyzerWorkspacePreferences = {
     requireShaPinning: true,
     warnOnMissingTopLevelPermissions: true,
   },
-  theme: "system",
+  theme: "light",
   ui: {
     autoRunAnalysis: true,
     rememberReportSnapshots: false,
