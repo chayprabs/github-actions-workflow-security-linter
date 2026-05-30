@@ -136,7 +136,11 @@ export const malformedUsesRule: RuleModule = {
 
         const location =
           job.reusableWorkflowCall?.location ??
-          findPathLocation(parsedFile, ["jobs", job.id, "uses"], job.location) ??
+          findPathLocation(
+            parsedFile,
+            ["jobs", job.id, "uses"],
+            job.location,
+          ) ??
           job.location;
 
         return [

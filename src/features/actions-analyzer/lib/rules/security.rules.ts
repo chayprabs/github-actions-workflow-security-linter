@@ -32,7 +32,8 @@ import type {
   WorkflowStep,
 } from "@/features/actions-analyzer/types";
 
-const missingTopLevelPermissionsRuleDefinition = requireRuleDefinition("GHA100");
+const missingTopLevelPermissionsRuleDefinition =
+  requireRuleDefinition("GHA100");
 const topLevelWriteAllRuleDefinition = requireRuleDefinition("GHA101");
 const broadWritePermissionsRuleDefinition = requireRuleDefinition("GHA102");
 const pullRequestTargetRuleDefinition = requireRuleDefinition("GHA103");
@@ -42,7 +43,8 @@ const workflowRunPrivilegeRuleDefinition = requireRuleDefinition("GHA106");
 const secretsInWorkflowOrJobEnvRuleDefinition = requireRuleDefinition("GHA107");
 const longLivedCloudSecretRuleDefinition = requireRuleDefinition("GHA108");
 const untrustedDeploymentRuleDefinition = requireRuleDefinition("GHA109");
-const privilegedThirdPartyActionRuleDefinition = requireRuleDefinition("GHA110");
+const privilegedThirdPartyActionRuleDefinition =
+  requireRuleDefinition("GHA110");
 
 export const missingTopLevelPermissionsRule: RuleModule = {
   definition: missingTopLevelPermissionsRuleDefinition,
@@ -62,11 +64,9 @@ export const missingTopLevelPermissionsRule: RuleModule = {
         ? createInsertFixAtOffset(
             parsedFile.content,
             findTopLevelInsertionOffset(parsedFile.content),
-            [
-              "permissions:",
-              "  contents: read",
-              "",
-            ].join(detectLineEnding(parsedFile.content)),
+            ["permissions:", "  contents: read", ""].join(
+              detectLineEnding(parsedFile.content),
+            ),
             {
               description:
                 "Insert an explicit read-only workflow baseline at the top of the file.",
@@ -142,8 +142,10 @@ export const broadWritePermissionsRule: RuleModule = {
 
       if (
         topLevelScopes.length > 0 &&
-        !(workflow.permissions?.kind === "shorthand" &&
-          workflow.permissions.shorthand === "write-all")
+        !(
+          workflow.permissions?.kind === "shorthand" &&
+          workflow.permissions.shorthand === "write-all"
+        )
       ) {
         findings.push(
           createRuleFinding(broadWritePermissionsRuleDefinition, {
@@ -226,49 +228,67 @@ export const pullRequestTargetRule: RuleModule = {
 export const pullRequestTargetCheckoutRule: RuleModule = {
   definition: pullRequestTargetCheckoutRuleDefinition,
   check(context) {
-    return visitSteps(context).flatMap(({ job, parsedFile, step, workflow }, index) => {
-      if (
-        !workflow.on.some((trigger) => trigger.name === "pull_request_target") ||
-        !isCheckoutStep(step)
-      ) {
-        return [];
-      }
+    return visitSteps(context).flatMap(
+      ({ job, parsedFile, step, workflow }, index) => {
+        if (
+          !workflow.on.some(
+            (trigger) => trigger.name === "pull_request_target",
+          ) ||
+          !isCheckoutStep(step)
+        ) {
+          return [];
+        }
 
-      const refValue = step.with.value?.ref;
-      const repositoryValue = step.with.value?.repository;
-      const headRefCheckout = isLikelyPullRequestHeadCheckoutRef(refValue);
-      const headRepositoryCheckout =
-        typeof repositoryValue === "string" &&
-        repositoryValue.includes("github.event.pull_request.head.repo.");
+        const refValue = step.with.value?.ref;
+        const repositoryValue = step.with.value?.repository;
+        const headRefCheckout = isLikelyPullRequestHeadCheckoutRef(refValue);
+        const headRepositoryCheckout =
+          typeof repositoryValue === "string" &&
+          repositoryValue.includes("github.event.pull_request.head.repo.");
 
-      if (!headRefCheckout && !headRepositoryCheckout) {
-        return [];
-      }
+        if (!headRefCheckout && !headRepositoryCheckout) {
+          return [];
+        }
 
-      const location =
-        findPathLocation(parsedFile, ["jobs", job.id, "steps", step.index, "with", "ref"]) ??
-        findPathLocation(parsedFile, ["jobs", job.id, "steps", step.index, "with", "repository"]) ??
-        step.uses?.location ??
-        step.location;
+        const location =
+          findPathLocation(parsedFile, [
+            "jobs",
+            job.id,
+            "steps",
+            step.index,
+            "with",
+            "ref",
+          ]) ??
+          findPathLocation(parsedFile, [
+            "jobs",
+            job.id,
+            "steps",
+            step.index,
+            "with",
+            "repository",
+          ]) ??
+          step.uses?.location ??
+          step.location;
 
-      return [
-        createRuleFinding(
-          pullRequestTargetCheckoutRuleDefinition,
-          {
-            evidence: buildEvidence(parsedFile, location),
-            filePath: workflow.filePath,
-            location,
-            message: `Step \`${getStepLabel(step)}\` checks out pull request head content inside a \`pull_request_target\` workflow, which can combine untrusted code with elevated token or secret access.`,
-            relatedJobs: [job.id],
-            relatedSteps: [getStepLabel(step)],
-            remediation:
-              "Do not check out or execute pull request head code in a `pull_request_target` workflow. Split privileged follow-up work from untrusted pull request builds, or switch the build workflow to `pull_request`.",
-            severity: headRefCheckout ? "critical" : "high",
-          },
-          index,
-        ),
-      ];
-    });
+        return [
+          createRuleFinding(
+            pullRequestTargetCheckoutRuleDefinition,
+            {
+              evidence: buildEvidence(parsedFile, location),
+              filePath: workflow.filePath,
+              location,
+              message: `Step \`${getStepLabel(step)}\` checks out pull request head content inside a \`pull_request_target\` workflow, which can combine untrusted code with elevated token or secret access.`,
+              relatedJobs: [job.id],
+              relatedSteps: [getStepLabel(step)],
+              remediation:
+                "Do not check out or execute pull request head code in a `pull_request_target` workflow. Split privileged follow-up work from untrusted pull request builds, or switch the build workflow to `pull_request`.",
+              severity: headRefCheckout ? "critical" : "high",
+            },
+            index,
+          ),
+        ];
+      },
+    );
   },
 };
 
@@ -279,33 +299,35 @@ export const selfHostedPullRequestRule: RuleModule = {
       return [];
     }
 
-    return visitJobs(context).flatMap(({ job, parsedFile, workflow }, index) => {
-      if (
-        !hasUntrustedPullRequestTrigger(workflow) ||
-        !isSelfHostedRunsOn(job.runsOn.raw)
-      ) {
-        return [];
-      }
+    return visitJobs(context).flatMap(
+      ({ job, parsedFile, workflow }, index) => {
+        if (
+          !hasUntrustedPullRequestTrigger(workflow) ||
+          !isSelfHostedRunsOn(job.runsOn.raw)
+        ) {
+          return [];
+        }
 
-      return [
-        createRuleFinding(
-          selfHostedPullRequestRuleDefinition,
-          {
-            evidence: buildEvidence(
-              parsedFile,
-              job.runsOn.location ?? job.location,
-            ),
-            filePath: workflow.filePath,
-            location: job.runsOn.location ?? job.location,
-            message: `Job \`${job.id}\` uses a self-hosted runner while the workflow listens to pull request events that may execute contributor-controlled code.`,
-            relatedJobs: [job.id],
-            remediation:
-              "Prefer GitHub-hosted runners for untrusted pull request workflows. If self-hosted runners are required, isolate them tightly and require review or approval before privileged jobs run.",
-          },
-          index,
-        ),
-      ];
-    });
+        return [
+          createRuleFinding(
+            selfHostedPullRequestRuleDefinition,
+            {
+              evidence: buildEvidence(
+                parsedFile,
+                job.runsOn.location ?? job.location,
+              ),
+              filePath: workflow.filePath,
+              location: job.runsOn.location ?? job.location,
+              message: `Job \`${job.id}\` uses a self-hosted runner while the workflow listens to pull request events that may execute contributor-controlled code.`,
+              relatedJobs: [job.id],
+              remediation:
+                "Prefer GitHub-hosted runners for untrusted pull request workflows. If self-hosted runners are required, isolate them tightly and require review or approval before privileged jobs run.",
+            },
+            index,
+          ),
+        ];
+      },
+    );
   },
 };
 
@@ -321,7 +343,9 @@ export const workflowRunPrivilegeRule: RuleModule = {
       const artifactDownload = findArtifactDownloadStep(workflow.jobs);
       const hasBroadPermissions =
         getBroadWriteScopes(workflow.permissions).length > 0 ||
-        workflow.jobs.some((job) => getBroadWriteScopes(job.permissions).length > 0);
+        workflow.jobs.some(
+          (job) => getBroadWriteScopes(job.permissions).length > 0,
+        );
 
       if (!artifactDownload && !hasBroadPermissions) {
         return [];
@@ -329,7 +353,8 @@ export const workflowRunPrivilegeRule: RuleModule = {
 
       const location =
         artifactDownload?.location ??
-        workflow.on.find((trigger) => trigger.name === "workflow_run")?.location ??
+        workflow.on.find((trigger) => trigger.name === "workflow_run")
+          ?.location ??
         getWorkflowAnchorLocation(workflow, parsedFile);
       const riskConditions = [
         artifactDownload
@@ -426,7 +451,9 @@ export const longLivedCloudSecretRule: RuleModule = {
             location: expression.location,
             message: `This workflow references long-lived cloud credential secret${matchingSecretNames.length === 1 ? "" : "s"} ${matchingSecretNames
               .map((secretName) => `\`${secretName}\``)
-              .join(", ")}. This heuristic is worth reviewing because short-lived OIDC credentials are often safer.`,
+              .join(
+                ", ",
+              )}. This heuristic is worth reviewing because short-lived OIDC credentials are often safer.`,
             relatedJobs: expression.jobId ? [expression.jobId] : [],
             relatedSteps: expression.stepLabel ? [expression.stepLabel] : [],
             remediation:
@@ -442,89 +469,95 @@ export const longLivedCloudSecretRule: RuleModule = {
 export const untrustedDeploymentRule: RuleModule = {
   definition: untrustedDeploymentRuleDefinition,
   check(context) {
-    return visitJobs(context).flatMap(({ job, parsedFile, workflow }, index) => {
-      if (
-        !hasUntrustedPullRequestTrigger(workflow) ||
-        !isDeploymentLikeJob(job)
-      ) {
-        return [];
-      }
+    return visitJobs(context).flatMap(
+      ({ job, parsedFile, workflow }, index) => {
+        if (
+          !hasUntrustedPullRequestTrigger(workflow) ||
+          !isDeploymentLikeJob(job)
+        ) {
+          return [];
+        }
 
-      return [
-        createRuleFinding(
-          untrustedDeploymentRuleDefinition,
-          {
-            confidence: workflow.on.some(
-              (trigger) => trigger.name === "pull_request_target",
-            )
-              ? "high"
-              : "medium",
-            evidence: buildEvidence(parsedFile, job.location),
-            filePath: workflow.filePath,
-            location: job.location ?? job.environment.location,
-            message: `Job \`${job.id}\` looks like a deploy, release, or publish job, but the workflow runs on pull request events that may involve untrusted contributions.`,
-            relatedJobs: [job.id],
-            remediation:
-              "Keep deployment and release jobs on trusted triggers such as push to protected branches, tags, environment approvals, or manually approved follow-up workflows.",
-          },
-          index,
-        ),
-      ];
-    });
+        return [
+          createRuleFinding(
+            untrustedDeploymentRuleDefinition,
+            {
+              confidence: workflow.on.some(
+                (trigger) => trigger.name === "pull_request_target",
+              )
+                ? "high"
+                : "medium",
+              evidence: buildEvidence(parsedFile, job.location),
+              filePath: workflow.filePath,
+              location: job.location ?? job.environment.location,
+              message: `Job \`${job.id}\` looks like a deploy, release, or publish job, but the workflow runs on pull request events that may involve untrusted contributions.`,
+              relatedJobs: [job.id],
+              remediation:
+                "Keep deployment and release jobs on trusted triggers such as push to protected branches, tags, environment approvals, or manually approved follow-up workflows.",
+            },
+            index,
+          ),
+        ];
+      },
+    );
   },
 };
 
 export const privilegedThirdPartyActionRule: RuleModule = {
   definition: privilegedThirdPartyActionRuleDefinition,
   check(context) {
-    return visitJobs(context).flatMap(({ job, parsedFile, workflow }, index) => {
-      const effectivePermissions = getJobEffectivePermissions(workflow, job);
-      const broadScopes = getBroadWriteScopes(effectivePermissions);
+    return visitJobs(context).flatMap(
+      ({ job, parsedFile, workflow }, index) => {
+        const effectivePermissions = getJobEffectivePermissions(workflow, job);
+        const broadScopes = getBroadWriteScopes(effectivePermissions);
 
-      if (broadScopes.length === 0) {
-        return [];
-      }
+        if (broadScopes.length === 0) {
+          return [];
+        }
 
-      const thirdPartySteps = job.steps.filter((step) =>
-        isThirdPartyActionUse(step.uses),
-      );
+        const thirdPartySteps = job.steps.filter((step) =>
+          isThirdPartyActionUse(step.uses),
+        );
 
-      if (thirdPartySteps.length === 0) {
-        return [];
-      }
+        if (thirdPartySteps.length === 0) {
+          return [];
+        }
 
-      const location =
-        thirdPartySteps[0]?.uses?.location ??
-        thirdPartySteps[0]?.location ??
-        job.permissions?.location ??
-        workflow.permissions?.location ??
-        job.location;
-      const actionLabels = thirdPartySteps
-        .map((step) => step.uses?.raw)
-        .filter((value): value is string => typeof value === "string");
+        const location =
+          thirdPartySteps[0]?.uses?.location ??
+          thirdPartySteps[0]?.location ??
+          job.permissions?.location ??
+          workflow.permissions?.location ??
+          job.location;
+        const actionLabels = thirdPartySteps
+          .map((step) => step.uses?.raw)
+          .filter((value): value is string => typeof value === "string");
 
-      return [
-        createRuleFinding(
-          privilegedThirdPartyActionRuleDefinition,
-          {
-            evidence: buildEvidence(parsedFile, location),
-            filePath: workflow.filePath,
-            location,
-            message: `Job \`${job.id}\` exposes broad token access (${formatScopeList(broadScopes)}) to third-party action${actionLabels.length === 1 ? "" : "s"} ${actionLabels
-              .map((label) => `\`${label}\``)
-              .join(", ")}. Actions in the job can use the same token permissions.`,
-            relatedJobs: [job.id],
-            relatedSteps: thirdPartySteps.map((step) => getStepLabel(step)),
-            remediation:
-              "Verify the external actions are trusted and pinned appropriately, and reduce the job token to only the permissions required. If possible, split privileged operations into a smaller follow-up job.",
-            severity: shouldRelaxBroadWriteSeverity(workflow, job)
-              ? "medium"
-              : "high",
-          },
-          index,
-        ),
-      ];
-    });
+        return [
+          createRuleFinding(
+            privilegedThirdPartyActionRuleDefinition,
+            {
+              evidence: buildEvidence(parsedFile, location),
+              filePath: workflow.filePath,
+              location,
+              message: `Job \`${job.id}\` exposes broad token access (${formatScopeList(broadScopes)}) to third-party action${actionLabels.length === 1 ? "" : "s"} ${actionLabels
+                .map((label) => `\`${label}\``)
+                .join(
+                  ", ",
+                )}. Actions in the job can use the same token permissions.`,
+              relatedJobs: [job.id],
+              relatedSteps: thirdPartySteps.map((step) => getStepLabel(step)),
+              remediation:
+                "Verify the external actions are trusted and pinned appropriately, and reduce the job token to only the permissions required. If possible, split privileged operations into a smaller follow-up job.",
+              severity: shouldRelaxBroadWriteSeverity(workflow, job)
+                ? "medium"
+                : "high",
+            },
+            index,
+          ),
+        ];
+      },
+    );
   },
 };
 
@@ -539,10 +572,7 @@ function findArtifactDownloadStep(jobs: WorkflowJob[]): WorkflowStep | null {
         return step;
       }
 
-      if (
-        step.run?.text &&
-        /\bgh\s+run\s+download\b/u.test(step.run.text)
-      ) {
+      if (step.run?.text && /\bgh\s+run\s+download\b/u.test(step.run.text)) {
         return step;
       }
     }
@@ -552,9 +582,11 @@ function findArtifactDownloadStep(jobs: WorkflowJob[]): WorkflowStep | null {
 }
 
 function formatReferenceList(references: string[]) {
-  const uniqueReferences = references.filter((reference, index, allReferences) => {
-    return allReferences.indexOf(reference) === index;
-  });
+  const uniqueReferences = references.filter(
+    (reference, index, allReferences) => {
+      return allReferences.indexOf(reference) === index;
+    },
+  );
 
   return uniqueReferences.map((reference) => `\`${reference}\``).join(", ");
 }

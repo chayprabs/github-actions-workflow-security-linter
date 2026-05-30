@@ -57,27 +57,29 @@ const reusableWorkflowDisallowedKeys = [
 export const missingRunsOnOrUsesRule: RuleModule = {
   definition: missingRunsOnOrUsesRuleDefinition,
   check(context) {
-    return visitJobs(context).flatMap(({ job, parsedFile, workflow }, index) => {
-      if (hasOwnField(job.raw, "runs-on") || hasOwnField(job.raw, "uses")) {
-        return [];
-      }
+    return visitJobs(context).flatMap(
+      ({ job, parsedFile, workflow }, index) => {
+        if (hasOwnField(job.raw, "runs-on") || hasOwnField(job.raw, "uses")) {
+          return [];
+        }
 
-      return [
-        createRuleFinding(
-          missingRunsOnOrUsesRuleDefinition,
-          {
-            evidence: buildEvidence(parsedFile, job.location),
-            filePath: workflow.filePath,
-            location: job.location,
-            message: `Job \`${job.id}\` defines neither \`runs-on\` nor job-level \`uses\`. A normal job needs a runner, while a reusable workflow caller job needs \`uses\`.`,
-            relatedJobs: [job.id],
-            remediation:
-              "Add `runs-on` for a normal job, or replace the job body with a supported reusable workflow caller job using `uses`, `with`, and `secrets`.",
-          },
-          index,
-        ),
-      ];
-    });
+        return [
+          createRuleFinding(
+            missingRunsOnOrUsesRuleDefinition,
+            {
+              evidence: buildEvidence(parsedFile, job.location),
+              filePath: workflow.filePath,
+              location: job.location,
+              message: `Job \`${job.id}\` defines neither \`runs-on\` nor job-level \`uses\`. A normal job needs a runner, while a reusable workflow caller job needs \`uses\`.`,
+              relatedJobs: [job.id],
+              remediation:
+                "Add `runs-on` for a normal job, or replace the job body with a supported reusable workflow caller job using `uses`, `with`, and `secrets`.",
+            },
+            index,
+          ),
+        ];
+      },
+    );
   },
 };
 
@@ -96,7 +98,11 @@ export const unknownNeedsRule: RuleModule = {
 
           const location =
             job.needs.location ??
-            findPathLocation(parsedFile, ["jobs", job.id, "needs"], job.location);
+            findPathLocation(
+              parsedFile,
+              ["jobs", job.id, "needs"],
+              job.location,
+            );
 
           return [
             createRuleFinding(
@@ -149,31 +155,40 @@ export const invalidPermissionsRule: RuleModule = {
 export const invalidRunsOnRule: RuleModule = {
   definition: invalidRunsOnRuleDefinition,
   check(context) {
-    return visitJobs(context).flatMap(({ job, parsedFile, workflow }, index) => {
-      if (!hasOwnField(job.raw, "runs-on") || isValidRunsOnValue(job.runsOn.raw)) {
-        return [];
-      }
+    return visitJobs(context).flatMap(
+      ({ job, parsedFile, workflow }, index) => {
+        if (
+          !hasOwnField(job.raw, "runs-on") ||
+          isValidRunsOnValue(job.runsOn.raw)
+        ) {
+          return [];
+        }
 
-      const location =
-        job.runsOn.location ??
-        findPathLocation(parsedFile, ["jobs", job.id, "runs-on"], job.location);
+        const location =
+          job.runsOn.location ??
+          findPathLocation(
+            parsedFile,
+            ["jobs", job.id, "runs-on"],
+            job.location,
+          );
 
-      return [
-        createRuleFinding(
-          invalidRunsOnRuleDefinition,
-          {
-            evidence: buildEvidence(parsedFile, location),
-            filePath: workflow.filePath,
-            location,
-            message: buildRunsOnMessage(job.runsOn.raw),
-            relatedJobs: [job.id],
-            remediation:
-              "Use a non-empty runner label string, a non-empty array of runner labels, or a valid `runs-on` mapping with `group` and/or `labels`.",
-          },
-          index,
-        ),
-      ];
-    });
+        return [
+          createRuleFinding(
+            invalidRunsOnRuleDefinition,
+            {
+              evidence: buildEvidence(parsedFile, location),
+              filePath: workflow.filePath,
+              location,
+              message: buildRunsOnMessage(job.runsOn.raw),
+              relatedJobs: [job.id],
+              remediation:
+                "Use a non-empty runner label string, a non-empty array of runner labels, or a valid `runs-on` mapping with `group` and/or `labels`.",
+            },
+            index,
+          ),
+        ];
+      },
+    );
   },
 };
 
@@ -255,42 +270,44 @@ export const invalidTimeoutRule: RuleModule = {
 export const reusableWorkflowMixedFieldsRule: RuleModule = {
   definition: reusableWorkflowMixedFieldsRuleDefinition,
   check(context) {
-    return visitJobs(context).flatMap(({ job, parsedFile, workflow }, index) => {
-      if (
-        job.reusableWorkflowCall === null ||
-        job.reusableWorkflowCall.kind === "unknown"
-      ) {
-        return [];
-      }
+    return visitJobs(context).flatMap(
+      ({ job, parsedFile, workflow }, index) => {
+        if (
+          job.reusableWorkflowCall === null ||
+          job.reusableWorkflowCall.kind === "unknown"
+        ) {
+          return [];
+        }
 
-      const incompatibleKeys = reusableWorkflowDisallowedKeys.filter((key) =>
-        hasOwnField(job.raw, key),
-      );
+        const incompatibleKeys = reusableWorkflowDisallowedKeys.filter((key) =>
+          hasOwnField(job.raw, key),
+        );
 
-      if (incompatibleKeys.length === 0) {
-        return [];
-      }
+        if (incompatibleKeys.length === 0) {
+          return [];
+        }
 
-      const location =
-        job.reusableWorkflowCall.location ??
-        findPathLocation(parsedFile, ["jobs", job.id, "uses"], job.location);
+        const location =
+          job.reusableWorkflowCall.location ??
+          findPathLocation(parsedFile, ["jobs", job.id, "uses"], job.location);
 
-      return [
-        createRuleFinding(
-          reusableWorkflowMixedFieldsRuleDefinition,
-          {
-            evidence: buildEvidence(parsedFile, location),
-            filePath: workflow.filePath,
-            location,
-            message: `Job \`${job.id}\` calls a reusable workflow with \`uses\`, but it also defines incompatible job fields: ${incompatibleKeys.join(", ")}.`,
-            relatedJobs: [job.id],
-            remediation:
-              "Keep only the supported caller-job keywords such as `name`, `uses`, `with`, `secrets`, `strategy`, `needs`, `if`, `concurrency`, and `permissions`.",
-          },
-          index,
-        ),
-      ];
-    });
+        return [
+          createRuleFinding(
+            reusableWorkflowMixedFieldsRuleDefinition,
+            {
+              evidence: buildEvidence(parsedFile, location),
+              filePath: workflow.filePath,
+              location,
+              message: `Job \`${job.id}\` calls a reusable workflow with \`uses\`, but it also defines incompatible job fields: ${incompatibleKeys.join(", ")}.`,
+              relatedJobs: [job.id],
+              remediation:
+                "Keep only the supported caller-job keywords such as `name`, `uses`, `with`, `secrets`, `strategy`, `needs`, `if`, `concurrency`, and `permissions`.",
+            },
+            index,
+          ),
+        ];
+      },
+    );
   },
 };
 
@@ -338,7 +355,10 @@ function checkPermissions({
   }
 
   if (permissions.kind === "shorthand") {
-    if (permissions.shorthand === "read-all" || permissions.shorthand === "write-all") {
+    if (
+      permissions.shorthand === "read-all" ||
+      permissions.shorthand === "write-all"
+    ) {
       return [];
     }
 
@@ -355,50 +375,53 @@ function checkPermissions({
     ];
   }
 
-  return Object.entries(permissions.scopes).flatMap(([scope, access], index) => {
-    const location = permissions.scopeLocations[scope] ?? permissions.location;
+  return Object.entries(permissions.scopes).flatMap(
+    ([scope, access], index) => {
+      const location =
+        permissions.scopeLocations[scope] ?? permissions.location;
 
-    if (!knownPermissionScopes.has(scope)) {
-      return [
-        createRuleFinding(
-          invalidPermissionsRuleDefinition,
-          {
-            confidence: "medium",
-            evidence: buildEvidence(parsedFile, location),
-            filePath,
-            location,
-            message: `${subject} uses unknown permission scope \`${scope}\`.`,
-            relatedJobs,
-            remediation:
-              "Check the scope name against the GitHub Actions permissions list, then fix the typo or remove the unsupported scope.",
-            severity: "medium",
-          },
-          index,
-        ),
-      ];
-    }
+      if (!knownPermissionScopes.has(scope)) {
+        return [
+          createRuleFinding(
+            invalidPermissionsRuleDefinition,
+            {
+              confidence: "medium",
+              evidence: buildEvidence(parsedFile, location),
+              filePath,
+              location,
+              message: `${subject} uses unknown permission scope \`${scope}\`.`,
+              relatedJobs,
+              remediation:
+                "Check the scope name against the GitHub Actions permissions list, then fix the typo or remove the unsupported scope.",
+              severity: "medium",
+            },
+            index,
+          ),
+        ];
+      }
 
-    if (!isValidPermissionAccess(scope, access)) {
-      return [
-        createRuleFinding(
-          invalidPermissionsRuleDefinition,
-          {
-            evidence: buildEvidence(parsedFile, location),
-            filePath,
-            location,
-            message: `${subject} sets \`${scope}\` to \`${String(access)}\`, which is not an allowed access level.`,
-            relatedJobs,
-            remediation: `Use one of ${getAllowedAccessValues(scope)
-              .map((value) => `\`${value}\``)
-              .join(", ")} for \`${scope}\`.`,
-          },
-          index,
-        ),
-      ];
-    }
+      if (!isValidPermissionAccess(scope, access)) {
+        return [
+          createRuleFinding(
+            invalidPermissionsRuleDefinition,
+            {
+              evidence: buildEvidence(parsedFile, location),
+              filePath,
+              location,
+              message: `${subject} sets \`${scope}\` to \`${String(access)}\`, which is not an allowed access level.`,
+              relatedJobs,
+              remediation: `Use one of ${getAllowedAccessValues(scope)
+                .map((value) => `\`${value}\``)
+                .join(", ")} for \`${scope}\`.`,
+            },
+            index,
+          ),
+        ];
+      }
 
-    return [];
-  });
+      return [];
+    },
+  );
 }
 
 function getAllowedAccessValues(scope: string) {
@@ -414,7 +437,9 @@ function getAllowedAccessValues(scope: string) {
 }
 
 function isValidPermissionAccess(scope: string, access: unknown) {
-  return typeof access === "string" && getAllowedAccessValues(scope).includes(access);
+  return (
+    typeof access === "string" && getAllowedAccessValues(scope).includes(access)
+  );
 }
 
 function isValidRunsOnValue(rawRunsOn: unknown): boolean {
@@ -437,22 +462,32 @@ function isValidRunsOnValue(rawRunsOn: unknown): boolean {
 
   const keys = Object.keys(rawRunsOn);
 
-  if (keys.length === 0 || keys.some((key) => key !== "group" && key !== "labels")) {
+  if (
+    keys.length === 0 ||
+    keys.some((key) => key !== "group" && key !== "labels")
+  ) {
     return false;
   }
 
   const group = rawRunsOn.group;
   const labels = rawRunsOn.labels;
   const hasValidGroup =
-    group === undefined || (typeof group === "string" && group.trim().length > 0);
+    group === undefined ||
+    (typeof group === "string" && group.trim().length > 0);
   const hasValidLabels =
     labels === undefined ||
     (typeof labels === "string" && labels.trim().length > 0) ||
     (Array.isArray(labels) &&
       labels.length > 0 &&
-      labels.every((value) => typeof value === "string" && value.trim().length > 0));
+      labels.every(
+        (value) => typeof value === "string" && value.trim().length > 0,
+      ));
 
-  return hasValidGroup && hasValidLabels && (group !== undefined || labels !== undefined);
+  return (
+    hasValidGroup &&
+    hasValidLabels &&
+    (group !== undefined || labels !== undefined)
+  );
 }
 
 function isValidTimeoutValue(rawTimeout: unknown) {

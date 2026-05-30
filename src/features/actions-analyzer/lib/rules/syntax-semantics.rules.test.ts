@@ -28,7 +28,10 @@ function createInput(path: string, content: string) {
   });
 }
 
-function analyzeRule(ruleId: (typeof syntaxSemanticsRuleIds)[number], content: string) {
+function analyzeRule(
+  ruleId: (typeof syntaxSemanticsRuleIds)[number],
+  content: string,
+) {
   return analyzeWorkflowFiles(
     [createInput(`.github/workflows/${ruleId.toLowerCase()}.yml`, content)],
     {
@@ -230,7 +233,9 @@ jobs:
       },
     );
 
-    expect(report.findings.map((finding) => [finding.ruleId, finding.severity])).toEqual([
+    expect(
+      report.findings.map((finding) => [finding.ruleId, finding.severity]),
+    ).toEqual([
       ["GHA013", "high"],
       ["GHA013", "medium"],
     ]);

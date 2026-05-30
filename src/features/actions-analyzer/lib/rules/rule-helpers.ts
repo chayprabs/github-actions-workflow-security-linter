@@ -1,11 +1,4 @@
-import {
-  isMap,
-  isNode,
-  isScalar,
-  isSeq,
-  type Pair,
-  type YAMLMap,
-} from "yaml";
+import { isMap, isNode, isScalar, isSeq, type Pair, type YAMLMap } from "yaml";
 
 import { getRuleDefinition } from "@/features/actions-analyzer/lib/rule-catalog";
 import type {

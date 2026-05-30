@@ -279,7 +279,9 @@ export interface WorkflowCodeEditorProps {
   jumpTarget: WorkflowEditorJumpTarget | null;
   label: string;
   onChange: (value: string) => void;
-  onFormatNotice?: ((message: string, tone: "error" | "success") => void) | undefined;
+  onFormatNotice?:
+    | ((message: string, tone: "error" | "success") => void)
+    | undefined;
   onSoftWrapChange: (enabled: boolean) => void;
   softWrapEnabled: boolean;
   value: string;
@@ -546,15 +548,15 @@ export function WorkflowCodeEditor({
     <div className="space-y-3" data-testid="workflow-code-editor">
       {exceedsEditorThreshold ? (
         <Alert title="Large input fallback" tone="warning">
-          This file is {formatBytes(fileSizeBytes)}. This tool is using the plain
-          textarea to avoid sluggish editor behavior above 1 MB.
+          This file is {formatBytes(fileSizeBytes)}. This tool is using the
+          plain textarea to avoid sluggish editor behavior above 1 MB.
         </Alert>
       ) : null}
 
       {editorError ? (
         <Alert title="Editor fallback" tone="warning">
-          CodeMirror could not initialize cleanly, so This tool kept the resilient
-          textarea available instead.
+          CodeMirror could not initialize cleanly, so This tool kept the
+          resilient textarea available instead.
         </Alert>
       ) : null}
 

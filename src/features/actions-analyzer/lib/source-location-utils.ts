@@ -1,4 +1,7 @@
-import type { SourceLocation, SourceRange } from "@/features/actions-analyzer/types";
+import type {
+  SourceLocation,
+  SourceRange,
+} from "@/features/actions-analyzer/types";
 
 export function createSourceRangeFromOffsets(
   filePath: string,
@@ -98,19 +101,13 @@ export function getLineStarts(content: string) {
   return lineStarts;
 }
 
-export function getLocationText(
-  content: string,
-  range: SourceRange,
-) {
+export function getLocationText(content: string, range: SourceRange) {
   const { from, to } = getOffsetsForSourceRange(content, range);
 
   return content.slice(from, to);
 }
 
-export function getOffsetsForSourceRange(
-  content: string,
-  range: SourceRange,
-) {
+export function getOffsetsForSourceRange(content: string, range: SourceRange) {
   const lineStarts = getLineStarts(content);
   const from = getOffsetForLineColumn(
     content,
@@ -134,14 +131,20 @@ export function getOffsetsForSourceRange(
 export function getStartOfNextLineOffset(content: string, lineNumber: number) {
   const lineStarts = getLineStarts(content);
 
-  return lineStarts[lineNumber] ?? getLineEndOffset(content, lineStarts, lineNumber);
+  return (
+    lineStarts[lineNumber] ?? getLineEndOffset(content, lineStarts, lineNumber)
+  );
 }
 
 function clamp(value: number, minimum: number, maximum: number) {
   return Math.min(Math.max(value, minimum), maximum);
 }
 
-function getLineBreakStart(content: string, lineStart: number, lineEnd: number) {
+function getLineBreakStart(
+  content: string,
+  lineStart: number,
+  lineEnd: number,
+) {
   let nextLineStart = lineEnd;
 
   while (

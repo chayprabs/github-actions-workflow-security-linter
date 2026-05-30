@@ -132,7 +132,9 @@ describe("share payload encoding", () => {
 
 describe("upload file selection boundaries", () => {
   it("accepts zero-byte supported files", () => {
-    const result = validateWorkflowFileSelection([{ name: "empty.yml", size: 0 }]);
+    const result = validateWorkflowFileSelection([
+      { name: "empty.yml", size: 0 },
+    ]);
 
     expect(result.accepted).toHaveLength(1);
     expect(result.errors).toHaveLength(0);

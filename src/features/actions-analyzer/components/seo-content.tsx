@@ -196,8 +196,8 @@ export function SeoContent({ onLoadExample }: SeoContentProps) {
             Related tools
           </h2>
           <p className="max-w-4xl text-base leading-7 text-muted-foreground">
-            This tool is starting with GitHub Actions workflow review and will add
-            adjacent config tools later instead of pretending they already
+            This tool is starting with GitHub Actions workflow review and will
+            add adjacent config tools later instead of pretending they already
             exist.
           </p>
         </div>

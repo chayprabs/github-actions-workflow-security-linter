@@ -102,8 +102,7 @@ export function createSafeDownloadFileName({
   extension: string;
   timestamp?: string | undefined;
 }) {
-  const normalizedBaseName =
-    sanitizeFileNameSegment(baseName) || "gha-report";
+  const normalizedBaseName = sanitizeFileNameSegment(baseName) || "gha-report";
   const normalizedTimestamp = timestamp
     ? timestamp
         .replace(/[-:]/gu, "")

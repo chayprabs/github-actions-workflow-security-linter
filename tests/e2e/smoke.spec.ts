@@ -69,7 +69,7 @@ test("risky sample analysis shows findings, editor jump, and PR comment copy", a
   await page.goto(`${homePath}?sample=risky-pull-request-target`);
   const inputPanel = getVisibleInputPanel(page);
 
-  await inputPanel
+  await inputPanel;
   await expect(inputPanel.getByTestId("workflow-path-input")).toHaveValue(
     /\.github\/workflows\/pr-target-risky\.yml/i,
   );
@@ -80,12 +80,18 @@ test("risky sample analysis shows findings, editor jump, and PR comment copy", a
   await expect(page.getByTestId("results-score")).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByTestId("results-finding-list")).toContainText(/GHA103/i, {
-    timeout: 30_000,
-  });
-  await expect(page.getByTestId("results-finding-list")).toContainText(/GHA104/i, {
-    timeout: 30_000,
-  });
+  await expect(page.getByTestId("results-finding-list")).toContainText(
+    /GHA103/i,
+    {
+      timeout: 30_000,
+    },
+  );
+  await expect(page.getByTestId("results-finding-list")).toContainText(
+    /GHA104/i,
+    {
+      timeout: 30_000,
+    },
+  );
 
   await page
     .getByTestId("results-finding-list")
@@ -118,7 +124,9 @@ test("uploading a workflow file analyzes locally and surfaces findings", async (
   await inputPanel
     .getByTestId("workflow-file-upload")
     .setInputFiles(uploadFixturePath);
-  await expect(inputPanel.getByText(/unpinned-third-party\.yml/i)).toBeVisible();
+  await expect(
+    inputPanel.getByText(/unpinned-third-party\.yml/i),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: /^Analyze$/i }).click();
 

@@ -197,12 +197,12 @@ describe("security rule pack", () => {
       },
     );
 
-    expect(report.findings.filter((finding) => finding.severity === "high")).toEqual(
-      [],
-    );
-    expect(report.findings.filter((finding) => finding.severity === "critical")).toEqual(
-      [],
-    );
+    expect(
+      report.findings.filter((finding) => finding.severity === "high"),
+    ).toEqual([]);
+    expect(
+      report.findings.filter((finding) => finding.severity === "critical"),
+    ).toEqual([]);
   });
 
   it("changes missing-permissions severity by analysis profile", () => {

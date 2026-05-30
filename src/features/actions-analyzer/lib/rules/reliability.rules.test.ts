@@ -3,12 +3,7 @@ import { describe, expect, it } from "vitest";
 import { analyzeWorkflowFiles } from "@/features/actions-analyzer/lib/analyze-workflows";
 import { createWorkflowInputFile } from "@/features/actions-analyzer/lib/workflow-input-utils";
 
-type ReliabilityRuleId =
-  | "GHA401"
-  | "GHA402"
-  | "GHA403"
-  | "GHA404"
-  | "GHA405";
+type ReliabilityRuleId = "GHA401" | "GHA402" | "GHA403" | "GHA404" | "GHA405";
 
 function createInput(path: string, content: string) {
   return createWorkflowInputFile({
@@ -18,10 +13,7 @@ function createInput(path: string, content: string) {
   });
 }
 
-function analyzeReliabilityRule(
-  ruleId: ReliabilityRuleId,
-  content: string,
-) {
+function analyzeReliabilityRule(ruleId: ReliabilityRuleId, content: string) {
   return analyzeWorkflowFiles(
     [createInput(`.github/workflows/${ruleId.toLowerCase()}.yml`, content)],
     {

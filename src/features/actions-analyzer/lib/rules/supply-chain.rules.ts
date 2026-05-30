@@ -27,9 +27,11 @@ const branchRefRuleDefinition = requireRuleDefinition("GHA202");
 const shortShaRuleDefinition = requireRuleDefinition("GHA203");
 const dockerDigestRuleDefinition = requireRuleDefinition("GHA204");
 const dynamicUsesRuleDefinition = requireRuleDefinition("GHA205");
-const checkoutPersistedCredentialsRuleDefinition = requireRuleDefinition("GHA206");
+const checkoutPersistedCredentialsRuleDefinition =
+  requireRuleDefinition("GHA206");
 const latestTagRuleDefinition = requireRuleDefinition("GHA207");
-const privilegedThirdPartyReferenceRuleDefinition = requireRuleDefinition("GHA208");
+const privilegedThirdPartyReferenceRuleDefinition =
+  requireRuleDefinition("GHA208");
 
 export const thirdPartyUnpinnedRule: RuleModule = {
   definition: thirdPartyUnpinnedRuleDefinition,
@@ -264,7 +266,9 @@ export const checkoutPersistedCredentialsRule: RuleModule = {
       }
 
       const workflow = context.getWorkflow(item.filePath);
-      const job = workflow?.jobs.find((candidate) => candidate.id === item.jobId);
+      const job = workflow?.jobs.find(
+        (candidate) => candidate.id === item.jobId,
+      );
       const step =
         job && typeof item.stepIndex === "number"
           ? job.steps[item.stepIndex]
@@ -284,8 +288,7 @@ export const checkoutPersistedCredentialsRule: RuleModule = {
           item.stepIndex ?? 0,
           "with",
           "persist-credentials",
-        ]) ??
-        item.location;
+        ]) ?? item.location;
       const fix =
         parsedFile &&
         step?.with.location &&

@@ -8,37 +8,37 @@ export const contentType = "image/png";
 
 export default function OpenGraphImage() {
   return new ImageResponse(
-    (
+    <div
+      style={{
+        alignItems: "center",
+        background: "#ffffff",
+        color: "#0f172a",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        justifyContent: "center",
+        padding: 80,
+        width: "100%",
+      }}
+    >
+      <div style={{ fontSize: 28, opacity: 0.75 }}>
+        Browser-local CI security
+      </div>
+      <div style={{ fontSize: 64, fontWeight: 700, marginTop: 16 }}>
+        {siteConfig.shortName}
+      </div>
       <div
         style={{
-          alignItems: "center",
-          background: "#ffffff",
-          color: "#0f172a",
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          justifyContent: "center",
-          padding: 80,
-          width: "100%",
+          fontSize: 26,
+          lineHeight: 1.4,
+          marginTop: 24,
+          maxWidth: 900,
+          textAlign: "center",
         }}
       >
-        <div style={{ fontSize: 28, opacity: 0.75 }}>Browser-local CI security</div>
-        <div style={{ fontSize: 64, fontWeight: 700, marginTop: 16 }}>
-          {siteConfig.shortName}
-        </div>
-        <div
-          style={{
-            fontSize: 26,
-            lineHeight: 1.4,
-            marginTop: 24,
-            maxWidth: 900,
-            textAlign: "center",
-          }}
-        >
-          {siteConfig.tagline}
-        </div>
+        {siteConfig.tagline}
       </div>
-    ),
+    </div>,
     size,
   );
 }

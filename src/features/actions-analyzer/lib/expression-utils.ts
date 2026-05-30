@@ -105,98 +105,173 @@ export function collectExpressionsFromWorkflow(
 ): WorkflowExpression[] {
   const expressions: WorkflowExpression[] = [];
 
-  collectFromUnknownValue(expressions, workflow.name.raw, {
-    fieldPath: ["name"],
-    fieldType: "name",
-    location: workflow.name.location,
-  }, workflow.filePath);
-  collectFromUnknownValue(expressions, workflow.concurrency.raw, {
-    fieldPath: ["concurrency"],
-    fieldType: "concurrency",
-    location: workflow.concurrency.location,
-  }, workflow.filePath);
-  collectFromUnknownValue(expressions, workflow.env.raw, {
-    fieldPath: ["env"],
-    fieldType: "env",
-    location: workflow.env.location,
-  }, workflow.filePath);
-  collectFromUnknownValue(expressions, workflow.defaults.raw, {
-    fieldPath: ["defaults"],
-    fieldType: "other",
-    location: workflow.defaults.location,
-  }, workflow.filePath);
+  collectFromUnknownValue(
+    expressions,
+    workflow.name.raw,
+    {
+      fieldPath: ["name"],
+      fieldType: "name",
+      location: workflow.name.location,
+    },
+    workflow.filePath,
+  );
+  collectFromUnknownValue(
+    expressions,
+    workflow.concurrency.raw,
+    {
+      fieldPath: ["concurrency"],
+      fieldType: "concurrency",
+      location: workflow.concurrency.location,
+    },
+    workflow.filePath,
+  );
+  collectFromUnknownValue(
+    expressions,
+    workflow.env.raw,
+    {
+      fieldPath: ["env"],
+      fieldType: "env",
+      location: workflow.env.location,
+    },
+    workflow.filePath,
+  );
+  collectFromUnknownValue(
+    expressions,
+    workflow.defaults.raw,
+    {
+      fieldPath: ["defaults"],
+      fieldType: "other",
+      location: workflow.defaults.location,
+    },
+    workflow.filePath,
+  );
 
   for (const job of workflow.jobs) {
     const jobPath = ["jobs", job.id] as Array<number | string>;
     const jobStepLabel = job.name.value ?? job.id;
     const jobRaw = asRecord(job.raw);
 
-    collectFromUnknownValue(expressions, job.name.raw, {
-      fieldPath: [...jobPath, "name"],
-      fieldType: "name",
-      jobId: job.id,
-      location: job.name.location,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, job.if.raw, {
-      allowBareExpression: true,
-      fieldPath: [...jobPath, "if"],
-      fieldType: "if",
-      jobId: job.id,
-      location: job.if.location,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, job.runsOn.raw, {
-      fieldPath: [...jobPath, "runs-on"],
-      fieldType: "other",
-      jobId: job.id,
-      location: job.runsOn.location,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, job.concurrency.raw, {
-      fieldPath: [...jobPath, "concurrency"],
-      fieldType: "concurrency",
-      jobId: job.id,
-      location: job.concurrency.location,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, job.environment.raw, {
-      fieldPath: [...jobPath, "environment"],
-      fieldType: "other",
-      jobId: job.id,
-      location: job.environment.location,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, job.timeoutMinutes.raw, {
-      fieldPath: [...jobPath, "timeout-minutes"],
-      fieldType: "timeout-minutes",
-      jobId: job.id,
-      location: job.timeoutMinutes.location,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, job.strategy?.raw, {
-      fieldPath: [...jobPath, "strategy"],
-      fieldType: "strategy",
-      jobId: job.id,
-      location: job.strategy?.location,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, job.with.raw, {
-      fieldPath: [...jobPath, "with"],
-      fieldType: "with",
-      jobId: job.id,
-      location: job.with.location,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, job.secrets.raw, {
-      fieldPath: [...jobPath, "secrets"],
-      fieldType: "other",
-      jobId: job.id,
-      location: job.secrets.location,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, jobRaw.env, {
-      fieldPath: [...jobPath, "env"],
-      fieldType: "env",
-      jobId: job.id,
-    }, workflow.filePath);
-    collectFromUnknownValue(expressions, job.reusableWorkflowCall?.raw, {
-      fieldPath: [...jobPath, "uses"],
-      fieldType: "uses",
-      jobId: job.id,
-      location: job.reusableWorkflowCall?.location,
-    }, workflow.filePath);
+    collectFromUnknownValue(
+      expressions,
+      job.name.raw,
+      {
+        fieldPath: [...jobPath, "name"],
+        fieldType: "name",
+        jobId: job.id,
+        location: job.name.location,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      job.if.raw,
+      {
+        allowBareExpression: true,
+        fieldPath: [...jobPath, "if"],
+        fieldType: "if",
+        jobId: job.id,
+        location: job.if.location,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      job.runsOn.raw,
+      {
+        fieldPath: [...jobPath, "runs-on"],
+        fieldType: "other",
+        jobId: job.id,
+        location: job.runsOn.location,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      job.concurrency.raw,
+      {
+        fieldPath: [...jobPath, "concurrency"],
+        fieldType: "concurrency",
+        jobId: job.id,
+        location: job.concurrency.location,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      job.environment.raw,
+      {
+        fieldPath: [...jobPath, "environment"],
+        fieldType: "other",
+        jobId: job.id,
+        location: job.environment.location,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      job.timeoutMinutes.raw,
+      {
+        fieldPath: [...jobPath, "timeout-minutes"],
+        fieldType: "timeout-minutes",
+        jobId: job.id,
+        location: job.timeoutMinutes.location,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      job.strategy?.raw,
+      {
+        fieldPath: [...jobPath, "strategy"],
+        fieldType: "strategy",
+        jobId: job.id,
+        location: job.strategy?.location,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      job.with.raw,
+      {
+        fieldPath: [...jobPath, "with"],
+        fieldType: "with",
+        jobId: job.id,
+        location: job.with.location,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      job.secrets.raw,
+      {
+        fieldPath: [...jobPath, "secrets"],
+        fieldType: "other",
+        jobId: job.id,
+        location: job.secrets.location,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      jobRaw.env,
+      {
+        fieldPath: [...jobPath, "env"],
+        fieldType: "env",
+        jobId: job.id,
+      },
+      workflow.filePath,
+    );
+    collectFromUnknownValue(
+      expressions,
+      job.reusableWorkflowCall?.raw,
+      {
+        fieldPath: [...jobPath, "uses"],
+        fieldType: "uses",
+        jobId: job.id,
+        location: job.reusableWorkflowCall?.location,
+      },
+      workflow.filePath,
+    );
 
     for (const step of job.steps) {
       const stepLabel =
@@ -205,96 +280,151 @@ export function collectExpressionsFromWorkflow(
         number | string
       >;
 
-      collectFromUnknownValue(expressions, step.name.raw, {
-        fieldPath: [...stepPath, "name"],
-        fieldType: "name",
-        jobId: job.id,
-        location: step.name.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-      collectFromUnknownValue(expressions, step.if.raw, {
-        allowBareExpression: true,
-        fieldPath: [...stepPath, "if"],
-        fieldType: "if",
-        jobId: job.id,
-        location: step.if.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-      collectFromUnknownValue(expressions, step.run?.raw, {
-        fieldPath: [...stepPath, "run"],
-        fieldType: "run",
-        jobId: job.id,
-        location: step.run?.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-      collectFromUnknownValue(expressions, step.shell.raw, {
-        fieldPath: [...stepPath, "shell"],
-        fieldType: "shell",
-        jobId: job.id,
-        location: step.shell.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-      collectFromUnknownValue(expressions, step.timeoutMinutes.raw, {
-        fieldPath: [...stepPath, "timeout-minutes"],
-        fieldType: "timeout-minutes",
-        jobId: job.id,
-        location: step.timeoutMinutes.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-      collectFromUnknownValue(expressions, step.continueOnError.raw, {
-        fieldPath: [...stepPath, "continue-on-error"],
-        fieldType: "other",
-        jobId: job.id,
-        location: step.continueOnError.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-      collectFromUnknownValue(expressions, step.workingDirectory.raw, {
-        fieldPath: [...stepPath, "working-directory"],
-        fieldType: "working-directory",
-        jobId: job.id,
-        location: step.workingDirectory.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-      collectFromUnknownValue(expressions, step.with.raw, {
-        fieldPath: [...stepPath, "with"],
-        fieldType: "with",
-        jobId: job.id,
-        location: step.with.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-      collectFromUnknownValue(expressions, step.env.raw, {
-        fieldPath: [...stepPath, "env"],
-        fieldType: "env",
-        jobId: job.id,
-        location: step.env.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-      collectFromUnknownValue(expressions, step.uses?.raw, {
-        fieldPath: [...stepPath, "uses"],
-        fieldType: "uses",
-        jobId: job.id,
-        location: step.uses?.location,
-        stepIndex: step.index,
-        stepLabel,
-      }, workflow.filePath);
-
-      if (stepLabel !== jobStepLabel) {
-        collectFromUnknownValue(expressions, step.additionalFields, {
-          fieldPath: stepPath,
-          fieldType: "other",
+      collectFromUnknownValue(
+        expressions,
+        step.name.raw,
+        {
+          fieldPath: [...stepPath, "name"],
+          fieldType: "name",
           jobId: job.id,
+          location: step.name.location,
           stepIndex: step.index,
           stepLabel,
-        }, workflow.filePath);
+        },
+        workflow.filePath,
+      );
+      collectFromUnknownValue(
+        expressions,
+        step.if.raw,
+        {
+          allowBareExpression: true,
+          fieldPath: [...stepPath, "if"],
+          fieldType: "if",
+          jobId: job.id,
+          location: step.if.location,
+          stepIndex: step.index,
+          stepLabel,
+        },
+        workflow.filePath,
+      );
+      collectFromUnknownValue(
+        expressions,
+        step.run?.raw,
+        {
+          fieldPath: [...stepPath, "run"],
+          fieldType: "run",
+          jobId: job.id,
+          location: step.run?.location,
+          stepIndex: step.index,
+          stepLabel,
+        },
+        workflow.filePath,
+      );
+      collectFromUnknownValue(
+        expressions,
+        step.shell.raw,
+        {
+          fieldPath: [...stepPath, "shell"],
+          fieldType: "shell",
+          jobId: job.id,
+          location: step.shell.location,
+          stepIndex: step.index,
+          stepLabel,
+        },
+        workflow.filePath,
+      );
+      collectFromUnknownValue(
+        expressions,
+        step.timeoutMinutes.raw,
+        {
+          fieldPath: [...stepPath, "timeout-minutes"],
+          fieldType: "timeout-minutes",
+          jobId: job.id,
+          location: step.timeoutMinutes.location,
+          stepIndex: step.index,
+          stepLabel,
+        },
+        workflow.filePath,
+      );
+      collectFromUnknownValue(
+        expressions,
+        step.continueOnError.raw,
+        {
+          fieldPath: [...stepPath, "continue-on-error"],
+          fieldType: "other",
+          jobId: job.id,
+          location: step.continueOnError.location,
+          stepIndex: step.index,
+          stepLabel,
+        },
+        workflow.filePath,
+      );
+      collectFromUnknownValue(
+        expressions,
+        step.workingDirectory.raw,
+        {
+          fieldPath: [...stepPath, "working-directory"],
+          fieldType: "working-directory",
+          jobId: job.id,
+          location: step.workingDirectory.location,
+          stepIndex: step.index,
+          stepLabel,
+        },
+        workflow.filePath,
+      );
+      collectFromUnknownValue(
+        expressions,
+        step.with.raw,
+        {
+          fieldPath: [...stepPath, "with"],
+          fieldType: "with",
+          jobId: job.id,
+          location: step.with.location,
+          stepIndex: step.index,
+          stepLabel,
+        },
+        workflow.filePath,
+      );
+      collectFromUnknownValue(
+        expressions,
+        step.env.raw,
+        {
+          fieldPath: [...stepPath, "env"],
+          fieldType: "env",
+          jobId: job.id,
+          location: step.env.location,
+          stepIndex: step.index,
+          stepLabel,
+        },
+        workflow.filePath,
+      );
+      collectFromUnknownValue(
+        expressions,
+        step.uses?.raw,
+        {
+          fieldPath: [...stepPath, "uses"],
+          fieldType: "uses",
+          jobId: job.id,
+          location: step.uses?.location,
+          stepIndex: step.index,
+          stepLabel,
+        },
+        workflow.filePath,
+      );
+
+      if (stepLabel !== jobStepLabel) {
+        collectFromUnknownValue(
+          expressions,
+          step.additionalFields,
+          {
+            fieldPath: stepPath,
+            fieldType: "other",
+            jobId: job.id,
+            stepIndex: step.index,
+            stepLabel,
+          },
+          workflow.filePath,
+        );
       }
     }
   }
@@ -366,9 +496,7 @@ export function extractExpressionContexts(
 
   return {
     contexts: [...contexts].sort(),
-    functions: [...functions].sort((left, right) =>
-      left.localeCompare(right),
-    ),
+    functions: [...functions].sort((left, right) => left.localeCompare(right)),
     references: [...references].sort(),
     unknownContexts: [...unknownContexts].sort(),
   };
@@ -511,7 +639,10 @@ function collectFromStringValue(
         ]
       : [];
 
-  for (const extractedExpression of [...wrappedExpressions, ...bareExpressions]) {
+  for (const extractedExpression of [
+    ...wrappedExpressions,
+    ...bareExpressions,
+  ]) {
     const contextAnalysis = extractExpressionContexts(
       extractedExpression.expressionText,
     );
@@ -602,9 +733,7 @@ function getMatchedUntrustedContexts(expressionText: string) {
 
   return references.filter((reference) =>
     untrustedGitHubContextCatalog.some((candidate) => {
-      return (
-        reference === candidate || reference.startsWith(`${candidate}.`)
-      );
+      return reference === candidate || reference.startsWith(`${candidate}.`);
     }),
   );
 }
@@ -730,7 +859,11 @@ function resolveExpressionLocationFromBase(
   startOffset: number,
   endOffset: number,
 ): SourceLocation {
-  const startPosition = resolveRelativePosition(value, locationBase, startOffset);
+  const startPosition = resolveRelativePosition(
+    value,
+    locationBase,
+    startOffset,
+  );
   const endPosition = resolveRelativePosition(
     value,
     locationBase,

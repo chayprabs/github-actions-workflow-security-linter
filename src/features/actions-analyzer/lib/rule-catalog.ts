@@ -477,7 +477,8 @@ export const ruleCatalog = [
   },
   {
     id: "GHA112",
-    title: "Reusable workflow inherits secrets on untrusted pull request triggers",
+    title:
+      "Reusable workflow inherits secrets on untrusted pull request triggers",
     description:
       "Calling reusable workflows with `secrets: inherit` on untrusted pull request triggers can expose repository secrets to untrusted code paths.",
     category: "security",

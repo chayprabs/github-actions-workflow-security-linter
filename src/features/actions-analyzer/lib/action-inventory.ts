@@ -26,8 +26,7 @@ import type {
 const fullShaPattern = /^[a-f0-9]{40}$/iu;
 const shortShaPattern = /^[a-f0-9]{7,39}$/iu;
 const majorTagPattern = /^v?\d+$/u;
-const semverTagPattern =
-  /^v?\d+\.\d+(?:\.\d+)?(?:[-+][0-9A-Za-z.-]+)?$/u;
+const semverTagPattern = /^v?\d+\.\d+(?:\.\d+)?(?:[-+][0-9A-Za-z.-]+)?$/u;
 const branchRefPattern =
   /^(?:refs\/heads\/|heads\/|main|master|develop|development|dev|trunk|stable|staging|production|release(?:[/-].+)?)$/iu;
 const digestPattern = /^sha256:[a-f0-9]{64}$/iu;

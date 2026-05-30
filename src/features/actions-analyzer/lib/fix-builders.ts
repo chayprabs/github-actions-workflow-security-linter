@@ -27,9 +27,15 @@ export function createInsertFixAfterLine(
   const lineStarts = getLineStarts(content);
   const insertionOffset = getStartOfNextLineOffset(content, lineNumber);
   const lineEndOffset = getLineEndOffset(content, lineStarts, lineNumber);
-  const prefix = insertionOffset === lineEndOffset ? detectLineEnding(content) : "";
+  const prefix =
+    insertionOffset === lineEndOffset ? detectLineEnding(content) : "";
 
-  return createInsertFixAtOffset(content, insertionOffset, `${prefix}${insertionText}`, options);
+  return createInsertFixAtOffset(
+    content,
+    insertionOffset,
+    `${prefix}${insertionText}`,
+    options,
+  );
 }
 
 export function createInsertFixAtOffset(

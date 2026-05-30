@@ -278,8 +278,8 @@ export function GitHubImportDialog({
             </CardTitle>
             <CardDescription>
               Public imports are fetched by your browser straight from GitHub.
-              No credentials are requested and nothing is proxied through
-              This tool.
+              No credentials are requested and nothing is proxied through This
+              tool.
             </CardDescription>
             <div className="grid gap-3">
               <Alert title="No credentials requested" tone="info">

@@ -823,12 +823,16 @@ export async function fetchPublicGitHubDefaultBranch({
     });
   }
 
-  const payload = (await response.json()) as { default_branch?: string | undefined };
+  const payload = (await response.json()) as {
+    default_branch?: string | undefined;
+  };
 
   return payload.default_branch ?? null;
 }
 
-export function buildSuggestedGitRefs(defaultBranch: string | null | undefined) {
+export function buildSuggestedGitRefs(
+  defaultBranch: string | null | undefined,
+) {
   const refs: string[] = [];
   const seen = new Set<string>();
 

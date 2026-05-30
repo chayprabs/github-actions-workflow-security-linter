@@ -25,11 +25,11 @@ Optional environment variable:
 
 ## Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `npm run dev` | Development server |
-| `npm run verify` | typecheck + lint + test + build |
-| `npm run test:e2e` | Playwright browser tests |
+| Script               | Purpose                                              |
+| -------------------- | ---------------------------------------------------- |
+| `npm run dev`        | Development server                                   |
+| `npm run verify`     | typecheck + lint + test + build                      |
+| `npm run test:e2e`   | Playwright browser tests                             |
 | `npm run smoke:prod` | Post-deploy route checks (`SMOKE_BASE_URL` required) |
 
 Install Chromium once before e2e:

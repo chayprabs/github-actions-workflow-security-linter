@@ -21,7 +21,8 @@ interface UseWorkflowAnalysisOptions {
   settings?: Partial<AnalyzerSettings> | undefined;
 }
 
-const analysisErrorMessage = "The analyzer could not analyze this workflow locally.";
+const analysisErrorMessage =
+  "The analyzer could not analyze this workflow locally.";
 
 export function useWorkflowAnalysis({
   files,

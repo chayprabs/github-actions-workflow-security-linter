@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ruleCatalog } from "@/features/actions-analyzer/lib/rule-catalog";
-import type { FindingCategory, RuleDefinition } from "@/features/actions-analyzer/types";
+import type {
+  FindingCategory,
+  RuleDefinition,
+} from "@/features/actions-analyzer/types";
 
 interface RuleTogglesPanelProps {
   disabledRuleIds: string[];
@@ -18,7 +21,10 @@ export function RuleTogglesPanel({
   onChange,
 }: RuleTogglesPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const disabledSet = useMemo(() => new Set(disabledRuleIds), [disabledRuleIds]);
+  const disabledSet = useMemo(
+    () => new Set(disabledRuleIds),
+    [disabledRuleIds],
+  );
 
   const groupedRules = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();

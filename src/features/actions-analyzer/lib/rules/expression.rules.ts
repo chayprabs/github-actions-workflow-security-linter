@@ -21,7 +21,8 @@ export const malformedExpressionRule: RuleModule = {
         return [];
       }
 
-      const unmatchedBraces = expression.isWrapped && !expression.rawExpression.endsWith("}}");
+      const unmatchedBraces =
+        expression.isWrapped && !expression.rawExpression.endsWith("}}");
 
       return [
         createRuleFinding(
@@ -83,7 +84,9 @@ export const secretsInIfRule: RuleModule = {
       if (
         expression.isMalformed ||
         expression.fieldType !== "if" ||
-        !expression.references.some((reference) => reference.startsWith("secrets."))
+        !expression.references.some((reference) =>
+          reference.startsWith("secrets."),
+        )
       ) {
         return [];
       }
@@ -121,7 +124,9 @@ export const matrixOutsideMatrixJobRule: RuleModule = {
       }
 
       const workflow = context.getWorkflow(expression.filePath);
-      const job = workflow?.jobs.find((candidate) => candidate.id === expression.jobId);
+      const job = workflow?.jobs.find(
+        (candidate) => candidate.id === expression.jobId,
+      );
 
       if (!job || job.strategy?.matrix != null) {
         return [];
@@ -224,7 +229,7 @@ export const untrustedContextRule: RuleModule = {
                       "env:",
                       "  UNTRUSTED_INPUT: ${{ github.event.pull_request.title }}",
                       "run: |",
-                      '  printf \'%s\\n\' \"$UNTRUSTED_INPUT\"',
+                      "  printf '%s\\n' \"$UNTRUSTED_INPUT\"",
                     ].join("\n"),
                     {
                       description:

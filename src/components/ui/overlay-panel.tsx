@@ -22,8 +22,10 @@ const sizeClasses: Record<OverlayPanelSize, string> = {
   xl: "max-w-5xl",
 };
 
-interface OverlayPanelProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
+interface OverlayPanelProps extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "title"
+> {
   description?: ReactNode | undefined;
   onClose: () => void;
   open: boolean;
@@ -89,7 +91,8 @@ export function OverlayPanel({
       }
 
       const firstFocusableElement = focusableElements[0];
-      const lastFocusableElement = focusableElements[focusableElements.length - 1];
+      const lastFocusableElement =
+        focusableElements[focusableElements.length - 1];
 
       if (event.shiftKey && document.activeElement === firstFocusableElement) {
         event.preventDefault();

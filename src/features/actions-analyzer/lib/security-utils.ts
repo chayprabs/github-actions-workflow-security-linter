@@ -168,11 +168,15 @@ export function hasBroadWritePermissions(
 }
 
 export function hasPrivilegedTriggers(workflow: NormalizedWorkflow): boolean {
-  return workflow.on.some((trigger) => privilegedTriggerNames.has(trigger.name));
+  return workflow.on.some((trigger) =>
+    privilegedTriggerNames.has(trigger.name),
+  );
 }
 
 export function hasTrustedTriggers(workflow: NormalizedWorkflow): boolean {
-  return workflow.on.some((trigger) => !untrustedTriggerNames.has(trigger.name));
+  return workflow.on.some(
+    (trigger) => !untrustedTriggerNames.has(trigger.name),
+  );
 }
 
 export function hasUntrustedPullRequestTrigger(
@@ -195,7 +199,9 @@ export function hasIdTokenWritePermission(
     return true;
   }
 
-  return permissions.kind === "mapping" && permissions.scopes["id-token"] === "write";
+  return (
+    permissions.kind === "mapping" && permissions.scopes["id-token"] === "write"
+  );
 }
 
 export function isDeploymentLikeJob(job: WorkflowJob): boolean {
@@ -228,7 +234,11 @@ export function isLikelyPullRequestHeadCheckoutRef(value: unknown): boolean {
 export function isSecurityPackRuleId(ruleId: string): boolean {
   const numericRuleId = Number.parseInt(ruleId.slice(3), 10);
 
-  return Number.isFinite(numericRuleId) && numericRuleId >= 100 && numericRuleId < 200;
+  return (
+    Number.isFinite(numericRuleId) &&
+    numericRuleId >= 100 &&
+    numericRuleId < 200
+  );
 }
 
 export function isSelfHostedRunsOn(rawRunsOn: unknown): boolean {
@@ -241,7 +251,10 @@ export function isSelfHostedRunsOn(rawRunsOn: unknown): boolean {
 
   if (Array.isArray(rawRunsOn)) {
     return rawRunsOn.some((value) => {
-      return typeof value === "string" && value.trim().toLowerCase() === "self-hosted";
+      return (
+        typeof value === "string" &&
+        value.trim().toLowerCase() === "self-hosted"
+      );
     });
   }
 
@@ -252,7 +265,9 @@ export function isSelfHostedRunsOn(rawRunsOn: unknown): boolean {
   return isSelfHostedRunsOn(rawRunsOn.labels);
 }
 
-export function getActionOriginForOwner(owner: string | null): ActionOriginKind {
+export function getActionOriginForOwner(
+  owner: string | null,
+): ActionOriginKind {
   if (!owner) {
     return "unknown";
   }
@@ -266,9 +281,7 @@ export function isFirstPartyOwner(owner: string | null): boolean {
   return getActionOriginForOwner(owner) === "first-party";
 }
 
-export function isThirdPartyActionUse(
-  uses: WorkflowActionUse | null,
-): boolean {
+export function isThirdPartyActionUse(uses: WorkflowActionUse | null): boolean {
   return (
     uses?.kind === "repository-action" &&
     getActionOriginForOwner(uses.owner) === "third-party"
@@ -300,7 +313,9 @@ export function summarizeTriggerKinds(
       filters: getTriggerFilterLabels(trigger),
     })),
   );
-  const events = Array.from(new Set(detailMap.map((detail) => detail.event))).sort();
+  const events = Array.from(
+    new Set(detailMap.map((detail) => detail.event)),
+  ).sort();
   const trustedEvents = events.filter(
     (event) => !untrustedTriggerNames.has(event),
   );
@@ -316,8 +331,8 @@ export function summarizeTriggerKinds(
     details: detailMap,
     manualEvents: events.filter((event) => event === "workflow_dispatch"),
     privilegedEvents,
-    releaseEvents: events.filter((event) =>
-      event === "deployment" || event === "release",
+    releaseEvents: events.filter(
+      (event) => event === "deployment" || event === "release",
     ),
     scheduledEvents: events.filter((event) => event === "schedule"),
     trustedEvents,

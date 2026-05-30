@@ -83,9 +83,9 @@ describe("expression context helpers", () => {
   it("detects likely expressions and untrusted GitHub contexts", () => {
     expect(isProbablyExpression("github.ref == 'refs/heads/main'")).toBe(true);
     expect(isProbablyExpression("plain display name")).toBe(false);
-    expect(
-      containsUntrustedContext("github.event.pull_request.title"),
-    ).toBe(true);
+    expect(containsUntrustedContext("github.event.pull_request.title")).toBe(
+      true,
+    );
     expect(containsUntrustedContext("github.repository")).toBe(false);
   });
 });
@@ -161,7 +161,9 @@ jobs:
     );
 
     expect(
-      buildExpressionSummary(collectExpressionsFromWorkflow(normalizedWorkflow)),
+      buildExpressionSummary(
+        collectExpressionsFromWorkflow(normalizedWorkflow),
+      ),
     ).toEqual({
       contexts: ["github"],
       totalExpressions: 3,

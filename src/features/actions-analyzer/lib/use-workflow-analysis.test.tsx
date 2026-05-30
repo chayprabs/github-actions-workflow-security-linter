@@ -61,7 +61,9 @@ class MockWorker {
   ) {
     if (type === "message") {
       this.messageListeners.add(
-        listener as (event: MessageEvent<WorkflowAnalysisWorkerResponse>) => void,
+        listener as (
+          event: MessageEvent<WorkflowAnalysisWorkerResponse>,
+        ) => void,
       );
       return;
     }
@@ -77,7 +79,9 @@ class MockWorker {
   ) {
     if (type === "message") {
       this.messageListeners.delete(
-        listener as (event: MessageEvent<WorkflowAnalysisWorkerResponse>) => void,
+        listener as (
+          event: MessageEvent<WorkflowAnalysisWorkerResponse>,
+        ) => void,
       );
       return;
     }

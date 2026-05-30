@@ -35,6 +35,8 @@ jobs:
   });
 
   it("blocks files with regular comments", () => {
-    expect(canSafelyFormatWorkflowYaml(`name: CI # inline`).allowed).toBe(false);
+    expect(canSafelyFormatWorkflowYaml(`name: CI # inline`).allowed).toBe(
+      false,
+    );
   });
 });

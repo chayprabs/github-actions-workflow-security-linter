@@ -17,7 +17,8 @@ describe("report snapshots", () => {
   it("saves and reads snapshots from localStorage", () => {
     const report = analyzeWorkflowFiles([
       createWorkflowInputFile({
-        content: "name: test\non: push\njobs:\n  ci:\n    runs-on: ubuntu-latest\n",
+        content:
+          "name: test\non: push\njobs:\n  ci:\n    runs-on: ubuntu-latest\n",
         path: ".github/workflows/ci.yml",
         sourceKind: "paste",
       }),

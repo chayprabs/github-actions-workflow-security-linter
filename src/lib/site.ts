@@ -22,8 +22,7 @@ const siteUrl = resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 export const siteConfig = {
   name: "GHA Workflow Analyzer",
   shortName: "GHA Workflow Analyzer",
-  tagline:
-    "Browser-local GitHub Actions workflow security and lint analyzer",
+  tagline: "Browser-local GitHub Actions workflow security and lint analyzer",
   description:
     "Paste or upload GitHub Actions workflow YAML to find syntax errors, risky permissions, unsafe triggers, unpinned actions, and CI reliability problems. Runs locally in your browser with no login.",
   url: siteUrl,

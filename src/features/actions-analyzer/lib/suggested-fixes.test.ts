@@ -129,7 +129,9 @@ jobs:
           enabledRuleIds: [ruleId],
         },
       );
-      const finding = report.findings.find((candidate) => candidate.ruleId === ruleId);
+      const finding = report.findings.find(
+        (candidate) => candidate.ruleId === ruleId,
+      );
 
       expect(finding?.fix).toBeDefined();
 
@@ -166,7 +168,9 @@ jobs:
       );
 
       expect(parsedFile.parseFindings).toEqual([]);
-      expect(rerun.findings.filter((candidate) => candidate.ruleId === ruleId)).toEqual([]);
+      expect(
+        rerun.findings.filter((candidate) => candidate.ruleId === ruleId),
+      ).toEqual([]);
     }
   });
 });

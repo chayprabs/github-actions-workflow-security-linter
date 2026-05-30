@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <Container className="max-w-3xl space-y-8 py-12 sm:py-16" data-testid="terms-page">
+    <Container
+      className="max-w-3xl space-y-8 py-12 sm:py-16"
+      data-testid="terms-page"
+    >
       <header className="space-y-2" data-testid="terms-toolbar">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">
           Terms &amp; Conditions
@@ -50,11 +53,12 @@ export default function TermsPage() {
             3. No warranties
           </h2>
           <p className="mt-2">
-            THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot;
-            WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING
-            IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-            PURPOSE, AND NON-INFRINGEMENT. We do not warrant that the Service will
-            be error-free, complete, or suitable for your environment.
+            THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS
+            AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR
+            IMPLIED, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+            FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. We do not warrant
+            that the Service will be error-free, complete, or suitable for your
+            environment.
           </p>
         </section>
 
@@ -64,12 +68,12 @@ export default function TermsPage() {
           </h2>
           <p className="mt-2">
             TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE OPERATOR OF THIS SERVICE
-            AND ITS CONTRIBUTORS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
-            SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS,
-            DATA, GOODWILL, OR BUSINESS INTERRUPTION, ARISING FROM YOUR USE OF OR
-            INABILITY TO USE THE SERVICE, EVEN IF ADVISED OF THE POSSIBILITY OF
-            SUCH DAMAGES. OUR TOTAL LIABILITY FOR ANY CLAIM RELATING TO THE
-            SERVICE WILL NOT EXCEED USD $100.
+            AND ITS CONTRIBUTORS WILL NOT BE LIABLE FOR ANY INDIRECT,
+            INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS
+            OF PROFITS, DATA, GOODWILL, OR BUSINESS INTERRUPTION, ARISING FROM
+            YOUR USE OF OR INABILITY TO USE THE SERVICE, EVEN IF ADVISED OF THE
+            POSSIBILITY OF SUCH DAMAGES. OUR TOTAL LIABILITY FOR ANY CLAIM
+            RELATING TO THE SERVICE WILL NOT EXCEED USD $100.
           </p>
         </section>
 
@@ -113,15 +117,18 @@ export default function TermsPage() {
           <p className="mt-2">
             These Terms are governed by the laws of India, without regard to
             conflict-of-law rules. Courts in India will have exclusive
-            jurisdiction, except where mandatory consumer protection laws in your
-            country require otherwise.
+            jurisdiction, except where mandatory consumer protection laws in
+            your country require otherwise.
           </p>
         </section>
 
         <section>
-          <h2 className="text-base font-semibold text-foreground">9. Contact</h2>
+          <h2 className="text-base font-semibold text-foreground">
+            9. Contact
+          </h2>
           <p className="mt-2">
-            Questions about these Terms may be directed via the contact options on{" "}
+            Questions about these Terms may be directed via the contact options
+            on{" "}
             <a
               className="font-medium text-foreground underline-offset-4 hover:text-accent hover:underline"
               href={siteConfig.personalWebsiteUrl}

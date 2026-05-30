@@ -246,13 +246,13 @@ jobs:
       ),
     ]);
 
-    expect(
-      report.findings.some((finding) => finding.ruleId === "GHA018"),
-    ).toBe(true);
+    expect(report.findings.some((finding) => finding.ruleId === "GHA018")).toBe(
+      true,
+    );
     expect(report.summary.workflowCount).toBe(1);
-    expect(
-      report.findings.some((finding) => finding.ruleId === "GHA018"),
-    ).toBe(true);
+    expect(report.findings.some((finding) => finding.ruleId === "GHA018")).toBe(
+      true,
+    );
   });
 });
 

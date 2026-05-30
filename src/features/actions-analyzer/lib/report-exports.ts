@@ -133,10 +133,7 @@ export function buildPrCommentMarkdown(report: WorkflowAnalysisReport) {
     );
   }
 
-  lines.push(
-    "",
-    `_Generated locally on ${formatDate(report.generatedAt)}._`,
-  );
+  lines.push("", `_Generated locally on ${formatDate(report.generatedAt)}._`);
 
   return lines.join("\n");
 }

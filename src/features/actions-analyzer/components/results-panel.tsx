@@ -263,8 +263,7 @@ export function ResultsPanel({
     return report ? buildReliabilitySummary(report) : null;
   }, [report]);
   const safeFixCount = useMemo(
-    () =>
-      findings.filter((finding) => finding.fix?.safety === "safe").length,
+    () => findings.filter((finding) => finding.fix?.safety === "safe").length,
     [findings],
   );
 
@@ -368,7 +367,8 @@ export function ResultsPanel({
     ) {
       publishFixFeedback({
         findingId: finding.id,
-        message: "The analyzer could not find the file content needed for this fix.",
+        message:
+          "The analyzer could not find the file content needed for this fix.",
         tone: "danger",
       });
       return;
@@ -430,9 +430,9 @@ export function ResultsPanel({
         >
           <div className="space-y-3">
             <p>
-              The analyzer hit an analyzer exception while reviewing your workflow.
-              The editor input stays local, and you can copy diagnostic context
-              without exposing a raw stack trace in the page.
+              The analyzer hit an analyzer exception while reviewing your
+              workflow. The editor input stays local, and you can copy
+              diagnostic context without exposing a raw stack trace in the page.
             </p>
             <div className="flex flex-wrap gap-2">
               <CopyButton
@@ -1430,8 +1430,8 @@ function FindingDetailPanel({
               title="Re-run analysis first"
               tone="warning"
             >
-              The file changed after this analysis run, so The analyzer will not apply
-              the patch until the finding is refreshed.
+              The file changed after this analysis run, so The analyzer will not
+              apply the patch until the finding is refreshed.
             </Alert>
           ) : null}
           {patchPreview ? (
@@ -1511,8 +1511,8 @@ function IgnoredFindingsSection({
         Ignored findings ({ignoredFindings.length})
       </summary>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        These findings were suppressed by an inline This tool ignore comment and do
-        not affect the current score.
+        These findings were suppressed by an inline This tool ignore comment and
+        do not affect the current score.
       </p>
       <div className="mt-4 space-y-2">
         {ignoredFindings.map((ignoredFinding) => (

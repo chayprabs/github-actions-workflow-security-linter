@@ -77,7 +77,9 @@ jobs:
       { enabledRuleIds: ["GHA401"] },
     );
 
-    expect(report.findings.map((finding) => finding.ruleId)).toContain("GHA901");
+    expect(report.findings.map((finding) => finding.ruleId)).toContain(
+      "GHA901",
+    );
   });
 
   it("supports authos-ignore as a legacy alias", () => {

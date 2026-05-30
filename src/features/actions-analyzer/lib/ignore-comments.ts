@@ -181,7 +181,10 @@ function collectTargetLines(lines: string[], commentLineIndex: number) {
       continue;
     }
 
-    if (trimmedLine.startsWith("#") && !ignoreCommentPattern.test(trimmedLine)) {
+    if (
+      trimmedLine.startsWith("#") &&
+      !ignoreCommentPattern.test(trimmedLine)
+    ) {
       if (targetLines.length > 0) {
         break;
       }

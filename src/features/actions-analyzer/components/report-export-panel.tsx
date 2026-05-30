@@ -223,8 +223,9 @@ export function ReportExportPanel({
       </h3>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
         Copy a PR-ready summary or download machine-readable reports. The
-        default share link restores filters, disabled rules, and sample IDs only.
-        Opt in to a content-including link when you need to restore pasted YAML.
+        default share link restores filters, disabled rules, and sample IDs
+        only. Opt in to a content-including link when you need to restore pasted
+        YAML.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -268,9 +269,9 @@ export function ReportExportPanel({
             Share workflow content in the URL?
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            This link embeds compressed YAML in the query string. Anyone with the
-            URL can read your workflow files. This tool still does not upload them to
-            a server.
+            This link embeds compressed YAML in the query string. Anyone with
+            the URL can read your workflow files. This tool still does not
+            upload them to a server.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button onClick={handleCopyContentShareLink} size="sm">

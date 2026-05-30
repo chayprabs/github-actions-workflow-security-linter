@@ -33,9 +33,7 @@ const legacyRedirect = await fetch(
 );
 
 if (![301, 302, 307, 308].includes(legacyRedirect.status)) {
-  console.error(
-    `Legacy tool route did not redirect: ${legacyRedirect.status}`,
-  );
+  console.error(`Legacy tool route did not redirect: ${legacyRedirect.status}`);
   process.exit(1);
 }
 

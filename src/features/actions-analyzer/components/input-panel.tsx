@@ -45,9 +45,8 @@ import type {
 } from "@/features/actions-analyzer/types";
 
 const LazyWorkflowCodeEditor = lazy(async () => {
-  const editorModule = await import(
-    "@/features/actions-analyzer/components/workflow-code-editor"
-  );
+  const editorModule =
+    await import("@/features/actions-analyzer/components/workflow-code-editor");
 
   return {
     default:

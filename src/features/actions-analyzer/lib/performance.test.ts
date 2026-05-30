@@ -37,26 +37,22 @@ ${jobs}
 }
 
 describe("analysis performance", () => {
-  it(
-    "analyzes a large synthetic workflow within a reasonable local budget",
-    () => {
-      const content = buildLargeSyntheticWorkflow();
-      const startTime = performance.now();
-      const report = analyzeWorkflowFiles([
-        createWorkflowInputFile({
-          content,
-          path: ".github/workflows/large-synthetic.yml",
-          sourceKind: "sample",
-        }),
-      ]);
-      const durationMs = performance.now() - startTime;
+  it("analyzes a large synthetic workflow within a reasonable local budget", () => {
+    const content = buildLargeSyntheticWorkflow();
+    const startTime = performance.now();
+    const report = analyzeWorkflowFiles([
+      createWorkflowInputFile({
+        content,
+        path: ".github/workflows/large-synthetic.yml",
+        sourceKind: "sample",
+      }),
+    ]);
+    const durationMs = performance.now() - startTime;
 
-      expect(durationMs).toBeLessThan(4000);
-      expect(report.summary.jobCount).toBe(25);
-      expect(report.findings.map((finding) => finding.ruleId)).toContain(
-        "GHA407",
-      );
-    },
-    10_000,
-  );
+    expect(durationMs).toBeLessThan(4000);
+    expect(report.summary.jobCount).toBe(25);
+    expect(report.findings.map((finding) => finding.ruleId)).toContain(
+      "GHA407",
+    );
+  }, 10_000);
 });

@@ -82,7 +82,9 @@ export const missingJobsRule: RuleModule = {
       }
 
       const parsedFile = context.getParsedFile(workflow.filePath);
-      const location = workflow.jobsLocation ?? getWorkflowAnchorLocation(workflow, parsedFile);
+      const location =
+        workflow.jobsLocation ??
+        getWorkflowAnchorLocation(workflow, parsedFile);
 
       return [
         createRuleFinding(
@@ -94,7 +96,7 @@ export const missingJobsRule: RuleModule = {
             message:
               "This workflow is missing the top-level `jobs` mapping, so it cannot define any runnable jobs.",
             remediation:
-              "Add a `jobs` section with at least one job. Manual skeleton: `jobs: { build: { runs-on: ubuntu-latest, steps: [{ run: \"echo build\" }] } }`.",
+              'Add a `jobs` section with at least one job. Manual skeleton: `jobs: { build: { runs-on: ubuntu-latest, steps: [{ run: "echo build" }] } }`.',
           },
           index,
         ),
@@ -119,7 +121,9 @@ export const invalidJobsShapeRule: RuleModule = {
       }
 
       const parsedFile = context.getParsedFile(workflow.filePath);
-      const location = workflow.jobsLocation ?? getWorkflowAnchorLocation(workflow, parsedFile);
+      const location =
+        workflow.jobsLocation ??
+        getWorkflowAnchorLocation(workflow, parsedFile);
       const message = isPlainObject(workflow.jobsRaw)
         ? "The top-level `jobs` mapping is empty. GitHub Actions expects at least one named job."
         : "The top-level `jobs` field must be an object keyed by job id.";
@@ -133,7 +137,7 @@ export const invalidJobsShapeRule: RuleModule = {
             location,
             message,
             remediation:
-              "Replace `jobs` with a mapping such as `jobs: { build: { runs-on: ubuntu-latest, steps: [{ run: \"echo ok\" }] } }`.",
+              'Replace `jobs` with a mapping such as `jobs: { build: { runs-on: ubuntu-latest, steps: [{ run: "echo ok" }] } }`.',
           },
           index,
         ),
@@ -245,9 +249,7 @@ function findTypoFindings({
     sourceMap: {
       findLocationForPath: (
         path: readonly (number | string)[],
-      ) => ReturnType<
-        typeof createRuleFinding
-      >["location"];
+      ) => ReturnType<typeof createRuleFinding>["location"];
       getSourceSnippet: (
         location?: ReturnType<typeof createRuleFinding>["location"],
         contextLines?: number,
@@ -268,32 +270,35 @@ function findTypoFindings({
     }
   >;
 }) {
-  return Object.entries(suggestions).flatMap(([actualKey, suggestion], index) => {
-    if (!Object.hasOwn(raw, actualKey)) {
-      return [];
-    }
+  return Object.entries(suggestions).flatMap(
+    ([actualKey, suggestion], index) => {
+      if (!Object.hasOwn(raw, actualKey)) {
+        return [];
+      }
 
-    const location = parsedFile.sourceMap.findLocationForPath([
-      ...pathPrefix,
-      actualKey,
-    ]);
+      const location = parsedFile.sourceMap.findLocationForPath([
+        ...pathPrefix,
+        actualKey,
+      ]);
 
-    return [
-      createRuleFinding(
-        suspiciousKeyTypoRuleDefinition,
-        {
-          confidence: "high",
-          evidence: parsedFile.sourceMap.getSourceSnippet(location) ?? undefined,
-          filePath,
-          location,
-          message: `\`${actualKey}\` looks like a typo of \`${suggestion.expected}\`. GitHub Actions will ignore the misspelled ${suggestion.subject}.`,
-          relatedJobs,
-          relatedSteps,
-          remediation: `Rename \`${actualKey}\` to \`${suggestion.expected}\` so GitHub Actions reads the intended field.`,
-          severity: suggestion.severity,
-        },
-        index,
-      ),
-    ];
-  });
+      return [
+        createRuleFinding(
+          suspiciousKeyTypoRuleDefinition,
+          {
+            confidence: "high",
+            evidence:
+              parsedFile.sourceMap.getSourceSnippet(location) ?? undefined,
+            filePath,
+            location,
+            message: `\`${actualKey}\` looks like a typo of \`${suggestion.expected}\`. GitHub Actions will ignore the misspelled ${suggestion.subject}.`,
+            relatedJobs,
+            relatedSteps,
+            remediation: `Rename \`${actualKey}\` to \`${suggestion.expected}\` so GitHub Actions reads the intended field.`,
+            severity: suggestion.severity,
+          },
+          index,
+        ),
+      ];
+    },
+  );
 }

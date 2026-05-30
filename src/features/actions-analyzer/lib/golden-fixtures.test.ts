@@ -45,7 +45,9 @@ describe("golden workflow fixtures", () => {
           sourceKind: "sample",
         }),
       ]);
-      const findingIds = [...new Set(report.findings.map((finding) => finding.ruleId))].sort();
+      const findingIds = [
+        ...new Set(report.findings.map((finding) => finding.ruleId)),
+      ].sort();
 
       if (expectation.exact) {
         expect(findingIds).toEqual([...expectation.exact].sort());
