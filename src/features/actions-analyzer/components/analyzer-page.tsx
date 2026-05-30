@@ -103,7 +103,8 @@ function AnalyzerPageContent({
           maxMatrixCombinationsBeforeWarning:
             sharedSettings.maxMatrixCombinationsBeforeWarning ??
             storedPreferences.analyzer.maxMatrixCombinationsBeforeWarning,
-          profile: sharedSettings.profile ?? storedPreferences.analyzer.profile,
+          profile:
+            sharedSettings.profile ?? storedPreferences.analyzer.profile,
           requireShaPinning:
             sharedSettings.requireShaPinning ??
             storedPreferences.analyzer.requireShaPinning,
@@ -360,7 +361,7 @@ function AnalyzerPageContent({
         });
       } catch {
         pushToast({
-          message: "Authos could not copy the PR comment.",
+          message: "Could not copy the PR comment.",
           tone: "danger",
         });
       }

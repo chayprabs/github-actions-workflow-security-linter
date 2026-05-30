@@ -6,10 +6,7 @@ import {
   collectExpressionsFromWorkflow,
   hydrateWorkflowExpressions,
 } from "@/features/actions-analyzer/lib/expression-utils";
-import {
-  applyIgnoreComments,
-  isMetaMaintenanceRuleId,
-} from "@/features/actions-analyzer/lib/ignore-comments";
+import { applyIgnoreComments } from "@/features/actions-analyzer/lib/ignore-comments";
 import { normalizeParsedWorkflow } from "@/features/actions-analyzer/lib/normalize-workflow";
 import { parseWorkflowYamlFiles } from "@/features/actions-analyzer/lib/parse-workflow-yaml";
 import { buildPermissionSummary } from "@/features/actions-analyzer/lib/permission-minimizer";
@@ -233,7 +230,7 @@ export function runRules(
 
       if (process.env.NODE_ENV !== "production") {
         console.error(
-          `[Authos] Rule ${rule.definition.id} failed during analysis.`,
+          `[GHA Analyzer] Rule ${rule.definition.id} failed during analysis.`,
           error,
         );
       }
@@ -266,7 +263,7 @@ function buildRuleExecutionFailureFindings(
     confidence: "high",
     filePath,
     remediation:
-      "Re-run analysis after updating Authos. If this persists, report the rule id and workflow sample.",
+      "Re-run analysis after refreshing the page. If this persists, report the rule id and workflow sample.",
     tags: ["analyzer", "internal", failure.ruleId],
     relatedJobs: [],
     relatedSteps: [],
@@ -422,11 +419,7 @@ function filterFindingsBySettings(
   findings: AnalyzerFinding[],
   settings: Pick<AnalyzerSettings, "disabledRuleIds" | "enabledRuleIds">,
 ): AnalyzerFinding[] {
-  return findings.filter(
-    (finding) =>
-      isMetaMaintenanceRuleId(finding.ruleId) ||
-      isRuleEnabled(finding.ruleId, settings),
-  );
+  return findings.filter((finding) => isRuleEnabled(finding.ruleId, settings));
 }
 
 function finalizeFindings(findings: AnalyzerFinding[]): AnalyzerFinding[] {
@@ -493,10 +486,16 @@ function hydrateFindingWithDefinition(
   };
 }
 
+const alwaysEnabledRuleIds = new Set(["GHA901", "GHA902"]);
+
 function isRuleEnabled(
   ruleId: string,
   settings: Pick<AnalyzerSettings, "disabledRuleIds" | "enabledRuleIds">,
 ): boolean {
+  if (alwaysEnabledRuleIds.has(ruleId)) {
+    return true;
+  }
+
   const enabledRuleIds = settings.enabledRuleIds ?? [];
   const disabledRuleIds = settings.disabledRuleIds ?? [];
 

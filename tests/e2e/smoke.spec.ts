@@ -69,7 +69,6 @@ test("risky sample analysis shows findings, editor jump, and PR comment copy", a
   await page.goto(`${homePath}?sample=risky-pull-request-target`);
   const inputPanel = getVisibleInputPanel(page);
 
-  await inputPanel;
   await expect(inputPanel.getByTestId("workflow-path-input")).toHaveValue(
     /\.github\/workflows\/pr-target-risky\.yml/i,
   );
