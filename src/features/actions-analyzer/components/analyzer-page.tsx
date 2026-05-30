@@ -103,8 +103,7 @@ function AnalyzerPageContent({
           maxMatrixCombinationsBeforeWarning:
             sharedSettings.maxMatrixCombinationsBeforeWarning ??
             storedPreferences.analyzer.maxMatrixCombinationsBeforeWarning,
-          profile:
-            sharedSettings.profile ?? storedPreferences.analyzer.profile,
+          profile: sharedSettings.profile ?? storedPreferences.analyzer.profile,
           requireShaPinning:
             sharedSettings.requireShaPinning ??
             storedPreferences.analyzer.requireShaPinning,
